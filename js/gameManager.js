@@ -9,65 +9,7 @@ import { NpcSpawner } from './npcSpawner.js';
 import { Inventory, FOOD, FOOD_LABEL } from './inventory.js';
 import { FoodStation } from './foodStation.js';
 import { randomLook } from './art.js';
-
-const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
-
-/** Keep a point inside the walkable area and outside furniture. */
-export function constrain(p) {
-  const w = LAYOUT.walk;
-  p.x = clamp(p.x, w.minX, w.maxX);
-  p.y = clamp(p.y, w.minY, w.maxY);
-  for (const b of LAYOUT.blockers) {
-    if (p.x > b.x && p.x < b.x + b.w && p.y > b.y && p.y < b.y + b.h) {
-      // push out through the nearest edge (right edge is off-screen)
-      const dl = p.x - b.x, dt = p.y - b.y, db = b.y + b.h - p.y;
-      if (dl <= dt && dl <= db) p.x = b.x;
-      else if (dt <= db) p.y = b.y;
-      else p.y = b.y + b.h;
-    }
-  }
-  return p;
-}
-
-/** Where segment a->b enters rect r (0..1), or Infinity if it misses. (slab test) */
-function segmentHitsRect(a, b, r) {
-  const dx = b.x - a.x, dy = b.y - a.y;
-  let t0 = 0, t1 = 1;
-  for (const [p, q] of [[-dx, a.x - r.x], [dx, r.x + r.w - a.x], [-dy, a.y - r.y], [dy, r.y + r.h - a.y]]) {
-    if (p === 0) { if (q <= 0) return Infinity; continue; }
-    const t = q / p;
-    if (p < 0) { if (t > t1) return Infinity; t0 = Math.max(t0, t); }
-    else { if (t < t0) return Infinity; t1 = Math.min(t1, t); }
-  }
-  return t0 < t1 ? t0 : Infinity;
-}
-
-/**
- * Waypoints from `from` to `to` that walk around furniture. Blockers sit against
- * the right wall, so the way around is always via their left corners.
- */
-export function route(from, to) {
-  const M = 8; // clearance from the furniture edge
-  const path = [];
-  let at = from;
-  for (let guard = 0; guard < 6; guard++) {
-    // go around whichever piece of furniture the straight line hits first
-    let b = null, first = Infinity;
-    for (const r of LAYOUT.blockers) {
-      const t = segmentHitsRect(at, to, r);
-      if (t < first) { first = t; b = r; }
-    }
-    if (!b) break;
-    const top = { x: b.x - M, y: b.y - M }, bottom = { x: b.x - M, y: b.y + b.h + M };
-    // Under/over the block: first get to the near corner; already left of it: head for the far one.
-    const ref = at.x >= b.x ? at : to;
-    const corner = ref.y > b.y + b.h / 2 ? bottom : top;
-    path.push(corner);
-    at = corner;
-  }
-  path.push(to);
-  return path;
-}
+import { constrain, route } from './pathing.js';
 
 export class GameManager {
   constructor({ save, persist = () => {}, upgrades, highScores, rng = Math.random, onEvent = () => {} }) {

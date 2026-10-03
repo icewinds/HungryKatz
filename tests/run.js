@@ -149,13 +149,14 @@ test('high scores: top 5, sorted high to low', () => {
   assert.equal(hs.best(), 1200);
 });
 
-test('pathing: walks around the bowl and fridge instead of getting stuck', () => {
+test('pathing: walks around tables instead of getting stuck', () => {
   const { gm } = setup();
+  const [t1, , t3] = LAYOUT.tables;
   const trips = [
-    [[480, 780], [470, 600]], // below bowl -> between bowl and fridge
-    [[480, 780], [490, 290]], // below bowl -> above fridge (around both)
-    [[490, 290], [480, 780]], // and back
-    [[480, 560], [470, 300]], // below fridge -> above fridge
+    [[t1.x, t1.y - 60], [t1.x, t1.y + 40]],     // straight through table 1
+    [[t3.x - 120, t3.y - 10], [t3.x + 120, t3.y - 10]], // across table 3
+    [[270, 700], [150, 300]],                   // pads area -> window bar
+    [[60, 300], [LAYOUT.foodZone.x, LAYOUT.foodZone.y]], // door -> food pad
   ];
   for (const [[sx, sy], [tx, ty]] of trips) {
     place(gm, sx, sy);
@@ -164,6 +165,18 @@ test('pathing: walks around the bowl and fridge instead of getting stuck', () =>
     assert.ok(Math.hypot(gm.player.x - tx, gm.player.y - ty) < 1,
       `(${sx},${sy})->(${tx},${ty}) ended at (${gm.player.x | 0},${gm.player.y | 0})`);
   }
+});
+
+test('pathing: customers walk around tables to every seat', () => {
+  const { gm } = setup();
+  park(gm);
+  for (const spot of LAYOUT.spots) gm.spawnNpc({ spot, request: 'milk', patience: 999 });
+  const inTable = n => LAYOUT.blockers.some(r => n.x > r.x && n.x < r.x + r.w && n.y > r.y && n.y < r.y + r.h);
+  for (let i = 0; i < 60 * 15; i++) {
+    gm.update(1 / 60);
+    assert.ok(!gm.npcs.some(inTable), 'an NPC walked through a table');
+  }
+  assert.ok(gm.npcs.every(n => n.state === 'waiting'), 'every NPC reached its seat');
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

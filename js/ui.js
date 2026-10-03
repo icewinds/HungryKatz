@@ -25,7 +25,30 @@ export class UIManager {
     for (const [k, el] of Object.entries(this.screens)) el.classList.toggle('active', k === name);
   }
 
-  showHud(on) { $('hud').classList.toggle('hidden', !on); }
+  showHud(on) {
+    $('hud').classList.toggle('hidden', !on);
+    $('tray').classList.toggle('hidden', !on);
+  }
+
+  /** One paw per allowed miss; missed ones turn red. */
+  setMissed(n, max) {
+    const box = $('hud-paws');
+    if (box.children.length !== max) {
+      const paw = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="10" r="2.6"/><circle cx="9.5" cy="5.5" r="2.6"/><circle cx="14.5" cy="5.5" r="2.6"/><circle cx="18.5" cy="10" r="2.6"/><ellipse cx="12" cy="16" rx="5.6" ry="4.6"/></svg>';
+      box.innerHTML = `<span class="paw">${paw}</span>`.repeat(max);
+    }
+    if (this.hudCache.missed === n) return;
+    this.hudCache.missed = n;
+    [...box.children].forEach((p, i) => p.classList.toggle('on', i < n));
+    box.setAttribute('aria-label', `Missed ${n} of ${max}`);
+  }
+
+  setLevelProgress(p) {
+    const v = Math.round(p * 100) / 100;
+    if (this.hudCache.lvlp === v) return;
+    this.hudCache.lvlp = v;
+    $('hud-lvlring').style.setProperty('--p', v);
+  }
 
   updateHud(values) {
     for (const [k, v] of Object.entries(values)) {
@@ -36,7 +59,7 @@ export class UIManager {
   }
 
   bump(id) {
-    const el = $(id).closest('.pill') || $(id);
+    const el = $(id).closest('.bumpable') || $(id);
     el.classList.remove('bump');
     void el.offsetWidth; // restart the CSS animation
     el.classList.add('bump');

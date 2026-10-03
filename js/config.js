@@ -3,31 +3,32 @@
 
 export const WORLD = { W: 540, H: 960 };
 
-const TOP_ROW_Y = 280;
-const BOTTOM_ROW_Y = 786;
-const SPOT_XS = [80, 162, 244, 326, 404];
+// Café floor plan: back wall + window bar (top), three round tables (middle),
+// kitchen counter with two flat pickup pads (bottom). Door on the left wall.
+const BAR_Y = 258;                       // feet of cats sitting at the window bar
+const TABLES = [{ x: 150, y: 440 }, { x: 390, y: 440 }, { x: 270, y: 615 }];
+const SEAT_DX = 66;                      // seats sit either side of each table
 
 export const LAYOUT = {
-  walk: { minX: 26, maxX: 514, minY: 272, maxY: 790 }, // where the player may stand
-  playerStart: { x: 260, y: 540 },
-  entry: { x: -70, y: 500 },  // NPCs spawn here, off-screen left
-  door: { x: 40, y: 500 },    // first waypoint just inside the door
-  exit: { x: -80, y: 500 },   // NPCs are removed after reaching this
-  // Solid furniture the player is pushed out of (feet position)
-  blockers: [
-    { x: 440, y: 318, w: 120, h: 212 }, // fridge
-    { x: 448, y: 662, w: 120, h: 78 },  // cat food bowl
-  ],
-  milkZone: { x: 468, y: 432, r: 64 },
-  foodZone: { x: 488, y: 702, r: 66 },
-  fridge: { x: 452, y: 288, w: 80, h: 232 },
-  bowl: { x: 490, y: 702 },
-  topCounter: { x: 18, y: 172, w: 420, h: 74 },
-  bottomCounter: { x: 18, y: 806, w: 420, h: 74 },
-  // Waiting spots; NPCs stand at (x, y) = feet position
+  walk: { minX: 26, maxX: 514, minY: 248, maxY: 790 }, // where the player may stand
+  playerStart: { x: 270, y: 700 },
+  entry: { x: -70, y: 330 },  // NPCs spawn here, off-screen left
+  door: { x: 40, y: 330 },    // first waypoint just inside the door
+  exit: { x: -80, y: 330 },   // NPCs are removed after reaching this
+  windowBar: { x: 90, y: 168, w: 360, h: 54 },
+  tables: TABLES,
+  kitchenY: 800,              // top of the kitchen counter
+  // Solid furniture (feet can't enter); pathing.js routes around these
+  blockers: TABLES.map(t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 })),
+  milkZone: { x: 170, y: 752, r: 50 },
+  foodZone: { x: 370, y: 752, r: 50 },
+  // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction
   spots: [
-    ...SPOT_XS.map((x, i) => ({ id: `T${i + 1}`, row: 'top', x, y: TOP_ROW_Y })),
-    ...SPOT_XS.map((x, i) => ({ id: `B${i + 1}`, row: 'bottom', x, y: BOTTOM_ROW_Y })),
+    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: x < 270 ? 1 : -1 })),
+    ...TABLES.flatMap((t, i) => [
+      { id: `T${i + 1}a`, row: 'table', x: t.x - SEAT_DX, y: t.y, face: 1 },
+      { id: `T${i + 1}b`, row: 'table', x: t.x + SEAT_DX, y: t.y, face: -1 },
+    ]),
   ],
 };
 
@@ -77,3 +78,9 @@ export function levelForEarned(earned) {
   return lvl;
 }
 export const rewardForLevel = level => 10 + 2 * (level - 1);
+/** 0..1 progress from the current level's threshold to the next (for the HUD ring). */
+export function levelProgress(earned) {
+  const l = levelForEarned(earned);
+  const lo = (LEVEL_STEP * (l - 1) * l) / 2, hi = (LEVEL_STEP * l * (l + 1)) / 2;
+  return Math.min(1, (earned - lo) / (hi - lo));
+}

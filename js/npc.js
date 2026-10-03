@@ -1,6 +1,7 @@
 // NPC customer cat: enters from the left, waits at a spot, eats or gives up, leaves left.
 
 import { LAYOUT, NPC_SPEED } from './config.js';
+import { route } from './pathing.js';
 
 let nextId = 1;
 
@@ -14,7 +15,7 @@ export class NPC {
     this.timeLeft = patience;
     this.x = LAYOUT.entry.x;
     this.y = LAYOUT.entry.y;
-    this.path = [{ ...LAYOUT.door }, { x: spot.x, y: spot.y }];
+    this.path = [{ ...LAYOUT.door }, ...route(LAYOUT.door, spot)]; // walks around tables
     // 'entering' -> 'waiting' -> ('eating' ->) 'leaving' -> 'gone'
     this.state = 'entering';
     this.mood = null;            // 'happy' | 'sad' while leaving
@@ -39,7 +40,7 @@ export class NPC {
   leave(mood) {
     this.state = 'leaving';
     this.mood = mood;
-    this.path = [{ ...LAYOUT.door }, { ...LAYOUT.exit }];
+    this.path = [...route(this, LAYOUT.door), { ...LAYOUT.exit }];
   }
 
   /** Returns an event name ('arrived' | 'expired' | 'fedDone' | 'gone') or null. */
@@ -52,7 +53,7 @@ export class NPC {
           this.state = 'waiting';
           this.arriveT = 0;
           this.squash = 1;
-          this.facing = this.x < 270 ? 1 : -1;
+          this.facing = this.spot.face ?? (this.x < 270 ? 1 : -1);
           return 'arrived';
         }
         break;

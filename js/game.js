@@ -1,7 +1,7 @@
 // Entry point: wires managers together, owns the canvas, input, render loop,
 // PWA install/offline hooks and the debug panel.
 
-import { WORLD, LAYOUT, MAX_MISSED } from './config.js';
+import { WORLD, LAYOUT, MAX_MISSED, levelProgress } from './config.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
 import { HighScoreManager } from './highScores.js';
@@ -10,7 +10,7 @@ import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
 import { FOOD } from './inventory.js';
 import {
-  drawBackground, drawCat, drawFoodIcon, drawInventory, drawRequest, drawReady,
+  drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
   drawSadCloud, drawHeart, drawFx, PLAYER_LOOK, FONT,
 } from './art.js';
 
@@ -33,7 +33,7 @@ function onEvent(type, d) {
       setTimeout(() => audio.play('coin'), 120);
       ui.bump('hud-coins'); ui.bump('hud-score');
       break;
-    case 'missed': audio.play('sad'); ui.bump('hud-missed'); break;
+    case 'missed': audio.play('sad'); ui.bump('hud-paws'); break;
     case 'levelUp':
       audio.play('levelUp');
       ui.banner(`🎉 Restaurant Level ${d.level}! Customers now pay ${d.reward}`);
@@ -173,25 +173,23 @@ document.addEventListener('pointerdown', () => { audio.unlock(); audio.startMusi
 function render(time) {
   const { dpr, scale, ox, oy, w, h } = view;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#fff4e8'; ctx.fillRect(0, 0, w, h);                // letterbox: floor
-  ctx.fillStyle = '#ffc9d9'; ctx.fillRect(0, 0, w, oy + 172 * scale); // letterbox: wall
+  ctx.fillStyle = '#efd5bb'; ctx.fillRect(0, 0, w, h);                // letterbox: kitchen counter
+  ctx.fillStyle = '#fde7ed'; ctx.fillRect(0, 0, w, oy + 172 * scale); // letterbox: wall
   ctx.drawImage(bg, ox, oy, WORLD.W * scale, WORLD.H * scale);
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
 
   const { player: p, npcs, inventory: inv } = gm;
 
-  for (const s of gm.stations) if (s.flash > 0) {
-    ctx.globalAlpha = (s.flash / 0.4) * 0.5;
-    ctx.beginPath(); ctx.arc(s.zone.x, s.zone.y, s.zone.r, 0, Math.PI * 2);
-    ctx.fillStyle = '#fff'; ctx.fill();
-    ctx.globalAlpha = 1;
-  }
+  for (const s of gm.stations) drawPad(ctx, s.zone, s.type, !inv.isFull(s.type), time, s.flash);
   drawFx(ctx, gm.fx, 'under');
 
-  // depth-sorted cats
-  const actors = [...npcs, p].sort((a, b) => a.y - b.y);
+  // depth-sorted cats + tables (a table sorts by its front edge)
+  const tables = LAYOUT.tables.map(t => ({ table: t, y: t.y + 8 }));
+  const actors = [...npcs, p, ...tables].sort((a, b) => a.y - b.y);
   for (const a of actors) {
-    if (a === p) {
+    if (a.table) {
+      drawTable(ctx, a.table);
+    } else if (a === p) {
       drawCat(ctx, p.x, p.y, PLAYER_LOOK, { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
@@ -207,9 +205,7 @@ function render(time) {
     else if (n.mood === 'sad') drawSadCloud(ctx, n.x, top, time);
     else if (n.mood === 'happy' || n.state === 'eating') drawHeart(ctx, n.x, top + Math.sin(time * 6) * 3, 16);
   }
-  if (gm.state === 'playing') drawInventory(ctx, p.x, p.y, inv);
-  drawReady(ctx, 492, 262, inv.isFull('milk') ? 'Milk Full' : 'Milk Ready!', !inv.isFull('milk'), time);
-  drawReady(ctx, 490, 640, inv.isFull('catfood') ? 'Cat Food Full' : 'Cat Food Ready!', !inv.isFull('catfood'), time + 1);
+  if (gm.state === 'playing') drawCarryBadge(ctx, p.x, p.y, inv);
   drawFx(ctx, gm.fx, 'over');
 
   if (debug.on) drawDebug();
@@ -269,13 +265,17 @@ function frame(now) {
   gm.update(dt);
   render(now / 1000);
   drawMenuCat(now / 1000);
+  const inv = gm.inventory;
   ui.updateHud({
     coins: save.coins,
     level: save.level,
     score: gm.score,
     best: Math.max(highScores.best(), gm.score),
-    missed: `${gm.missed}/${MAX_MISSED}`,
+    milk: `${inv.items.milk}/${inv.max}`,
+    catfood: `${inv.items.catfood}/${inv.max}`,
   });
+  ui.setMissed(gm.missed, MAX_MISSED);
+  ui.setLevelProgress(levelProgress(save.totalEarned));
   updateDebugPanel(now);
   requestAnimationFrame(frame);
 }
@@ -307,6 +307,11 @@ if ('serviceWorker' in navigator) {
 }
 
 // ---------------------------------------------------------------- boot
+for (const type of [FOOD.MILK, FOOD.CATFOOD]) { // tray icons rendered with the same art as the canvas
+  const c = Object.assign(document.createElement('canvas'), { width: 56, height: 56 });
+  drawFoodIcon(c.getContext('2d'), type, 28, 30, 1.9);
+  document.getElementById(`ico-${type}`).src = c.toDataURL();
+}
 window.addEventListener('resize', resize);
 resize();
 document.fonts?.ready.then(buildBackground); // redraw the sign once Fredoka loads

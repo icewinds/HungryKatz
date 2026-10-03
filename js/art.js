@@ -278,33 +278,52 @@ export function drawFoodIcon(ctx, type, x, y, s = 1, alpha = 1) {
 }
 
 // ---------------------------------------------------------------- overlays
-export function drawLabel(ctx, x, y, text, { bg = '#fff', color = INK, size = 13 } = {}) {
-  ctx.font = `600 ${size}px ${FONT}`;
-  const w = ctx.measureText(text).width + 16, h = size + 10;
-  rrect(ctx, x - w / 2, y - h / 2, w, h, h / 2); fillStroke(ctx, bg, 'rgba(255,255,255,0.9)', 2);
-  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText(text, x, y + 1);
+const SHADOW = 'rgba(120,70,60,0.13)';
+
+/** Flat pickup pad on the floor; pulses while the player can still pick up. */
+export function drawPad(ctx, zone, type, ready, t, flash) {
+  const { x, y } = zone;
+  ellipse(ctx, x, y + 10, 48, 21);
+  fillStroke(ctx, ready ? '#d6f4e8' : '#eee8ea', ready ? '#86d6b2' : '#ddd3d7', 3);
+  if (ready) {
+    const k = (t * 0.7) % 1;
+    ctx.globalAlpha = 1 - k;
+    ellipse(ctx, x, y + 10, 48 + k * 16, 21 + k * 7);
+    ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  if (flash > 0) {
+    ctx.globalAlpha = flash / 0.4;
+    ellipse(ctx, x, y + 10, 52, 24); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+  drawFoodIcon(ctx, type, x, y - 4 + (ready ? Math.sin(t * 3) * 3 : 0), 1.25, ready ? 1 : 0.45);
 }
 
-export function drawReady(ctx, x, y, text, ready, t) {
-  const by = y + (ready ? Math.sin(t * 3) * 3 : 0);
-  tri(ctx, [x - 5, by + 9], [x + 5, by + 9], [x, by + 15]);
-  ctx.fillStyle = ready ? '#6fcf9f' : '#e9e2e6'; ctx.fill();
-  drawLabel(ctx, x, by, text, { bg: ready ? '#6fcf9f' : '#e9e2e6', color: ready ? '#fff' : '#9a8a92' });
-}
-
-/** Carried food above the player's head: slots per type + "n/max" counts. Never flipped. */
-export function drawInventory(ctx, x, y, inv) {
-  const n = inv.max, slot = 12, w = 22 + n * slot + 28, h = 42, top = y - 132;
-  rrect(ctx, x - w / 2, top, w, h, 12); fillStroke(ctx, 'rgba(255,255,255,0.93)', '#ffc6d6', 2);
-  ['milk', 'catfood'].forEach((type, i) => {
-    const ry = top + 12 + i * 19, cnt = inv.items[type];
-    for (let k = 0; k < n; k++) drawFoodIcon(ctx, type, x - w / 2 + 14 + k * slot, ry, 0.5, k < cnt ? 1 : 0.22);
-    ctx.font = `700 12px ${FONT}`;
-    ctx.fillStyle = cnt ? INK : '#b9a9b1';
-    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
-    ctx.fillText(`${cnt}/${n}`, x + w / 2 - 7, ry + 1);
+/** Tiny badge above the player: only the foods actually carried. Never flipped. */
+export function drawCarryBadge(ctx, x, y, inv) {
+  const items = ['milk', 'catfood'].filter(k => inv.items[k] > 0);
+  if (!items.length) return;
+  const w = items.length * 34 + 6, h = 24, top = y - 114;
+  rrect(ctx, x - w / 2, top, w, h, 12); fillStroke(ctx, 'rgba(255,255,255,0.95)', '#f6d3dd', 1.5);
+  ctx.font = `700 12px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  items.forEach((k, i) => {
+    const ix = x - w / 2 + 13 + i * 34;
+    drawFoodIcon(ctx, k, ix, top + 12, 0.55);
+    ctx.fillStyle = INK; ctx.fillText(inv.items[k], ix + 9, top + 13);
   });
+}
+
+/** Round café table; drawn per frame so cats behind it are occluded. */
+export function drawTable(ctx, t) {
+  ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill();
+  ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, '#d2a98d', null);
+  rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, '#ddb79b', null);
+  ellipse(ctx, t.x, t.y - 26, 46, 24); fillStroke(ctx, '#fff', '#f1cfd8', 3);
+  ellipse(ctx, t.x, t.y - 27, 34, 16); ctx.strokeStyle = '#fbe9ee'; ctx.lineWidth = 2; ctx.stroke();
+  rrect(ctx, t.x - 4, t.y - 38, 8, 12, 3); fillStroke(ctx, '#a9dcf5', null);
+  circle(ctx, t.x, t.y - 43, 4.5); fillStroke(ctx, '#ff8fab', null);
+  circle(ctx, t.x, t.y - 43, 1.8); fillStroke(ctx, '#ffd166', null);
 }
 
 /** Request bubble with circular countdown ring. */
@@ -316,16 +335,17 @@ export function drawRequest(ctx, npc, t) {
   ctx.save();
   ctx.translate(npc.x, npc.y - 104 * (npc.look.size || 1));
   ctx.scale(sc, sc);
-  tri(ctx, [-6, 16], [6, 16], [0, 26]); ctx.fillStyle = '#fff'; ctx.fill();
-  circle(ctx, 0, 0, 20); fillStroke(ctx, '#fff', null);
-  ctx.lineWidth = 5; ctx.lineCap = 'round';
-  circle(ctx, 0, 0, 24); ctx.strokeStyle = 'rgba(90,61,74,0.15)'; ctx.stroke();
+  if (urgent) { circle(ctx, 0, 0, 27); ctx.fillStyle = 'rgba(255,93,115,0.18)'; ctx.fill(); }
+  tri(ctx, [-5, 15], [5, 15], [0, 23]); ctx.fillStyle = '#fff'; ctx.fill();
+  circle(ctx, 0, 0, 19); fillStroke(ctx, '#fff', null);
+  ctx.lineWidth = 3.5; ctx.lineCap = 'round';
+  circle(ctx, 0, 0, 21); ctx.strokeStyle = 'rgba(90,61,74,0.12)'; ctx.stroke();
   const f = npc.frac;
   ctx.beginPath();
-  ctx.arc(0, 0, 24, -Math.PI / 2, -Math.PI / 2 + f * TAU);
+  ctx.arc(0, 0, 21, -Math.PI / 2, -Math.PI / 2 + f * TAU);
   ctx.strokeStyle = f > 0.6 ? '#5ccf8a' : f > 0.3 ? '#ffc94d' : '#ff5d73';
   ctx.stroke();
-  drawFoodIcon(ctx, npc.request, 0, 1, 0.95);
+  drawFoodIcon(ctx, npc.request, 0, 1, 0.85);
   ctx.restore();
 }
 
@@ -393,90 +413,76 @@ export function drawFx(ctx, fx, layer) {
 /** Static café, drawn once into an offscreen canvas (world coordinates). */
 export function drawBackground(ctx) {
   const { W, H } = WORLD;
-  // floor
-  ctx.fillStyle = '#fff4e8'; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = '#ffe9d9';
-  for (let y = 172, r = 0; y < H; y += 46, r++) for (let x = (r % 2) * 46; x < W; x += 92) ctx.fillRect(x, y, 46, 46);
-  ellipse(ctx, 250, 535, 160, 96); ctx.fillStyle = '#ffdbe6'; ctx.fill();
-  ellipse(ctx, 250, 535, 144, 82); ctx.setLineDash([10, 8]); ctx.strokeStyle = '#fff'; ctx.lineWidth = 4; ctx.stroke(); ctx.setLineDash([]);
-
-  // wall
-  ctx.fillStyle = '#ffc9d9'; ctx.fillRect(0, 0, W, 172);
-  ctx.fillStyle = '#ffbfd2'; for (let x = 0; x < W; x += 36) ctx.fillRect(x, 0, 18, 136);
-  ctx.fillStyle = '#fff0f5'; ctx.fillRect(0, 136, W, 36);
-  ctx.fillStyle = '#f2a7bf'; ctx.fillRect(0, 136, W, 4); ctx.fillRect(0, 168, W, 4);
-  for (const wx of [30, 390]) {
-    rrect(ctx, wx, 34, 120, 88, 14); fillStroke(ctx, '#c7ecff', '#fff', 6);
-    ctx.fillStyle = '#fff';
-    for (const [cx, cy, r] of [[wx + 35, 70, 10], [wx + 48, 64, 13], [wx + 62, 70, 10]]) { circle(ctx, cx, cy, r); ctx.fill(); }
-    ctx.fillRect(wx + 58, 34, 4, 88); ctx.fillRect(wx, 76, 120, 4);
-    rrect(ctx, wx - 6, 120, 132, 8, 4); fillStroke(ctx, '#fff', null);
-  }
-  rrect(ctx, 180, 40, 180, 72, 20); fillStroke(ctx, '#fff', '#ff8fab', 4);
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillStyle = '#ff7096'; ctx.font = `700 28px ${FONT}`; ctx.fillText('HungryKatz', 270, 68);
-  ctx.fillStyle = '#c99'; ctx.font = `600 13px ${FONT}`; ctx.fillText('C A T   C A F É', 270, 96);
-  for (let i = 0; i < 14; i++) { // bunting
-    const fx = 10 + i * 38;
-    tri(ctx, [fx, 10], [fx + 26, 10], [fx + 13, 28]);
-    ctx.fillStyle = ['#ff8fab', '#ffd166', '#8fd9b6', '#9fd3ff'][i % 4]; ctx.fill();
+  // wood plank floor
+  ctx.fillStyle = '#f8eadb'; ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#f0dcc6'; ctx.lineWidth = 2;
+  for (let y = 172, r = 0; y < H; y += 38, r++) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
+    for (let x = (r % 3) * 70 + 40; x < W; x += 210) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 38); ctx.stroke(); }
   }
 
-  // door + welcome mat on the left
-  rrect(ctx, -6, 440, 16, 120, 4); fillStroke(ctx, '#d9a5b8', null);
-  rrect(ctx, 6, 458, 44, 84, 10); fillStroke(ctx, '#a8e6cf', '#8fd9b6', 3);
-  ctx.fillStyle = '#8fd9b6'; for (let y = 470; y < 535; y += 14) ctx.fillRect(12, y, 32, 5);
+  // back wall, windows, clock
+  ctx.fillStyle = '#fde7ed'; ctx.fillRect(0, 0, W, 172);
+  ctx.fillStyle = '#fff5f8'; ctx.fillRect(0, 128, W, 44);
+  ctx.fillStyle = '#f6cfd9'; ctx.fillRect(0, 126, W, 3); ctx.fillRect(0, 169, W, 3);
+  for (const wx of [26, 320]) drawWindow(ctx, wx, 22, 194, 96);
+  circle(ctx, 270, 70, 25); fillStroke(ctx, '#fff', '#f2b8c8', 4);
+  ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(270, 70); ctx.lineTo(270, 55); ctx.moveTo(270, 70); ctx.lineTo(281, 76); ctx.stroke();
 
-  counter(ctx, LAYOUT.topCounter, 'top');
-  counter(ctx, LAYOUT.bottomCounter, 'bottom');
-  fridge(ctx, LAYOUT.fridge);
-
-  // cat food station
-  const b = LAYOUT.bowl;
-  ellipse(ctx, b.x, b.y + 12, 46, 17); fillStroke(ctx, '#bde0fe', '#9fd3ff', 3);
-  drawFoodIcon(ctx, 'catfood', b.x, b.y - 2, 2.1);
-
-  plant(ctx, 500, 925); plant(ctx, 36, 930);
-}
-
-function counter(ctx, c, row) {
-  const top = 30;
-  rrect(ctx, c.x + 4, c.y + 10, c.w, c.h, 16); ctx.fillStyle = 'rgba(120,70,60,0.15)'; ctx.fill();
-  rrect(ctx, c.x, c.y + top - 10, c.w, c.h - top + 10, 14); fillStroke(ctx, '#d4956a', null);
-  ctx.strokeStyle = '#c07f55'; ctx.lineWidth = 3;
-  for (let x = c.x + 60; x < c.x + c.w - 20; x += 70) { ctx.beginPath(); ctx.moveTo(x, c.y + top + 8); ctx.lineTo(x, c.y + c.h - 8); ctx.stroke(); }
-  rrect(ctx, c.x - 4, c.y, c.w + 8, top, 14); fillStroke(ctx, '#f2c6a0', null);
-  rrect(ctx, c.x + 8, c.y + 4, c.w - 16, 5, 3); fillStroke(ctx, '#ffe0c4', null);
+  // window bar with saucers, cushions for every seat
+  const b = LAYOUT.windowBar;
+  rrect(ctx, b.x + 4, b.y + 10, b.w, b.h, 12); ctx.fillStyle = SHADOW; ctx.fill();
+  rrect(ctx, b.x, b.y + 22, b.w, b.h - 22, 10); fillStroke(ctx, '#ddb08d', null);
+  rrect(ctx, b.x - 6, b.y, b.w + 12, 30, 12); fillStroke(ctx, '#f1cdab', null);
+  rrect(ctx, b.x + 6, b.y + 4, b.w - 12, 4, 2); fillStroke(ctx, '#fbe3cd', null);
   for (const s of LAYOUT.spots) {
-    if (s.row !== row) continue;
-    ellipse(ctx, s.x, c.y + top / 2 + 1, 16, 7); fillStroke(ctx, '#fff', '#f0d0dc', 2);
-    ellipse(ctx, s.x, c.y + top / 2 + 1, 9, 3.5); fillStroke(ctx, '#fbeef3', null);
+    if (s.row === 'bar') { ellipse(ctx, s.x, b.y + 15, 13, 5); fillStroke(ctx, '#fff', '#f1d4dc', 1.5); }
+    ellipse(ctx, s.x, s.y, 22, 8); fillStroke(ctx, '#fbd3de', '#f3b4c5', 2);
   }
+
+  // door + welcome mat on the left wall
+  rrect(ctx, -6, 280, 18, 100, 6); fillStroke(ctx, '#ecbccb', null);
+  rrect(ctx, 8, 298, 42, 64, 12); fillStroke(ctx, '#d6f2e6', '#ade3cc', 2);
+
+  kitchen(ctx);
 }
 
-function fridge(ctx, f) {
-  ellipse(ctx, f.x + f.w / 2, f.y + f.h, f.w / 2 + 6, 8); ctx.fillStyle = 'rgba(120,70,60,0.15)'; ctx.fill();
-  rrect(ctx, f.x, f.y, f.w, f.h, 14); fillStroke(ctx, '#e3f5ff', '#8ec5e8', 3);
-  rrect(ctx, f.x + f.w - 14, f.y + 5, 9, f.h - 10, 5); fillStroke(ctx, '#cbe8fa', null);
-  ctx.strokeStyle = '#8ec5e8'; ctx.lineWidth = 3;
-  ctx.beginPath(); ctx.moveTo(f.x + 2, f.y + 70); ctx.lineTo(f.x + f.w - 2, f.y + 70); ctx.stroke();
-  rrect(ctx, f.x + 9, f.y + 24, 6, 30, 3); fillStroke(ctx, '#8ec5e8', null);
-  rrect(ctx, f.x + 9, f.y + 84, 6, 52, 3); fillStroke(ctx, '#8ec5e8', null);
-  const sx = f.x + f.w / 2 + 4, sy = f.y + 36; // snowflake
-  ctx.lineWidth = 2;
-  for (let i = 0; i < 3; i++) {
-    const a = (i / 3) * Math.PI;
-    ctx.beginPath(); ctx.moveTo(sx - Math.cos(a) * 9, sy - Math.sin(a) * 9); ctx.lineTo(sx + Math.cos(a) * 9, sy + Math.sin(a) * 9); ctx.stroke();
-  }
-  drawFoodIcon(ctx, 'milk', f.x + f.w / 2 + 4, f.y + 150, 1.5);
-  ctx.fillStyle = '#5b8bd6'; ctx.font = `700 13px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.fillText('MILK', f.x + f.w / 2 + 4, f.y + 192);
+function drawWindow(ctx, x, y, w, h) {
+  rrect(ctx, x, y, w, h, 16); fillStroke(ctx, '#ddf1fb', '#fff', 6);
+  ctx.fillStyle = '#fff';
+  for (const [cx, cy, r] of [[x + 50, y + 44, 11], [x + 64, y + 38, 14], [x + 80, y + 44, 11], [x + 140, y + 62, 8], [x + 151, y + 58, 10]]) { circle(ctx, cx, cy, r); ctx.fill(); }
+  ctx.fillRect(x + w / 2 - 2, y, 4, h);
+  rrect(ctx, x - 6, y + h - 2, w + 12, 8, 4); fillStroke(ctx, '#fff', null);
+  // little potted plant on the sill
+  ctx.fillStyle = '#7fd1a1';
+  for (const [dx, dy, r] of [[-6, -12, 6], [6, -12, 6], [0, -18, 6]]) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
+  rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, '#f6a07c', null);
 }
 
-function plant(ctx, x, y) {
-  ctx.fillStyle = '#6cc788';
-  for (const [dx, dy, r] of [[-10, -30, 12], [10, -32, 12], [0, -44, 13], [-14, -16, 9], [14, -18, 9]]) { circle(ctx, x + dx, y + dy, r); ctx.fill(); }
-  ctx.beginPath();
-  ctx.moveTo(x - 16, y - 14); ctx.lineTo(x + 16, y - 14); ctx.lineTo(x + 12, y + 14); ctx.lineTo(x - 12, y + 14); ctx.closePath();
-  fillStroke(ctx, '#f08a5d', '#d26f45', 2);
+function kitchen(ctx) {
+  const y = LAYOUT.kitchenY, { W, H } = WORLD;
+  ctx.fillStyle = SHADOW; ctx.fillRect(0, y - 6, W, 8);
+  // counter front with mint tile band, under-counter fridge and cupboard
+  ctx.fillStyle = '#efd5bb'; ctx.fillRect(0, y + 24, W, H - y - 24);
+  ctx.fillStyle = '#c9eedf'; ctx.fillRect(0, y + 24, W, 16);
+  ctx.strokeStyle = '#b3e3cf'; ctx.lineWidth = 2;
+  for (let x = 24; x < W; x += 24) { ctx.beginPath(); ctx.moveTo(x, y + 24); ctx.lineTo(x, y + 40); ctx.stroke(); }
+  rrect(ctx, 110, y + 50, 120, 74, 10); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
+  for (const bx of [136, 160, 184, 208]) { rrect(ctx, bx - 6, y + 74, 12, 30, 4); fillStroke(ctx, '#fff', '#9cc3ea', 1.5); }
+  rrect(ctx, 310, y + 50, 120, 74, 10); fillStroke(ctx, '#f6e2cd', '#e6c6a6', 3);
+  drawFoodIcon(ctx, 'catfood', 370, y + 88, 1.1, 0.5);
+  // counter top + props
+  rrect(ctx, -6, y, W + 12, 28, 10); fillStroke(ctx, '#f6e6d6', '#ead2bb', 2);
+  for (const bx of [154, 170, 186]) { // milk bottles in a crate
+    rrect(ctx, bx - 6, y - 20, 12, 24, 4); fillStroke(ctx, '#fff', '#9cc3ea', 1.5);
+    rrect(ctx, bx - 3, y - 24, 6, 5, 2); fillStroke(ctx, '#5b8bd6', null);
+  }
+  rrect(ctx, 144, y - 4, 52, 14, 3); fillStroke(ctx, '#e7c3a0', null);
+  drawFoodIcon(ctx, 'catfood', 370, y - 2, 1.7);
+  for (const px of [40, 500]) {
+    ctx.fillStyle = '#7fd1a1';
+    for (const [dx, dy, r] of [[-9, -22, 10], [9, -22, 10], [0, -32, 11]]) { circle(ctx, px + dx, y + dy, r); ctx.fill(); }
+    rrect(ctx, px - 12, y - 16, 24, 20, 5); fillStroke(ctx, '#f6a07c', null);
+  }
 }
