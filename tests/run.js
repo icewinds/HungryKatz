@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { GameManager } from '../js/gameManager.js';
 import { UpgradeManager } from '../js/upgrades.js';
 import { HighScoreManager } from '../js/highScores.js';
-import { DEFAULT_SAVE } from '../js/storage.js';
+import { DEFAULT_SAVE, Storage } from '../js/storage.js';
+import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { Inventory } from '../js/inventory.js';
 import { LAYOUT, MAX_MISSED } from '../js/config.js';
 
@@ -177,6 +178,15 @@ test('pathing: customers walk around tables to every seat', () => {
     assert.ok(!gm.npcs.some(inTable), 'an NPC walked through a table');
   }
   assert.ok(gm.npcs.every(n => n.state === 'waiting'), 'every NPC reached its seat');
+});
+
+test('character: choice persists; unknown ids fall back to the default cat', () => {
+  Storage.save({ ...DEFAULT_SAVE(), character: 'oreo' });
+  assert.equal(Storage.load().character, 'oreo');
+  assert.equal(playerLook('oreo').name, 'Oreo');
+  assert.equal(playerLook('nope').id, PLAYER_LOOKS[0].id);
+  Storage.reset();
+  assert.equal(Storage.load().character, PLAYER_LOOKS[0].id);
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

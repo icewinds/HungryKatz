@@ -51,11 +51,18 @@ export function randomLook(rng = Math.random) {
   };
 }
 
-export const PLAYER_LOOK = {
-  fur: '#f4a259', light: '#fff1dc', dark: '#c0702c',
-  pattern: 'stripes', accessory: 'chef', acc: '#ff8fab', eye: '#3b2a33',
-  patch: '#fff', size: 1.08, seed: 0,
-};
+// Playable chef cats (character select). `acc` = apron colour.
+const CHEF = { accessory: 'chef', size: 1.08, seed: 0 };
+export const PLAYER_LOOKS = [
+  { id: 'mango', name: 'Mango', fur: '#f4a259', light: '#fff1dc', dark: '#c0702c', pattern: 'stripes', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', ...CHEF },
+  { id: 'smokey', name: 'Smokey', fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes', acc: '#7fb3ff', eye: '#d4a017', patch: '#fff', ...CHEF },
+  { id: 'oreo', name: 'Oreo', fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', ...CHEF },
+  { id: 'mochi', name: 'Mochi', fur: '#fbf3ea', light: '#ffffff', dark: '#c9b6a2', pattern: 'patch', acc: '#6fcf9f', eye: '#3b82c4', patch: '#f4a259', ...CHEF },
+  { id: 'lilac', name: 'Lilac', fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks', acc: '#ffc94d', eye: '#8a5cc7', patch: '#fff', ...CHEF },
+  { id: 'cocoa', name: 'Cocoa', fur: '#b07a52', light: '#f3dcc6', dark: '#7a4d2e', pattern: 'spots', acc: '#a07be0', eye: '#5cb85c', patch: '#fff', ...CHEF },
+];
+/** Look for a saved character id (falls back to the first cat). */
+export const playerLook = id => PLAYER_LOOKS.find(l => l.id === id) || PLAYER_LOOKS[0];
 
 // ---------------------------------------------------------------- cat
 /**

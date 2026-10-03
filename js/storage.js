@@ -9,6 +9,7 @@ export const DEFAULT_SAVE = () => ({
   totalEarned: 0,
   upgrades: { carry: 1, speed: 1, npcTime: 1 },
   highScores: [],
+  character: 'mango', // chosen player cat (art.js PLAYER_LOOKS id)
   settings: { music: true, sfx: true, debug: false },
 });
 
@@ -33,6 +34,7 @@ export const Storage = {
       totalEarned: num(data.totalEarned, 0),
       upgrades: { ...d.upgrades, ...data.upgrades },
       highScores: Array.isArray(data.highScores) ? data.highScores.filter(Number.isFinite).slice(0, 5) : [],
+      character: typeof data.character === 'string' ? data.character : d.character,
       settings: { ...d.settings, ...data.settings },
     };
   },

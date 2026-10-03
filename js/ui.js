@@ -83,6 +83,26 @@ export class UIManager {
     set('.toggle-debug', debugOn, '🐞 Debug');
   }
 
+  /** Grid of selectable cats; `draw(canvas, look)` paints each portrait. */
+  renderCharacters(looks, selectedId, draw) {
+    const list = $('char-list');
+    list.innerHTML = looks.map(l => `
+      <button class="char" data-action="pickCat" data-id="${l.id}" aria-label="${l.name}">
+        <canvas width="140" height="140"></canvas>
+        <span class="char-name">${l.name}</span>
+      </button>`).join('');
+    looks.forEach((l, i) => draw(list.children[i].querySelector('canvas'), l));
+    this.selectCharacter(selectedId);
+  }
+
+  selectCharacter(id) {
+    for (const b of document.querySelectorAll('.char')) {
+      const on = b.dataset.id === id;
+      b.classList.toggle('selected', on);
+      b.setAttribute('aria-pressed', on);
+    }
+  }
+
   setMenuBest(best) { $('menu-best').textContent = best; }
 
   renderUpgrades(upg, coins) {

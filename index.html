@@ -54,10 +54,21 @@
       <button class="btn big" data-action="play">▶ Play</button>
       <p class="best">🏆 High Score: <b id="menu-best">0</b></p>
       <div class="row">
+        <button class="btn secondary" data-action="openCharacters">🐱 Choose cat</button>
         <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
         <button id="btn-install" class="btn mint hidden" data-action="install">📲 Install</button>
       </div>
       <p id="install-hint" class="hint">Tip: in Chrome on Android tap <b>⋮</b> → <b>Add to Home screen</b> (or <b>Install app</b>) to play full-screen, even offline.</p>
+    </div>
+  </section>
+
+  <!-- Character select -->
+  <section id="screen-characters" class="screen">
+    <div class="panel wide">
+      <button class="close-x" data-action="closeCharacters" aria-label="Back">✕</button>
+      <h2>Choose your cat</h2>
+      <div id="char-list" class="char-grid"></div>
+      <button class="btn" data-action="closeCharacters">Done</button>
     </div>
   </section>
 

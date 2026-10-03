@@ -11,7 +11,7 @@ import { GameManager } from './gameManager.js';
 import { FOOD } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
-  drawSadCloud, drawHeart, drawFx, PLAYER_LOOK, FONT,
+  drawSadCloud, drawHeart, drawFx, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
 
 // ---------------------------------------------------------------- managers
@@ -55,6 +55,14 @@ const ui = new UIManager({
   restart: startGame,
   menu: goToMenu,
   quit: goToMenu,
+  openCharacters: () => { ui.renderCharacters(PLAYER_LOOKS, playerLook(save.character).id, drawCatPortrait); ui.show('characters'); },
+  closeCharacters: () => ui.show('menu'),
+  pickCat: btn => {
+    save.character = btn.dataset.id;
+    persist();
+    ui.selectCharacter(save.character);
+    audio.play('pickup');
+  },
   openSettings: () => ui.show('settings'),
   closeSettings: () => ui.show('menu'),
   pause: () => { if (gm.state !== 'playing') return; gm.paused = true; ui.show('pause'); },
@@ -190,7 +198,7 @@ function render(time) {
     if (a.table) {
       drawTable(ctx, a.table);
     } else if (a === p) {
-      drawCat(ctx, p.x, p.y, PLAYER_LOOK, { state: p.state, t: time, facing: p.facing, squash: p.squash });
+      drawCat(ctx, p.x, p.y, playerLook(save.character), { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
       drawCat(ctx, a.x + shake, a.y, a.look, { state: a.anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood });
@@ -254,7 +262,14 @@ function drawMenuCat(time) {
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
   mctx.setTransform(2.2, 0, 0, 2.2, menuCanvas.width / 2 - 8, menuCanvas.height - 12);
-  drawCat(mctx, 0, 0, PLAYER_LOOK, { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
+  drawCat(mctx, 0, 0, playerLook(save.character), { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
+}
+
+/** Static portrait for the character-select grid. */
+function drawCatPortrait(canvas, look) {
+  const c = canvas.getContext('2d');
+  c.setTransform(1.7, 0, 0, 1.7, canvas.width / 2 - 8, canvas.height - 8);
+  drawCat(c, 0, 0, look, { t: 1, facing: 1 });
 }
 
 // ---------------------------------------------------------------- loop

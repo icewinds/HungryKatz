@@ -212,6 +212,26 @@ html, body {
 .best { font-size: 17px; margin: 16px 0; }
 .best b { color: var(--gold); }
 
+/* Character select */
+.char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+.char {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 6px 4px 10px;
+  border: 3px solid transparent;
+  border-radius: 20px;
+  background: var(--cream);
+  font: 600 15px var(--font);
+  color: var(--ink);
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+.char canvas { width: 100%; aspect-ratio: 1; }
+.char:active { transform: scale(0.95); }
+.char.selected { border-color: var(--pink); background: #fff0f4; }
+.char.selected .char-name::after { content: " ✓"; color: var(--pink-d); }
+
 /* Upgrades */
 .coins-big { font-size: 24px; margin: -6px 0 14px; }
 .coins-big b { color: var(--gold); }
