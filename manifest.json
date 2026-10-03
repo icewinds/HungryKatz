@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "HungryKatz",
+  "short_name": "HungryKatz",
+  "description": "Feed the hungry cats in your cosy cat café!",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffe4ec",
+  "theme_color": "#ff8fab",
+  "categories": ["games"],
+  "icons": [
+    { "src": "assets/ui/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/ui/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/ui/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

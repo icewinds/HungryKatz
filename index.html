@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>HungryKatz</title>
+  <meta name="description" content="Feed the hungry cats in your cosy cat café!">
+  <meta name="theme-color" content="#ff8fab">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="assets/ui/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/ui/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <canvas id="game" aria-label="HungryKatz café. Tap to move your cat."></canvas>
+
+  <!-- HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-row">
+      <div class="pill coins"><span class="ico">🪙</span><b id="hud-coins">0</b></div>
+      <div class="pill"><span class="lbl">Lv</span><b id="hud-level">1</b></div>
+      <div class="pill missed"><span class="lbl">Missed</span><b id="hud-missed">0/10</b></div>
+      <span class="spacer"></span>
+      <button class="icon-btn" data-action="pause" aria-label="Pause">⏸</button>
+    </div>
+    <div class="hud-row">
+      <div class="pill"><span class="lbl">Score</span><b id="hud-score">0</b></div>
+      <div class="pill"><span class="lbl">Best</span><b id="hud-best">0</b></div>
+      <span class="spacer"></span>
+      <button class="btn btn-upgrade" data-action="openUpgrades">⬆ Upgrade</button>
+    </div>
+  </div>
+
+  <!-- Main menu -->
+  <section id="screen-menu" class="screen">
+    <div class="panel">
+      <h1 class="logo"><span>Hungry</span><span class="katz">Katz</span></h1>
+      <canvas id="menu-cat" width="200" height="190"></canvas>
+      <p class="tagline">Run the cutest café in town!</p>
+      <button class="btn big" data-action="play">▶ Play</button>
+      <p class="best">🏆 High Score: <b id="menu-best">0</b></p>
+      <div class="row">
+        <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
+        <button id="btn-install" class="btn mint hidden" data-action="install">📲 Install</button>
+      </div>
+      <p id="install-hint" class="hint">Tip: in Chrome on Android tap <b>⋮</b> → <b>Add to Home screen</b> (or <b>Install app</b>) to play full-screen, even offline.</p>
+    </div>
+  </section>
+
+  <!-- Settings -->
+  <section id="screen-settings" class="screen">
+    <div class="panel">
+      <button class="close-x" data-action="closeSettings" aria-label="Back">✕</button>
+      <h2>Settings</h2>
+      <div class="stack">
+        <button class="btn secondary toggle toggle-music" data-action="toggleMusic">🎵 Music</button>
+        <button class="btn secondary toggle toggle-sfx" data-action="toggleSfx">🔊 Sound FX</button>
+        <button class="btn secondary toggle toggle-debug" data-action="toggleDebug">🐞 Debug</button>
+      </div>
+      <p class="hint">How to play: tap the floor to walk. Walk into the fridge for milk and the bowl for cat food, then walk into a waiting cat that wants that food before its timer runs out. Miss 10 cats and it's game over!</p>
+    </div>
+  </section>
+
+  <!-- Pause -->
+  <section id="screen-pause" class="screen">
+    <div class="panel">
+      <h2>Paused</h2>
+      <div class="stack">
+        <button class="btn big" data-action="resume">▶ Resume</button>
+        <button class="btn secondary toggle toggle-music" data-action="toggleMusic">🎵 Music</button>
+        <button class="btn secondary toggle toggle-sfx" data-action="toggleSfx">🔊 Sound FX</button>
+        <button class="btn secondary" data-action="quit">🏠 Quit to Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Upgrades -->
+  <section id="screen-upgrades" class="screen">
+    <div class="panel wide">
+      <button class="close-x" data-action="closeUpgrades" aria-label="Back to game">✕</button>
+      <h2>Upgrades</h2>
+      <p class="coins-big">🪙 <b id="upg-coins">0</b></p>
+      <div id="upg-list"></div>
+      <button class="btn" data-action="closeUpgrades">Back to Café</button>
+    </div>
+  </section>
+
+  <!-- Game over -->
+  <section id="screen-gameover" class="screen">
+    <div class="panel">
+      <h2 class="gameover">GAME OVER</h2>
+      <p id="go-best" class="newbest hidden">⭐ NEW HIGH SCORE! ⭐</p>
+      <div class="stats">
+        <div><span>Final Score</span><b id="go-score">0</b></div>
+        <div><span>Coins Earned</span><b id="go-coins">0</b></div>
+      </div>
+      <h3>Top 5</h3>
+      <ol id="go-scores" class="scores"></ol>
+      <div class="stack">
+        <button class="btn big" data-action="restart">↻ Play Again</button>
+        <button class="btn secondary" data-action="menu">🏠 Main Menu</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="banner"></div>
+
+  <!-- Debug (enable in Settings or with ?debug) -->
+  <details id="debug-panel" open hidden>
+    <summary>🐞 Debug</summary>
+    <pre id="debug-text"></pre>
+    <div class="debug-btns">
+      <button data-action="dbgCoins">+500 coins</button>
+      <button data-action="dbgMilkNpc">Milk NPC</button>
+      <button data-action="dbgFoodNpc">Food NPC</button>
+      <button data-action="dbgExpire">Expire NPCs</button>
+      <button data-action="dbgMaxCarry">Carry 5</button>
+      <button data-action="dbgMiss9">Missed=9</button>
+      <button data-action="dbgReset">Reset save</button>
+    </div>
+  </details>
+
+  <script type="module" src="js/game.js"></script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "hungrykatz",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "HungryKatz - cute cat café PWA game",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node tests/run.js",
+    "icons": "node tools/make-icons.js"
+  }
+}
