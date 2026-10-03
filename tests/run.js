@@ -7,6 +7,7 @@ import { HighScoreManager } from '../js/highScores.js';
 import { DEFAULT_SAVE, Storage } from '../js/storage.js';
 import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { CharacterManager } from '../js/characters.js';
+import { NpcSpawner } from '../js/npcSpawner.js';
 import { Inventory } from '../js/inventory.js';
 import { LAYOUT, MAX_MISSED } from '../js/config.js';
 
@@ -213,6 +214,27 @@ test('character: choice persists; unknown ids fall back to the default cat', () 
   assert.equal(playerLook('nope').id, PLAYER_LOOKS[0].id);
   Storage.reset();
   assert.equal(Storage.load().character, PLAYER_LOOKS[0].id);
+});
+
+test('social seating: friends take a pair; loners sit beside someone; early game stays solo', () => {
+  const stage = (maxNpcs) => [{ at: 0, maxNpcs, interval: [1, 1], patience: 10 }];
+  // rng 0 => duo/neighbour rolls always succeed
+  const duo = new NpcSpawner(stage(4), LAYOUT.spots, () => 0);
+  duo.timer = 0;
+  const pair = duo.update(0.1, 0, []);
+  assert.equal(pair.length, 2);
+  assert.equal(pair[0].spot.partner, pair[1].spot, 'friends sit side by side');
+  assert.equal(pair[1].trail, 1);
+
+  const solo = new NpcSpawner(stage(1), LAYOUT.spots, () => 0);
+  solo.timer = 0;
+  assert.equal(solo.update(0.1, 0, []).length, 1, 'no duos while only 1 cat allowed');
+
+  const someone = { spot: LAYOUT.spots[5], state: 'waiting' };
+  const near = new NpcSpawner(stage(2), LAYOUT.spots, (() => { let i = 0; return () => (i++ === 0 ? 0.99 : 0); })());
+  near.timer = 0;
+  const [lone] = near.update(0.1, 0, [someone]);
+  assert.equal(lone.spot, someone.spot.partner, 'lone cat sits next to the waiting cat');
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

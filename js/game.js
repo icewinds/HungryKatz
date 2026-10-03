@@ -12,7 +12,7 @@ import { CharacterManager } from './characters.js';
 import { FOOD } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
-  drawSadCloud, drawHeart, drawFx, PLAYER_LOOKS, playerLook, FONT,
+  drawSadCloud, drawHeart, drawFx, drawChatBubble, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
 
 // ---------------------------------------------------------------- managers
@@ -209,6 +209,16 @@ function render(time) {
   drawFx(ctx, gm.fx, 'under');
 
   // depth-sorted cats + tables (a table sorts by its front edge)
+  // Seated neighbours chat: whoever's turn it is talks, the other listens.
+  const seated = new Map(npcs.filter(n => n.state === 'waiting' || n.state === 'eating').map(n => [n.spot, n]));
+  const speaking = new Set();
+  for (const n of npcs) {
+    const mate = n.state === 'waiting' && seated.get(n.spot.partner);
+    if (!mate) continue;
+    const turn = Math.floor(time / 1.8 + Math.min(n.id, mate.id) * 0.37) % 2;
+    if ((n.id < mate.id) === (turn === 0) || mate.state !== 'waiting') speaking.add(n);
+  }
+
   const tables = LAYOUT.tables.map(t => ({ table: t, y: t.y + 8 }));
   const actors = [...npcs, p, ...tables].sort((a, b) => a.y - b.y);
   for (const a of actors) {
@@ -218,7 +228,8 @@ function render(time) {
       drawCat(ctx, p.x, p.y, playerLook(chars.current()), { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
-      drawCat(ctx, a.x + shake, a.y, a.look, { state: a.anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood });
+      const anim = speaking.has(a) ? 'talk' : a.anim;
+      drawCat(ctx, a.x + shake, a.y, a.look, { state: anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood });
       if (a.state === 'eating') drawFoodIcon(ctx, a.request, a.x + a.facing * 26, a.y - 18, 0.8);
     }
   }
@@ -226,6 +237,7 @@ function render(time) {
   // overlays: drawn after all cats, never flipped
   for (const n of npcs) {
     const top = n.y - 96 * n.look.size;
+    if (speaking.has(n)) drawChatBubble(ctx, n.x, n.y, n.facing, Math.floor(time / 1.8) + n.id, time);
     if (n.state === 'waiting') drawRequest(ctx, n, time);
     else if (n.mood === 'sad') drawSadCloud(ctx, n.x, top, time);
     else if (n.mood === 'happy' || n.state === 'eating') drawHeart(ctx, n.x, top + Math.sin(time * 6) * 3, 16);

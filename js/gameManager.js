@@ -81,8 +81,7 @@ export class GameManager {
       }
     }
 
-    const spawn = this.spawner.update(dt, this.runTime, this.npcs);
-    if (spawn) this.spawnNpc(spawn);
+    for (const spawn of this.spawner.update(dt, this.runTime, this.npcs)) this.spawnNpc(spawn);
 
     for (const npc of this.npcs) {
       const ev = npc.update(dt);
@@ -101,7 +100,7 @@ export class GameManager {
   }
 
   /** Spawn a customer. Every field is optional (debug tools pass only `request`). */
-  spawnNpc({ spot, request, patience } = {}) {
+  spawnNpc({ spot, request, patience, trail = 0 } = {}) {
     spot ??= this.spawner.randomFreeSpot(this.npcs);
     if (!spot) return null;
     request ??= this.rng() < 0.5 ? FOOD.MILK : FOOD.CATFOOD;
@@ -111,6 +110,8 @@ export class GameManager {
       look: randomLook(this.rng),
       patience: patience + this.upgrades.value('npcTime'),
     });
+    npc.x -= 50 * trail; // the second friend follows a step behind
+    npc.phase += trail * 0.3;
     this.npcs.push(npc);
     return npc;
   }

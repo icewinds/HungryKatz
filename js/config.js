@@ -22,15 +22,25 @@ export const LAYOUT = {
   blockers: TABLES.map(t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 })),
   milkZone: { x: 170, y: 752, r: 50 },
   foodZone: { x: 370, y: 752, r: 50 },
-  // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction
+  // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction.
+  // Spots come in side-by-side pairs (linked via `partner` below) that face each other.
   spots: [
-    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: x < 270 ? 1 : -1 })),
+    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1 })),
     ...TABLES.flatMap((t, i) => [
       { id: `T${i + 1}a`, row: 'table', x: t.x - SEAT_DX, y: t.y, face: 1 },
       { id: `T${i + 1}b`, row: 'table', x: t.x + SEAT_DX, y: t.y, face: -1 },
     ]),
   ],
 };
+for (let i = 0; i < LAYOUT.spots.length; i += 2) {
+  const [a, b] = [LAYOUT.spots[i], LAYOUT.spots[i + 1]];
+  a.partner = b;
+  b.partner = a;
+}
+
+// Social seating: chance two friends arrive together (when the stage allows 2+),
+// and chance a lone cat picks a seat next to someone already waiting.
+export const SOCIAL = { duoChance: 0.35, neighborChance: 0.6 };
 
 // Difficulty over a run. `at` = seconds of (unpaused) play time.
 // maxNpcs = customers allowed in the restaurant at once,

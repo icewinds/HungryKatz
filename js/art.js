@@ -74,7 +74,7 @@ export const playerLook = id => PLAYER_LOOKS.find(l => l.id === id) || PLAYER_LO
 export function drawCat(ctx, x, y, look, o = {}) {
   const { state = 'idle', t = 0, facing = 1, squash = 0, mood = null } = o;
   const s = look.size || 1;
-  const walk = state === 'walk', eat = state === 'eat';
+  const walk = state === 'walk', eat = state === 'eat', talk = state === 'talk';
   const happy = eat || mood === 'happy', sad = mood === 'sad';
   const bob = walk ? -Math.abs(Math.sin(t * 11)) * 4 : Math.sin(t * 2.4) * 0.8;
   const swing = walk ? Math.sin(t * 11) * 4 : 0;
@@ -110,7 +110,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   leg(ctx, 11 - swing, look.fur, ol, look, true);
 
   // head
-  const hx = 5, hy = -44 + (eat ? 3 + Math.abs(Math.sin(t * 14)) * 3 : 0);
+  const hx = 5, hy = -44 + (eat ? 3 + Math.abs(Math.sin(t * 14)) * 3 : talk ? Math.abs(Math.sin(t * 7)) * 2 : 0);
   const droop = sad ? 6 : 0;
   const ears = [
     [[hx - 15, hy - 6], [hx - 13 - droop, hy - 26 + droop * 1.5], [hx - 2, hy - 15]],
@@ -151,7 +151,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   // nose, mouth, cheeks, whiskers
   tri(ctx, [hx + 1.5, hy + 3], [hx + 6.5, hy + 3], [hx + 4, hy + 6]); fillStroke(ctx, '#ff7a9a', null);
   ctx.strokeStyle = '#7a2e45'; ctx.lineWidth = 1.4;
-  if (eat && Math.sin(t * 14) > 0) { ellipse(ctx, hx + 4, hy + 9.5, 2.6, 2.2); fillStroke(ctx, '#7a2e45', null); }
+  if ((eat || talk) && Math.sin(t * (talk ? 18 : 14)) > 0) { ellipse(ctx, hx + 4, hy + 9.5, 2.6, 2.2); fillStroke(ctx, '#7a2e45', null); }
   else if (sad) { ctx.beginPath(); ctx.arc(hx + 4, hy + 11, 2.6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
   else {
     ctx.beginPath(); ctx.arc(hx + 2.5, hy + 7, 1.6, 0, Math.PI); ctx.stroke();
@@ -354,6 +354,27 @@ export function drawRequest(ctx, npc, t) {
   ctx.stroke();
   drawFoodIcon(ctx, npc.request, 0, 1, 0.85);
   ctx.restore();
+}
+
+const CHAT_KINDS = ['dots', 'heart', 'note', 'milk', 'catfood'];
+
+/** Little speech bubble beside a chatting cat's head, on the side it faces. */
+export function drawChatBubble(ctx, x, y, dir, n, t) {
+  const kind = CHAT_KINDS[n % CHAT_KINDS.length];
+  const bx = x + dir * 38, by = y - 68 + Math.sin(t * 4) * 1.5;
+  tri(ctx, [bx - dir * 8, by + 4], [bx - dir * 20, by + 12], [bx - dir * 2, by + 9]);
+  ctx.fillStyle = '#fff'; ctx.fill();
+  rrect(ctx, bx - 16, by - 11, 32, 22, 11); fillStroke(ctx, '#fff', '#f1d4dc', 1.5);
+  if (kind === 'dots') {
+    for (let i = 0; i < 3; i++) {
+      circle(ctx, bx - 7 + i * 7, by - Math.max(0, Math.sin(t * 8 - i)) * 2.5, 2.3);
+      ctx.fillStyle = INK; ctx.fill();
+    }
+  } else if (kind === 'heart') drawHeart(ctx, bx, by + 1, 11);
+  else if (kind === 'note') {
+    ctx.font = `700 15px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#8a5cc7'; ctx.fillText('♪♫', bx, by + 1);
+  } else drawFoodIcon(ctx, kind, bx, by + 1, 0.5);
 }
 
 export function drawSadCloud(ctx, x, y, t) {
