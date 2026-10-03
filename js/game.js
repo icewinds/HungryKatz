@@ -8,6 +8,7 @@ import { HighScoreManager } from './highScores.js';
 import { AudioManager } from './audio.js';
 import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
+import { CharacterManager } from './characters.js';
 import { FOOD } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
@@ -19,6 +20,8 @@ const save = Storage.load();
 const persist = () => Storage.save(save);
 const upgrades = new UpgradeManager(save, persist);
 const highScores = new HighScoreManager(save, persist);
+const chars = new CharacterManager(save, highScores, persist);
+let unlockedAtStart = [];
 const audio = new AudioManager(save.settings);
 const debug = { on: new URLSearchParams(location.search).has('debug') || save.settings.debug };
 const gm = new GameManager({ save, persist, upgrades, highScores, onEvent });
@@ -43,6 +46,7 @@ function onEvent(type, d) {
       audio.play('gameOver');
       ui.showHud(false);
       ui.showGameOver(d);
+      ui.setUnlockNote(chars.unlocked().filter(id => !unlockedAtStart.includes(id)).map(id => playerLook(id).name));
       ui.show('gameover');
       break;
   }
@@ -55,13 +59,25 @@ const ui = new UIManager({
   restart: startGame,
   menu: goToMenu,
   quit: goToMenu,
-  openCharacters: () => { ui.renderCharacters(PLAYER_LOOKS, playerLook(save.character).id, drawCatPortrait); ui.show('characters'); },
+  openCharacters: () => { ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait); ui.show('characters'); },
   closeCharacters: () => ui.show('menu'),
   pickCat: btn => {
-    save.character = btn.dataset.id;
-    persist();
-    ui.selectCharacter(save.character);
-    audio.play('pickup');
+    const id = btn.dataset.id, rule = chars.rule(id);
+    if (chars.isUnlocked(id)) {
+      chars.select(id);
+      ui.selectCharacter(id);
+      audio.play('pickup');
+    } else if (chars.buy(id)) {
+      chars.select(id);
+      audio.play('buy');
+      ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait);
+      ui.charEffect(id, 'bought');
+      ui.banner(`${playerLook(id).name} joined your café! 🎉`);
+    } else {
+      audio.play('wrong');
+      ui.charEffect(id, 'poor');
+      ui.banner(rule.coins ? `Need 🪙 ${rule.coins - save.coins} more coins` : `Reach a best score of ${rule.score} 🏆`);
+    }
   },
   openSettings: () => ui.show('settings'),
   closeSettings: () => ui.show('menu'),
@@ -118,6 +134,7 @@ function syncToggles() {
 function startGame() {
   audio.unlock();
   audio.startMusic();
+  unlockedAtStart = chars.unlocked(); // to announce score unlocks at game over
   gm.startRun();
   ui.show(null);
   ui.showHud(true);
@@ -198,7 +215,7 @@ function render(time) {
     if (a.table) {
       drawTable(ctx, a.table);
     } else if (a === p) {
-      drawCat(ctx, p.x, p.y, playerLook(save.character), { state: p.state, t: time, facing: p.facing, squash: p.squash });
+      drawCat(ctx, p.x, p.y, playerLook(chars.current()), { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
       drawCat(ctx, a.x + shake, a.y, a.look, { state: a.anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood });
@@ -262,7 +279,7 @@ function drawMenuCat(time) {
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
   mctx.setTransform(2.2, 0, 0, 2.2, menuCanvas.width / 2 - 8, menuCanvas.height - 12);
-  drawCat(mctx, 0, 0, playerLook(save.character), { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
+  drawCat(mctx, 0, 0, playerLook(chars.current()), { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
 }
 
 /** Static portrait for the character-select grid. */

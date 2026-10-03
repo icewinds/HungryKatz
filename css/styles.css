@@ -230,6 +230,21 @@ html, body {
 .char canvas { width: 100%; aspect-ratio: 1; }
 .char:active { transform: scale(0.95); }
 .char.selected { border-color: var(--pink); background: #fff0f4; }
+.char.locked canvas { opacity: 0.55; }
+.char.locked.score canvas { filter: grayscale(1) brightness(0.9); opacity: 0.4; }
+.char-tag {
+  margin-top: 4px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--mint);
+  color: #fff;
+  font-size: 13px;
+}
+.char-tag.poor { background: #e4dadf; color: var(--ink-soft); }
+.char-tag.score { background: #fff1c2; color: #8a6200; }
+.char.bought { animation: bought 0.5s cubic-bezier(.34, 1.56, .64, 1); }
+.char.poor { animation: shake 0.35s; }
+.unlock { margin: 4px 0 8px; font-weight: 600; color: #2f9e6e; }
 .char.selected .char-name::after { content: " ✓"; color: var(--pink-d); }
 
 /* Upgrades */

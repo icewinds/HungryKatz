@@ -6,6 +6,7 @@ import { UpgradeManager } from '../js/upgrades.js';
 import { HighScoreManager } from '../js/highScores.js';
 import { DEFAULT_SAVE, Storage } from '../js/storage.js';
 import { PLAYER_LOOKS, playerLook } from '../js/art.js';
+import { CharacterManager } from '../js/characters.js';
 import { Inventory } from '../js/inventory.js';
 import { LAYOUT, MAX_MISSED } from '../js/config.js';
 
@@ -178,6 +179,31 @@ test('pathing: customers walk around tables to every seat', () => {
     assert.ok(!gm.npcs.some(inTable), 'an NPC walked through a table');
   }
   assert.ok(gm.npcs.every(n => n.state === 'waiting'), 'every NPC reached its seat');
+});
+
+test('characters: coin cats are bought once; score cats unlock from best score', () => {
+  const save = DEFAULT_SAVE();
+  const hs = new HighScoreManager(save);
+  const ch = new CharacterManager(save, hs);
+  assert.deepEqual(ch.unlocked(), ['mango']);
+  assert.equal(ch.select('smokey'), false, 'locked cat cannot be selected');
+  save.coins = 50;
+  assert.equal(ch.buy('smokey'), false, 'too expensive');
+  assert.equal(save.coins, 50);
+  save.coins = 100;
+  assert.equal(ch.buy('smokey'), true);
+  assert.equal(save.coins, 20);
+  assert.equal(ch.buy('smokey'), false, 'already owned');
+  assert.equal(ch.buy('lilac'), false, 'score cats are not for sale');
+  hs.submit(299);
+  assert.equal(ch.isUnlocked('lilac'), false);
+  hs.submit(300);
+  assert.equal(ch.isUnlocked('lilac'), true);
+  assert.equal(ch.isUnlocked('cocoa'), false);
+  assert.equal(ch.select('lilac'), true);
+  assert.equal(ch.current(), 'lilac');
+  save.character = 'cocoa'; // e.g. tampered save
+  assert.equal(ch.current(), 'mango', 'locked pick falls back to the starter');
 });
 
 test('character: choice persists; unknown ids fall back to the default cat', () => {

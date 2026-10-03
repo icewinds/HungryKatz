@@ -83,16 +83,42 @@ export class UIManager {
     set('.toggle-debug', debugOn, '🐞 Debug');
   }
 
-  /** Grid of selectable cats; `draw(canvas, look)` paints each portrait. */
-  renderCharacters(looks, selectedId, draw) {
+  /**
+   * Grid of cats. `chars` = CharacterManager; locked cats show a coin price
+   * or the best score needed. `draw(canvas, look)` paints each portrait.
+   */
+  renderCharacters(looks, chars, coins, draw) {
+    $('char-coins').textContent = coins;
     const list = $('char-list');
-    list.innerHTML = looks.map(l => `
-      <button class="char" data-action="pickCat" data-id="${l.id}" aria-label="${l.name}">
-        <canvas width="140" height="140"></canvas>
-        <span class="char-name">${l.name}</span>
-      </button>`).join('');
+    list.innerHTML = looks.map(l => {
+      const r = chars.rule(l.id), open = chars.isUnlocked(l.id);
+      const tag = open ? '' : r.coins
+        ? `<span class="char-tag ${coins < r.coins ? 'poor' : ''}">🪙 ${r.coins}</span>`
+        : `<span class="char-tag score">🏆 ${r.score}</span>`;
+      const label = open ? l.name : r.coins ? `${l.name}, costs ${r.coins} coins` : `${l.name}, unlocks at best score ${r.score}`;
+      return `<button class="char ${open ? '' : r.coins ? 'locked' : 'locked score'}" data-action="pickCat" data-id="${l.id}" aria-label="${label}">
+          <canvas width="140" height="140"></canvas>
+          <span class="char-name">${l.name}</span>${tag}
+        </button>`;
+    }).join('');
     looks.forEach((l, i) => draw(list.children[i].querySelector('canvas'), l));
-    this.selectCharacter(selectedId);
+    this.selectCharacter(chars.current());
+  }
+
+  /** Feedback on one character card: 'bought' or 'poor' (same CSS as upgrade cards). */
+  charEffect(id, kind) {
+    const el = document.querySelector(`.char[data-id="${id}"]`);
+    if (!el) return;
+    el.classList.remove(kind);
+    void el.offsetWidth;
+    el.classList.add(kind);
+  }
+
+  /** Game-over line announcing cats unlocked by this run's score. */
+  setUnlockNote(names) {
+    const el = $('go-unlock');
+    el.textContent = names.length ? `🎉 New cat unlocked: ${names.join(' & ')}!` : '';
+    el.classList.toggle('hidden', !names.length);
   }
 
   selectCharacter(id) {

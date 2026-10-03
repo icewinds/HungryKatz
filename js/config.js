@@ -70,6 +70,17 @@ export const UPGRADES = {
   },
 };
 
+// How each playable cat (art.js PLAYER_LOOKS id) unlocks:
+// null = free, { coins } = buy with coins, { score } = reach that best score.
+export const CHARACTER_UNLOCKS = {
+  mango: null,
+  smokey: { coins: 80 },
+  oreo: { coins: 150 },
+  mochi: { coins: 250 },
+  lilac: { score: 300 },
+  cocoa: { score: 600 },
+};
+
 // Restaurant level comes from lifetime coins earned: L2 at 150, L3 at 450, L4 at 900...
 const LEVEL_STEP = 150;
 export function levelForEarned(earned) {

@@ -67,7 +67,9 @@
     <div class="panel wide">
       <button class="close-x" data-action="closeCharacters" aria-label="Back">✕</button>
       <h2>Choose your cat</h2>
+      <p class="coins-big">🪙 <b id="char-coins">0</b></p>
       <div id="char-list" class="char-grid"></div>
+      <p class="hint" style="margin-top:0">Buy cats with coins, or reach a high score to unlock the rarest ones.</p>
       <button class="btn" data-action="closeCharacters">Done</button>
     </div>
   </section>
@@ -115,6 +117,7 @@
     <div class="panel">
       <h2 class="gameover">GAME OVER</h2>
       <p id="go-best" class="newbest hidden">⭐ NEW HIGH SCORE! ⭐</p>
+      <p id="go-unlock" class="unlock hidden"></p>
       <div class="stats">
         <div><span>Final Score</span><b id="go-score">0</b></div>
         <div><span>Coins Earned</span><b id="go-coins">0</b></div>
