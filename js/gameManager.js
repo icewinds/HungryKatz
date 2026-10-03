@@ -29,6 +29,46 @@ export function constrain(p) {
   return p;
 }
 
+/** Where segment a->b enters rect r (0..1), or Infinity if it misses. (slab test) */
+function segmentHitsRect(a, b, r) {
+  const dx = b.x - a.x, dy = b.y - a.y;
+  let t0 = 0, t1 = 1;
+  for (const [p, q] of [[-dx, a.x - r.x], [dx, r.x + r.w - a.x], [-dy, a.y - r.y], [dy, r.y + r.h - a.y]]) {
+    if (p === 0) { if (q <= 0) return Infinity; continue; }
+    const t = q / p;
+    if (p < 0) { if (t > t1) return Infinity; t0 = Math.max(t0, t); }
+    else { if (t < t0) return Infinity; t1 = Math.min(t1, t); }
+  }
+  return t0 < t1 ? t0 : Infinity;
+}
+
+/**
+ * Waypoints from `from` to `to` that walk around furniture. Blockers sit against
+ * the right wall, so the way around is always via their left corners.
+ */
+export function route(from, to) {
+  const M = 8; // clearance from the furniture edge
+  const path = [];
+  let at = from;
+  for (let guard = 0; guard < 6; guard++) {
+    // go around whichever piece of furniture the straight line hits first
+    let b = null, first = Infinity;
+    for (const r of LAYOUT.blockers) {
+      const t = segmentHitsRect(at, to, r);
+      if (t < first) { first = t; b = r; }
+    }
+    if (!b) break;
+    const top = { x: b.x - M, y: b.y - M }, bottom = { x: b.x - M, y: b.y + b.h + M };
+    // Under/over the block: first get to the near corner; already left of it: head for the far one.
+    const ref = at.x >= b.x ? at : to;
+    const corner = ref.y > b.y + b.h / 2 ? bottom : top;
+    path.push(corner);
+    at = corner;
+  }
+  path.push(to);
+  return path;
+}
+
 export class GameManager {
   constructor({ save, persist = () => {}, upgrades, highScores, rng = Math.random, onEvent = () => {} }) {
     Object.assign(this, { save, persist, upgrades, highScores, rng, onEvent });
@@ -76,7 +116,7 @@ export class GameManager {
   tap(x, y, marker = true) {
     if (this.state !== 'playing' || this.paused) return;
     const p = constrain({ x, y });
-    this.player.moveTo(p.x, p.y);
+    this.player.moveTo(route(this.player, p));
     if (marker) this.fx.push({ kind: 'tap', x: p.x, y: p.y, t: 0, life: 0.45 });
   }
 

@@ -149,6 +149,23 @@ test('high scores: top 5, sorted high to low', () => {
   assert.equal(hs.best(), 1200);
 });
 
+test('pathing: walks around the bowl and fridge instead of getting stuck', () => {
+  const { gm } = setup();
+  const trips = [
+    [[480, 780], [470, 600]], // below bowl -> between bowl and fridge
+    [[480, 780], [490, 290]], // below bowl -> above fridge (around both)
+    [[490, 290], [480, 780]], // and back
+    [[480, 560], [470, 300]], // below fridge -> above fridge
+  ];
+  for (const [[sx, sy], [tx, ty]] of trips) {
+    place(gm, sx, sy);
+    gm.tap(tx, ty);
+    tick(gm, 8);
+    assert.ok(Math.hypot(gm.player.x - tx, gm.player.y - ty) < 1,
+      `(${sx},${sy})->(${tx},${ty}) ended at (${gm.player.x | 0},${gm.player.y | 0})`);
+  }
+});
+
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {
   const { gm } = setup();
   gm.spawner.timer = 0;
