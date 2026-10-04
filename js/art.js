@@ -57,7 +57,7 @@ export const PLAYER_LOOKS = [
   { id: 'mango', name: 'Mango', fur: '#f4a259', light: '#fff1dc', dark: '#c0702c', pattern: 'stripes', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', ...CHEF },
   { id: 'smokey', name: 'Smokey', fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes', acc: '#7fb3ff', eye: '#d4a017', patch: '#fff', ...CHEF },
   { id: 'oreo', name: 'Oreo', fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', ...CHEF },
-  { id: 'mochi', name: 'Snowy', fur: '#fdfbf7', light: '#ffffff', dark: '#b9a594', pattern: 'patch', acc: '#6fcf9f', eye: '#9bbf3a',
+  { id: 'mochi', name: 'Snowy', fur: '#fdfbf7', light: '#ffffff', dark: '#cdbfb3', pattern: 'patch', acc: '#6fcf9f', eye: '#9bbf3a', patchR: 6.5, // white body, small tan patch
     patch: '#d6a273', headPatch: '#4a3328', ear: '#d9a273', tail: '#4a3328', ...CHEF }, // id kept so owned/selected saves still work
   { id: 'lilac', name: 'Lilac', fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks', acc: '#ffc94d', eye: '#8a5cc7', patch: '#fff', ...CHEF },
   { id: 'cocoa', name: 'Cocoa', fur: '#b07a52', light: '#f3dcc6', dark: '#7a4d2e', pattern: 'spots', acc: '#a07be0', eye: '#5cb85c', patch: '#fff', ...CHEF },
@@ -225,7 +225,7 @@ function backPattern(ctx, look) {
     case 'spots':
       for (const [x, y, r] of [[-7, -24, 4], [6, -16, 3.5], [-3, -10, 3]]) { circle(ctx, x, y, r); ctx.fill(); }
       break;
-    case 'patch': circle(ctx, 8, -22, 11); ctx.fillStyle = look.patch; ctx.fill(); break;
+    case 'patch': circle(ctx, 8, -24, look.patchR ?? 11); ctx.fillStyle = look.patch; ctx.fill(); break;
   }
 }
 
@@ -288,7 +288,7 @@ function bodyPattern(ctx, look) {
     case 'spots':
       for (const [x, y, r] of [[-9, -24, 4], [2, -31, 3], [-4, -13, 3.5]]) { circle(ctx, x, y, r); ctx.fill(); }
       break;
-    case 'patch': circle(ctx, -9, -22, 11); ctx.fillStyle = look.patch; ctx.fill(); break;
+    case 'patch': circle(ctx, -9, -26, look.patchR ?? 11); ctx.fillStyle = look.patch; ctx.fill(); break;
     case 'tuxedo': ellipse(ctx, 8, -18, 12, 14); ctx.fillStyle = '#fff'; ctx.fill(); break;
   }
   ellipse(ctx, 7, -16, 9, 9); ctx.fillStyle = look.pattern === 'tuxedo' ? '#fff' : look.light; ctx.fill();
