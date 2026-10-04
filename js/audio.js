@@ -5,7 +5,7 @@
 // ASSETS in service-worker.js so they work offline.
 export const SOUND_FILES = {
   music: null, click: null, pickup: null, feed: null, coin: null,
-  arrive: null, sad: null, wrong: null, levelUp: null, gameOver: null, buy: null,
+  arrive: null, sad: null, wrong: null, levelUp: null, gameOver: null, buy: null, tip: null,
 };
 
 // note = [freqHz, durationSec, waveType, delaySec = 0, slideToHz = freq]
@@ -18,7 +18,13 @@ const SYNTH = {
   sad:      [[440, 0.18, 'triangle', 0, 320], [330, 0.3, 'triangle', 0.16, 200]],
   wrong:    [[200, 0.12, 'square', 0, 160]],
   buy:      [[660, 0.08, 'square'], [880, 0.08, 'square', 0.08], [1320, 0.16, 'square', 0.16]],
-  levelUp:  [[523, 0.1, 'square'], [659, 0.1, 'square', 0.1], [784, 0.1, 'square', 0.2], [1047, 0.3, 'square', 0.3]],
+  // cash-register "ka-ching": click, bell, sparkle
+  tip:      [[1800, 0.03, 'square', 0, 1200], [1568, 0.08, 'triangle', 0.04], [2093, 0.3, 'sine', 0.09],
+             [2637, 0.35, 'sine', 0.13], [3136, 0.4, 'sine', 0.18]],
+  // fanfare: rising arpeggio, held major chord, sparkle on top
+  levelUp:  [[523, 0.1, 'square'], [659, 0.1, 'square', 0.1], [784, 0.1, 'square', 0.2],
+             [1047, 0.6, 'triangle', 0.32], [1319, 0.6, 'triangle', 0.32], [1568, 0.6, 'triangle', 0.32],
+             [523, 0.6, 'sine', 0.32], [2093, 0.2, 'sine', 0.5], [2637, 0.3, 'sine', 0.6]],
   gameOver: [[523, 0.18, 'triangle'], [440, 0.18, 'triangle', 0.2], [349, 0.18, 'triangle', 0.4], [262, 0.45, 'triangle', 0.6]],
 };
 

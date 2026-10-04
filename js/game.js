@@ -43,7 +43,7 @@ function onEvent(type, d) {
       audio.play('feed');
       setTimeout(() => audio.play('coin'), 120);
       ui.bump('hud-coins'); ui.bump('hud-score');
-      if (d.tip) setTimeout(() => audio.play('coin'), 320); // extra jingle for a tip
+      if (d.tip) setTimeout(() => audio.play('tip'), 300); // ka-ching as the tip pops up
       break;
     case 'missed': audio.play('sad'); ui.bump('hud-paws'); ui.flashMiss(); break;
     case 'levelUp':
@@ -94,7 +94,7 @@ const ui = new UIManager({
     const s = daily.status(), coins = daily.claim();
     if (coins) {
       audio.unlock();
-      audio.play('levelUp');
+      audio.play('tip'); // coins ka-ching; the fanfare is saved for level ups
       ui.banner(`🎁 Day ${s.day} bonus: +${coins} coins!`);
     }
     ui.show('menu');
