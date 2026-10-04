@@ -262,7 +262,7 @@ html, body {
 .logo { margin: 0; font-family: var(--display); font-size: 54px; line-height: 1; font-weight: 400; letter-spacing: 0.5px; }
 .logo span { color: var(--pink); }
 .logo .katz { color: #e07a10; }
-#menu-cat { display: block; margin: 6px auto 0; width: 200px; height: 190px; }
+#menu-cat { display: block; margin: 0 auto; width: 210px; height: 240px; }
 .tagline { margin: 2px 0 16px; color: var(--ink-soft); }
 .best { font-size: 17px; margin: 16px 0; }
 .best b { color: var(--gold); }

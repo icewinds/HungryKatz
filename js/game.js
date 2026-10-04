@@ -649,7 +649,7 @@ function drawMenuCat(time) {
   if (ui.current !== 'menu') return;
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
-  mctx.setTransform(2.2, 0, 0, 2.2, menuCanvas.width / 2 - 8, menuCanvas.height - 12);
+  mctx.setTransform(2.2, 0, 0, 2.2, 126, menuCanvas.height - 17); // room for the full tail swing (118px left) and tall hats (212px up)
   drawCat(mctx, 0, 0, playerOutfit(), { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
 }
 
