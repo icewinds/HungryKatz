@@ -499,7 +499,8 @@ export function drawDoor(ctx, sc, open) {
     rrect(ctx, -6, top, 18, len, 6); fillStroke(ctx, p.door, 'rgba(90,61,74,0.25)', 1.5);
     rrect(ctx, -2, top + 12, 9, len * 0.42, 3); fillStroke(ctx, 'rgba(255,255,255,0.3)', null);       // panels
     rrect(ctx, -2, top + len * 0.52, 9, len * 0.42, 3); fillStroke(ctx, 'rgba(255,255,255,0.3)', null);
-    circle(ctx, 8, DOOR.hy + DOOR.W * 0.55, 3); fillStroke(ctx, '#ffd34d', '#c99a00', 1);          // knob
+    // knob on the room side, at handle height near the opening edge, sticking out into the café
+    drawKnob(ctx, 12, DOOR.hy + DOOR.W - KNOB_IN - DOOR.H * KNOB_UP, 1, 0);
     ctx.restore();
   }
   if (open <= 0.01) return;
@@ -509,11 +510,27 @@ export function drawDoor(ctx, sc, open) {
   ctx.save();
   ctx.transform(Math.sin(a), Math.cos(a), 0, -1, hx, hy);
   rrect(ctx, 0, 0, W, H, 5); fillStroke(ctx, p.door, 'rgba(90,61,74,0.35)', 1.5);
-  rrect(ctx, 10, 12, 32, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1); // panels
-  rrect(ctx, 54, 12, 32, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1);
+  rrect(ctx, 8, 12, 30, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1); // panels
+  rrect(ctx, 46, 12, 30, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1);
   rrect(ctx, W - 4, 0, 4, H, 2); fillStroke(ctx, 'rgba(90,61,74,0.18)', null);                          // edge
   ctx.restore();
-  // knob drawn upright (not squashed by the leaf's skew)
-  const kx = hx + Math.sin(a) * (W - 9), ky = hy + Math.cos(a) * (W - 9) - H * 0.45;
-  circle(ctx, kx, ky, 3.4); fillStroke(ctx, '#ffd34d', '#c99a00', 1.2);
+  // knob on the face we see, near the opening edge; it sticks out toward us (drawn round, not skewed)
+  ctx.save(); ctx.globalAlpha = Math.min(1, open * 4);
+  const u = W - KNOB_IN;
+  drawKnob(ctx, hx + Math.sin(a) * u, hy + Math.cos(a) * u - H * KNOB_UP, -Math.cos(a), Math.sin(a));
+  ctx.restore();
+}
+
+const KNOB_IN = 10, KNOB_UP = 0.45; // knob sits 10px in from the opening edge, just under half height
+/** A round brass doorknob: back plate on the door at (x, y), stem and shaded ball out along (nx, ny). */
+function drawKnob(ctx, x, y, nx, ny) {
+  const bx = x + nx * 5, by = y + ny * 5;
+  ellipse(ctx, x, y, 3.4, 4.4); fillStroke(ctx, '#e0a92a', '#a87a12', 1);                    // back plate
+  ctx.strokeStyle = '#a87a12'; ctx.lineWidth = 2.6; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(bx, by); ctx.stroke();                      // stem
+  ellipse(ctx, bx + 1.6, by + 2.4, 4, 2); ctx.fillStyle = 'rgba(60,40,30,0.22)'; ctx.fill(); // soft shadow
+  const g = ctx.createRadialGradient(bx - 1.4, by - 1.6, 0.4, bx, by, 4.4);
+  g.addColorStop(0, '#fff6c8'); g.addColorStop(0.35, '#ffd34d'); g.addColorStop(1, '#b8860b');
+  circle(ctx, bx, by, 4.2); ctx.fillStyle = g; ctx.fill();                                  // ball
+  ctx.strokeStyle = 'rgba(120,80,10,0.6)'; ctx.lineWidth = 0.8; ctx.stroke();
 }
