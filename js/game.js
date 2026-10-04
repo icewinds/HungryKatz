@@ -645,12 +645,32 @@ function updateDebugPanel(now) {
 // ---------------------------------------------------------------- menu mascot
 const menuCanvas = document.getElementById('menu-cat');
 const mctx = menuCanvas.getContext('2d');
+// After a minute with no taps, keys or mouse movement the menu cat stretches and yawns (then every minute).
+const IDLE_MS = 60000, YAWN_S = 4.2;
+const menuIdle = { since: performance.now() };
+for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel']) addEventListener(ev, () => { menuIdle.since = performance.now(); }, { passive: true });
+const ease = k => 1 - (1 - Math.min(1, Math.max(0, k))) ** 3;
+/** Stretch-and-yawn pose at T seconds into the routine: squash < 0 stretches tall, yawn opens the mouth. */
+function yawnPose(T) {
+  const stretch = T < 1 ? ease(T) : T < 2.6 ? 1 : 1 - ease((T - 2.6) / 0.4);
+  const bounce = T > 3 && T < 3.6 ? Math.sin(((T - 3) / 0.6) * Math.PI) * 0.35 * (1 - (T - 3) / 0.6) : 0;
+  const yawn = T < 0.6 ? 0 : T < 1.6 ? ease(T - 0.6) : T < 2.4 ? 1 : 1 - ease((T - 2.4) / 0.6);
+  return { squash: -0.85 * stretch + bounce, yawn };
+}
+
 function drawMenuCat(time) {
   if (ui.current !== 'menu') return;
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
-  mctx.setTransform(2.2, 0, 0, 2.2, 126, menuCanvas.height - 17); // room for the full tail swing (118px left) and tall hats (212px up)
-  drawCat(mctx, 0, 0, playerOutfit(), { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
+  mctx.setTransform(2.2, 0, 0, 2.2, 126, menuCanvas.height - 17); // room for the tail swing (122px left) and a tall hat mid-stretch (246px up)
+  const idle = performance.now() - menuIdle.since;
+  const T = idle >= IDLE_MS ? ((idle - IDLE_MS) % IDLE_MS) / 1000 : Infinity;
+  const pose = T < YAWN_S ? yawnPose(T) : null;
+  drawCat(mctx, 0, 0, playerOutfit(), {
+    t: time, facing: 1,
+    mood: !pose && Math.sin(time) > 0.6 ? 'happy' : null,
+    squash: pose?.squash ?? 0, yawn: pose?.yawn ?? 0,
+  });
 }
 
 /** Static portrait for the character-select grid. */
@@ -734,4 +754,4 @@ ui.show('menu');
 maybeShowDaily();
 requestAnimationFrame(frame);
 
-if (debugAllowed) window.hungryKatz = { gm, save, upgrades, highScores }; // console access for testing (?debug only)
+if (debugAllowed) window.hungryKatz = { gm, save, upgrades, highScores, menuIdle }; // console access for testing (?debug only)

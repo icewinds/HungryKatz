@@ -86,7 +86,7 @@ export function dressUp(look, outfit, OUTFITS) {
  * so icons and text never mirror.
  */
 export function drawCat(ctx, x, y, look, o = {}) {
-  const { state = 'idle', t = 0, facing = 1, squash = 0, mood = null } = o;
+  const { state = 'idle', t = 0, facing = 1, squash = 0, mood = null, yawn = 0 } = o; // yawn 0..1: eyes shut, mouth wide
   const s = look.size || 1;
   const walk = state === 'walk', eat = state === 'eat', talk = state === 'talk';
   const happy = eat || mood === 'happy', sad = mood === 'sad';
@@ -136,7 +136,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   leg(ctx, 11 - swing, look.fur, ol, look, true);
 
   // head
-  const hx = 5, hy = -44 + (eat ? 3 + Math.abs(Math.sin(t * 14)) * 3 : talk ? Math.abs(Math.sin(t * 7)) * 2 : 0);
+  const hx = 5, hy = -44 - yawn * 3 + (eat ? 3 + Math.abs(Math.sin(t * 14)) * 3 : talk ? Math.abs(Math.sin(t * 7)) * 2 : 0);
   const droop = sad ? 6 : 0;
   const ears = [
     [[hx - 15, hy - 6], [hx - 13 - droop, hy - 26 + droop * 1.5], [hx - 2, hy - 15]],
@@ -158,7 +158,10 @@ export function drawCat(ctx, x, y, look, o = {}) {
   ctx.strokeStyle = '#2b2230'; ctx.lineWidth = 2.2;
   for (const ex of [hx - 3, hx + 10]) {
     const ey = hy - 1;
-    if (happy) { ctx.beginPath(); ctx.arc(ex, ey + 2, 3.4, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
+    if (yawn > 0.3) { // squeezed shut: > <
+      const d = ex < hx ? 1 : -1;
+      ctx.beginPath(); ctx.moveTo(ex - d * 3, ey - 2.5); ctx.lineTo(ex + d * 2, ey); ctx.lineTo(ex - d * 3, ey + 2.5); ctx.stroke();
+    } else if (happy) { ctx.beginPath(); ctx.arc(ex, ey + 2, 3.4, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
     else if (blink) { ctx.beginPath(); ctx.moveTo(ex - 3, ey); ctx.lineTo(ex + 3, ey); ctx.stroke(); }
     else {
       ellipse(ctx, ex, ey, 3.6, 4.6); fillStroke(ctx, look.eye, null);
@@ -177,7 +180,12 @@ export function drawCat(ctx, x, y, look, o = {}) {
   // nose, mouth, cheeks, whiskers
   tri(ctx, [hx + 1.5, hy + 3], [hx + 6.5, hy + 3], [hx + 4, hy + 6]); fillStroke(ctx, '#ff7a9a', null);
   ctx.strokeStyle = '#7a2e45'; ctx.lineWidth = 1.4;
-  if ((eat || talk) && Math.sin(t * (talk ? 18 : 14)) > 0) { ellipse(ctx, hx + 4, hy + 9.5, 2.6, 2.2); fillStroke(ctx, '#7a2e45', null); }
+  if (yawn > 0.05) { // big yawn: open mouth, tongue, two tiny fangs
+    const my = hy + 10 + yawn, rx = 2.5 + yawn * 3.5, ry = 2 + yawn * 4.5;
+    ellipse(ctx, hx + 4, my, rx, ry); fillStroke(ctx, '#7a2e45', null);
+    ellipse(ctx, hx + 4, my + ry * 0.55, rx * 0.65, ry * 0.4); fillStroke(ctx, '#ff8fab', null);
+    if (yawn > 0.5) { ctx.fillStyle = '#fff'; for (const fx of [hx + 4 - rx * 0.55, hx + 4 + rx * 0.55]) tri(ctx, [fx - 1.2, my - ry * 0.8], [fx + 1.2, my - ry * 0.8], [fx, my - ry * 0.8 + 2.4]), ctx.fill(); }
+  } else if ((eat || talk) && Math.sin(t * (talk ? 18 : 14)) > 0) { ellipse(ctx, hx + 4, hy + 9.5, 2.6, 2.2); fillStroke(ctx, '#7a2e45', null); }
   else if (sad) { ctx.beginPath(); ctx.arc(hx + 4, hy + 11, 2.6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
   else {
     ctx.beginPath(); ctx.arc(hx + 2.5, hy + 7, 1.6, 0, Math.PI); ctx.stroke();
