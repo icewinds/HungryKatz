@@ -85,7 +85,7 @@ js/
   art.js              procedural placeholder art (cats, food, café)
   config.js           ALL tuning: layout, spawn stages, upgrades, rewards
 assets/ui             app icons (regenerate: npm run icons)
-assets/fonts          Fredoka (text) + Lilita One (logo, titles), self-hosted (SIL Open Font License: OFL.txt, OFL-LilitaOne.txt)
+assets/fonts          Lilita One (all text) + Fredoka (fallback for rare characters), self-hosted (SIL Open Font License: OFL-LilitaOne.txt, OFL.txt)
 assets/cats|food|backgrounds|audio   drop real art/audio here
 tests/run.js
 ```

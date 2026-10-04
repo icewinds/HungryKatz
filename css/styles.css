@@ -17,8 +17,8 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* Lilita One, self-hosted (SIL Open Font License: assets/fonts/OFL-LilitaOne.txt). Display face for
-   the logo, screen titles and big buttons; Fredoka stays for everything people read. */
+/* Lilita One, self-hosted (SIL Open Font License: assets/fonts/OFL-LilitaOne.txt): the face for all text.
+   It has one (heavy) weight, so bold styles use it as-is instead of a smeared fake bold (font-synthesis). */
 @font-face {
   font-family: 'Lilita One';
   font-style: normal;
@@ -40,14 +40,12 @@
   --gold: #8f6300;        /* 5:1 coin/score numbers */
   --red: #ff6b8a;
   --shadow: 0 6px 18px rgba(90, 61, 74, 0.12);
-  --font: "Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
-  --display: "Lilita One", var(--font);
+  /* Lilita One everywhere; Fredoka only fills in characters Lilita lacks (e.g. typed names with rare accents) */
+  --font: "Lilita One", "Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
+  --display: var(--font);
 }
 
 * { box-sizing: border-box; }
-
-/* In-game text (HUD, carry tray, banners) uses the display face, like the canvas text */
-#hud, #hud *, #tray, #tray *, #banner, #banner * { font-family: var(--display); font-weight: 400; }
 
 /* Drawn icons (js/icons.js) replace emoji inline; sized by the surrounding text */
 .ico { display: inline-block; width: 1.3em; height: 1.3em; vertical-align: -0.3em; }
@@ -58,6 +56,10 @@
 ::selection { background: #ffd3df; color: var(--ink); }
 :focus-visible { outline: 3px solid var(--pink-d); outline-offset: 2px; }
 .panel, .level-grid, .sticker-grid { scrollbar-width: thin; scrollbar-color: #f2b8c8 transparent; }
+
+html { font-synthesis: none; }
+/* With one weight, emphasis in running text is carried by colour instead of bold */
+.help-steps b, .help-tips b, .hint b, .go-relaxed b, .quit-confirm b { color: var(--pink-d); }
 
 html, body {
   margin: 0;

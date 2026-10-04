@@ -5,7 +5,7 @@
 
 import { WORLD } from './config.js';
 
-// In-game text face (Lilita One, single weight: draw at 400 so it is never fake-bolded).
+// Text face (Lilita One, single weight: draw at 400 so it is never fake-bolded).
 export const FONT = '"Lilita One", "Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif';
 const TAU = Math.PI * 2;
 export const INK = '#5a3d4a';
