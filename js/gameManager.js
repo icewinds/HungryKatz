@@ -2,11 +2,13 @@
 // UI/audio react through onEvent(type, data):
 //   pickup, arrive, feed, wrongFood, missed, levelUp, gameOver
 
-import { LAYOUT, MAX_MISSED, FEED_RADIUS, levelForEarned, rewardForLevel } from './config.js';
+import {
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, levelForEarned, rewardForLevel, foodsForLevel, foodUnlockLevel,
+} from './config.js';
 import { Player } from './player.js';
 import { NPC } from './npc.js';
 import { NpcSpawner } from './npcSpawner.js';
-import { Inventory, FOOD, FOOD_LABEL } from './inventory.js';
+import { Inventory, FOOD_LABEL } from './inventory.js';
 import { FoodStation } from './foodStation.js';
 import { randomLook } from './art.js';
 import { constrain, route } from './pathing.js';
@@ -16,10 +18,7 @@ export class GameManager {
     Object.assign(this, { save, persist, upgrades, highScores, rng, onEvent });
     this.player = new Player(LAYOUT.playerStart.x, LAYOUT.playerStart.y);
     this.inventory = new Inventory(1);
-    this.stations = [
-      new FoodStation(FOOD.MILK, LAYOUT.milkZone),
-      new FoodStation(FOOD.CATFOOD, LAYOUT.foodZone),
-    ];
+    this.stations = FOODS.map(f => new FoodStation(f.id, LAYOUT.pads[f.id]));
     this.spawner = new NpcSpawner(undefined, LAYOUT.spots, rng);
     this.npcs = [];
     this.fx = [];
@@ -54,6 +53,9 @@ export class GameManager {
   }
 
   get reward() { return rewardForLevel(this.save.level); }
+  /** Foods on the menu right now (unlocked by restaurant level). */
+  get foods() { return foodsForLevel(this.save.level); }
+  rewardFor(food) { return this.reward + (FOODS.find(f => f.id === food)?.bonus ?? 0); }
 
   tap(x, y, marker = true) {
     if (this.state !== 'playing' || this.paused) return;
@@ -68,20 +70,28 @@ export class GameManager {
     const p = this.player;
     p.update(dt, constrain);
 
-    // food stations: each only fills its own food type
+    // food stations: each only fills its own food type, and only once it's on the menu
+    const foods = this.foods;
     for (const s of this.stations) {
       s.update(dt);
       if (!s.contains(p.x, p.y)) continue;
+      if (!foods.includes(s.type)) {
+        if (s.hintCd <= 0) {
+          s.hintCd = 2;
+          this.text(s.zone.x, s.zone.y - 70, `${FOOD_LABEL[s.type]} unlocks at Lv ${foodUnlockLevel(s.type)}`, '#9a8590', 16);
+        }
+        continue;
+      }
       const n = s.tryPickup(this.inventory);
       if (n > 0) {
         p.squash = 1;
-        this.text(p.x, p.y - 150, `+${n} ${FOOD_LABEL[s.type]}`, s.type === FOOD.MILK ? '#4a86d9' : '#e0607e', 22);
-        this.burst(s.zone.x, s.zone.y - 30, 'sparkle', 6, s.type === FOOD.MILK ? '#9fd3ff' : '#ffb3c6');
+        this.text(p.x, p.y - 150, `+${n} ${FOOD_LABEL[s.type]}`, '#e0607e', 22);
+        this.burst(s.zone.x, s.zone.y - 30, 'sparkle', 6, '#ffb3c6');
         this.onEvent('pickup', { type: s.type, amount: n });
       }
     }
 
-    for (const spawn of this.spawner.update(dt, this.runTime, this.npcs)) this.spawnNpc(spawn);
+    for (const spawn of this.spawner.update(dt, this.runTime, this.npcs, foods)) this.spawnNpc(spawn);
 
     for (const npc of this.npcs) {
       const ev = npc.update(dt);
@@ -103,7 +113,7 @@ export class GameManager {
   spawnNpc({ spot, request, patience, trail = 0 } = {}) {
     spot ??= this.spawner.randomFreeSpot(this.npcs);
     if (!spot) return null;
-    request ??= this.rng() < 0.5 ? FOOD.MILK : FOOD.CATFOOD;
+    if (!request) { const foods = this.foods; request = foods[Math.floor(this.rng() * foods.length)]; }
     patience ??= this.spawner.stage(this.runTime).patience;
     const npc = new NPC({
       spot, request,
@@ -127,23 +137,28 @@ export class GameManager {
       }
       return false;
     }
-    const r = this.reward;
+    // Happy customers sometimes leave a little tip on top.
+    const tip = this.rng() < TIPS.chance ? TIPS.min + Math.floor(this.rng() * (TIPS.max - TIPS.min + 1)) : 0;
+    const r = this.rewardFor(npc.request) + tip;
     this.save.coins += r;
     this.save.totalEarned += r;
     this.score += r; // score only ever goes up; spending coins never lowers it
     this.fed++;
     npc.feed();
     this.player.squash = 1;
-    this.text(npc.x, npc.y - 140, `+${r}`, '#e0a000', 28);
+    this.text(npc.x, npc.y - 140, `+${r - tip}`, '#e0a000', 28);
+    if (tip) this.fx.push({ kind: 'text', x: npc.x + 34, y: npc.y - 112, text: `+${tip} tip!`, color: '#2f9e6e', size: 18, t: -0.25, life: 1.3 });
     this.burst(npc.x, npc.y - 60, 'heart', 6, '#ff6b8a');
-    this.burst(npc.x, npc.y - 60, 'coin', 5);
+    this.burst(npc.x, npc.y - 60, 'coin', tip ? 10 : 5);
     const lvl = levelForEarned(this.save.totalEarned);
     if (lvl > this.save.level) {
+      const before = this.foods;
       this.save.level = lvl;
-      this.onEvent('levelUp', { level: lvl, reward: this.reward });
+      const newFoods = this.foods.filter(f => !before.includes(f));
+      this.onEvent('levelUp', { level: lvl, reward: this.reward, newFoods });
     }
     this.persist();
-    this.onEvent('feed', { npc, reward: r });
+    this.onEvent('feed', { npc, reward: r, tip });
     return true;
   }
 

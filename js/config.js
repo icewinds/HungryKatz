@@ -3,6 +3,20 @@
 
 export const WORLD = { W: 540, H: 960 };
 
+// The menu. Food i unlocks at restaurant level 1 + i * FOOD_UNLOCK_EVERY
+// (milk L1, cat food L3, fish L5, ...). `bonus` = extra coins per serve.
+export const FOOD_UNLOCK_EVERY = 2;
+export const FOODS = [
+  { id: 'milk', label: 'Milk', bonus: 0 },
+  { id: 'catfood', label: 'Cat Food', bonus: 2 },
+  { id: 'fish', label: 'Fish', bonus: 4 },
+  { id: 'sushi', label: 'Sushi', bonus: 6 },
+  { id: 'cupcake', label: 'Cupcake', bonus: 8 },
+];
+export const foodUnlockLevel = id => 1 + FOODS.findIndex(f => f.id === id) * FOOD_UNLOCK_EVERY;
+/** Food ids on the menu at a restaurant level, in unlock order. */
+export const foodsForLevel = level => FOODS.filter(f => foodUnlockLevel(f.id) <= level).map(f => f.id);
+
 // Café floor plan: back wall + window bar (top), three round tables (middle),
 // kitchen counter with two flat pickup pads (bottom). Door on the left wall.
 const BAR_Y = 258;                       // feet of cats sitting at the window bar
@@ -20,8 +34,8 @@ export const LAYOUT = {
   kitchenY: 800,              // top of the kitchen counter
   // Solid furniture (feet can't enter); pathing.js routes around these
   blockers: TABLES.map(t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 })),
-  milkZone: { x: 170, y: 752, r: 50 },
-  foodZone: { x: 370, y: 752, r: 50 },
+  // One pickup pad per food, evenly spaced in front of the kitchen counter
+  pads: Object.fromEntries(FOODS.map((f, i) => [f.id, { x: 70 + i * 100, y: 752, r: 44 }])),
   // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction.
   // Spots come in side-by-side pairs (linked via `partner` below) that face each other.
   spots: [
@@ -54,6 +68,9 @@ export const SPAWN_STAGES = [
   { at: 280, maxNpcs: 6, interval: [1.2, 2.5], patience: 11 },
 ];
 
+// Tips: chance a fed customer adds a random tip (coins) on top of the payment.
+export const TIPS = { chance: 0.25, min: 2, max: 6 };
+
 export const MAX_MISSED = 10;
 export const FEED_RADIUS = 46;   // player<->NPC contact distance
 export const NPC_SPEED = 140;    // px per second
@@ -62,9 +79,9 @@ export const MAX_UPGRADE_LEVEL = 5;
 export const UPGRADES = {
   carry: {
     icon: '🥛', name: 'Carry Capacity',
-    desc: 'Carry more milk AND more cat food at the same time.',
+    desc: 'Carry more of every food at the same time.',
     values: [1, 2, 3, 4, 5], costs: [40, 90, 160, 260],
-    fmt: v => `${v} + ${v}`,
+    fmt: v => `${v} each`,
   },
   speed: {
     icon: '⚡', name: 'Movement Speed',

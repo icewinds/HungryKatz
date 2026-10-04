@@ -2,6 +2,7 @@
 // Buttons declare data-action="name"; clicks route to handlers[name](button).
 
 import { UPGRADES, MAX_UPGRADE_LEVEL } from './config.js';
+import { FOOD_LABEL } from './inventory.js';
 
 const $ = id => document.getElementById(id);
 
@@ -41,6 +42,25 @@ export class UIManager {
     this.hudCache.missed = n;
     [...box.children].forEach((p, i) => p.classList.toggle('on', i < n));
     box.setAttribute('aria-label', `Missed ${n} of ${max}`);
+  }
+
+  /** Bottom tray: one slot per food on the menu (rebuilt when a new food unlocks). */
+  updateTray(foods, inv, icons) {
+    const box = $('tray-items'), key = foods.join();
+    if (this.trayKey !== key) {
+      this.trayKey = key;
+      this.trayVals = {};
+      box.innerHTML = foods.map(id => `<span class="tray-item" data-food="${id}"><img src="${icons[id]}" alt="${FOOD_LABEL[id]}"><b></b></span>`).join('');
+      box.classList.toggle('compact', foods.length > 2);
+    }
+    for (const el of box.children) {
+      const id = el.dataset.food, n = inv.items[id];
+      const txt = foods.length > 2 ? `${n}` : `${n}/${inv.max}`; // compact: count only, "full" shown by colour
+      if (this.trayVals[id] === txt + inv.max) continue;
+      this.trayVals[id] = txt + inv.max;
+      el.lastElementChild.textContent = txt;
+      el.classList.toggle('full', n >= inv.max);
+    }
   }
 
   setLevelProgress(p) {

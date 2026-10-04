@@ -122,6 +122,10 @@ html, body {
 }
 .tray-item { display: flex; align-items: center; gap: 6px; font-size: 18px; }
 .tray-item img { width: 30px; height: 30px; }
+.tray-item.full b { color: #2f9e6e; }
+.tray-items.compact { padding: 6px 4px; }
+.tray-items.compact .tray-item { gap: 1px; font-size: 16px; }
+.tray-items.compact .tray-item img { width: 26px; height: 26px; }
 
 /* ---------- Buttons ---------- */
 .btn {

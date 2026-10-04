@@ -1,7 +1,7 @@
 // Entry point: wires managers together, owns the canvas, input, render loop,
 // PWA install/offline hooks and the debug panel.
 
-import { WORLD, LAYOUT, MAX_MISSED, levelProgress } from './config.js';
+import { WORLD, LAYOUT, MAX_MISSED, FOODS, levelProgress, foodUnlockLevel } from './config.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
 import { HighScoreManager } from './highScores.js';
@@ -9,7 +9,7 @@ import { AudioManager } from './audio.js';
 import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
 import { CharacterManager } from './characters.js';
-import { FOOD } from './inventory.js';
+import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
   drawSadCloud, drawHeart, drawFx, drawChatBubble, PLAYER_LOOKS, playerLook, FONT,
@@ -35,11 +35,14 @@ function onEvent(type, d) {
       audio.play('feed');
       setTimeout(() => audio.play('coin'), 120);
       ui.bump('hud-coins'); ui.bump('hud-score');
+      if (d.tip) setTimeout(() => audio.play('coin'), 320); // extra jingle for a tip
       break;
     case 'missed': audio.play('sad'); ui.bump('hud-paws'); break;
     case 'levelUp':
       audio.play('levelUp');
-      ui.banner(`🎉 Restaurant Level ${d.level}! Customers now pay ${d.reward}`);
+      ui.banner(d.newFoods.length
+        ? `🎉 Level ${d.level}! New on the menu: ${d.newFoods.map(f => FOOD_LABEL[f]).join(', ')}`
+        : `🎉 Restaurant Level ${d.level}! Customers now pay ${d.reward}`);
       ui.bump('hud-level');
       break;
     case 'gameOver':
@@ -205,7 +208,11 @@ function render(time) {
 
   const { player: p, npcs, inventory: inv } = gm;
 
-  for (const s of gm.stations) drawPad(ctx, s.zone, s.type, !inv.isFull(s.type), time, s.flash);
+  const menu = gm.foods;
+  for (const s of gm.stations) {
+    const locked = menu.includes(s.type) ? 0 : foodUnlockLevel(s.type);
+    drawPad(ctx, s.zone, s.type, !inv.isFull(s.type), time, s.flash, locked);
+  }
   drawFx(ctx, gm.fx, 'under');
 
   // depth-sorted cats + tables (a table sorts by its front edge)
@@ -257,7 +264,7 @@ function drawDebug() {
     ctx.beginPath(); ctx.arc(s.x, s.y, 10, 0, Math.PI * 2); ctx.stroke();
     ctx.fillStyle = ctx.strokeStyle; ctx.fillText(s.id, s.x, s.y + 22);
   }
-  for (const z of [LAYOUT.milkZone, LAYOUT.foodZone]) {
+  for (const z of Object.values(LAYOUT.pads)) {
     ctx.strokeStyle = '#06c'; ctx.beginPath(); ctx.arc(z.x, z.y, z.r, 0, Math.PI * 2); ctx.stroke();
   }
   ctx.strokeStyle = '#c0c';
@@ -315,9 +322,8 @@ function frame(now) {
     level: save.level,
     score: gm.score,
     best: Math.max(highScores.best(), gm.score),
-    milk: `${inv.items.milk}/${inv.max}`,
-    catfood: `${inv.items.catfood}/${inv.max}`,
   });
+  ui.updateTray(gm.foods, inv, foodIcons);
   ui.setMissed(gm.missed, MAX_MISSED);
   ui.setLevelProgress(levelProgress(save.totalEarned));
   updateDebugPanel(now);
@@ -351,11 +357,12 @@ if ('serviceWorker' in navigator) {
 }
 
 // ---------------------------------------------------------------- boot
-for (const type of [FOOD.MILK, FOOD.CATFOOD]) { // tray icons rendered with the same art as the canvas
+// Tray icons rendered with the same art as the canvas.
+const foodIcons = Object.fromEntries(FOODS.map(({ id }) => {
   const c = Object.assign(document.createElement('canvas'), { width: 56, height: 56 });
-  drawFoodIcon(c.getContext('2d'), type, 28, 30, 1.9);
-  document.getElementById(`ico-${type}`).src = c.toDataURL();
-}
+  drawFoodIcon(c.getContext('2d'), id, 28, 30, 1.9);
+  return [id, c.toDataURL()];
+}));
 window.addEventListener('resize', resize);
 resize();
 document.fonts?.ready.then(buildBackground); // redraw the sign once Fredoka loads

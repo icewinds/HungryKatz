@@ -36,7 +36,7 @@ export class NpcSpawner {
   }
 
   /** Returns a list of spawn requests { spot, request, patience, trail? } (usually 0 or 1, 2 for friends). */
-  update(dt, runTime, npcs) {
+  update(dt, runTime, npcs, foods = [FOOD.MILK, FOOD.CATFOOD]) {
     const st = this.stage(runTime);
     this.timer -= dt;
     if (this.timer > 0) return [];
@@ -48,7 +48,7 @@ export class NpcSpawner {
     const [lo, hi] = st.interval;
     this.timer = lo + this.rng() * (hi - lo);
     const pick = list => list[Math.floor(this.rng() * list.length)];
-    const req = spot => ({ spot, request: this.rng() < 0.5 ? FOOD.MILK : FOOD.CATFOOD, patience: st.patience });
+    const req = spot => ({ spot, request: pick(foods), patience: st.patience }); // only foods on the menu
 
     // Two friends walk in together and take a pair of seats.
     if (room >= 2 && this.rng() < SOCIAL.duoChance) {

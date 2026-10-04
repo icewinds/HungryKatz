@@ -269,7 +269,7 @@ export function drawFoodIcon(ctx, type, x, y, s = 1, alpha = 1) {
     rrect(ctx, -3, -18, 6, 4, 1.5); fillStroke(ctx, '#5b8bd6', null);
     rrect(ctx, -8, 1, 16, 7, 2); fillStroke(ctx, '#7fb3ff', null);
     ellipse(ctx, 0, 4.5, 2, 2.4); fillStroke(ctx, '#fff', null);
-  } else {
+  } else if (type === 'catfood') {
     ctx.fillStyle = '#b8763e';
     for (const [kx, ky, r] of [[-6, -3, 4], [0, -6, 4.5], [6, -3, 4], [-2, -1, 3], [3, -1, 3]]) {
       circle(ctx, kx, ky, r); ctx.fill();
@@ -280,6 +280,22 @@ export function drawFoodIcon(ctx, type, x, y, s = 1, alpha = 1) {
     fillStroke(ctx, '#ff8fab', '#d4607e', 2);
     ellipse(ctx, -1, 4.5, 3.5, 2); fillStroke(ctx, '#fff', null); // fish logo
     tri(ctx, [2, 4.5], [5, 2.5], [5, 6.5]); fillStroke(ctx, '#fff', null);
+  } else if (type === 'fish') {
+    tri(ctx, [6, 0], [14, -8], [14, 8]); fillStroke(ctx, '#7cc4ff', '#3f8fd0', 2);
+    ellipse(ctx, -2, 0, 11, 7); fillStroke(ctx, '#9fd3ff', '#3f8fd0', 2);
+    ctx.beginPath(); ctx.arc(-4, 0, 4.5, -0.9, 0.9); ctx.strokeStyle = '#3f8fd0'; ctx.lineWidth = 1.5; ctx.stroke();
+    circle(ctx, -8, -1.5, 1.7); fillStroke(ctx, '#2b2230', null);
+  } else if (type === 'sushi') {
+    rrect(ctx, -11, -2, 22, 12, 5); fillStroke(ctx, '#fff', '#d9cbd2', 2);
+    rrect(ctx, -12, -9, 24, 10, 5); fillStroke(ctx, '#ff9f7a', '#e2735a', 2);
+    ctx.strokeStyle = '#ffd3c2'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(-6, -7); ctx.lineTo(-8, -2); ctx.moveTo(6, -7); ctx.lineTo(4, -2); ctx.stroke();
+    rrect(ctx, -3, -9, 6, 19, 1.5); fillStroke(ctx, '#3d4a3d', null);
+  } else if (type === 'cupcake') {
+    ctx.beginPath(); ctx.moveTo(-8, 2); ctx.lineTo(8, 2); ctx.lineTo(6, 12); ctx.lineTo(-6, 12); ctx.closePath();
+    fillStroke(ctx, '#ffc94d', '#e3a400', 2);
+    for (const [cx, cy, r] of [[-5, -1, 5.5], [5, -1, 5.5], [0, -5, 6.5]]) { circle(ctx, cx, cy, r); fillStroke(ctx, '#ffb3c6', null); }
+    circle(ctx, 0, -12, 3); fillStroke(ctx, '#ff5d73', null);
   }
   ctx.restore();
 }
@@ -287,10 +303,18 @@ export function drawFoodIcon(ctx, type, x, y, s = 1, alpha = 1) {
 // ---------------------------------------------------------------- overlays
 const SHADOW = 'rgba(120,70,60,0.13)';
 
-/** Flat pickup pad on the floor; pulses while the player can still pick up. */
-export function drawPad(ctx, zone, type, ready, t, flash) {
+/** Flat pickup pad on the floor; pulses while the player can still pick up. Locked pads show their unlock level. */
+export function drawPad(ctx, zone, type, ready, t, flash, lockedLevel = 0) {
   const { x, y } = zone;
-  ellipse(ctx, x, y + 10, 48, 21);
+  if (lockedLevel) {
+    ellipse(ctx, x, y + 10, 46, 20); fillStroke(ctx, '#f1ebed', '#e2d8dc', 2);
+    drawFoodIcon(ctx, type, x, y - 4, 1.1, 0.25);
+    rrect(ctx, x - 20, y + 2, 40, 18, 9); fillStroke(ctx, '#fff', '#e2d8dc', 1.5);
+    ctx.font = `700 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#9a8590'; ctx.fillText(`🔒${lockedLevel}`, x, y + 12);
+    return;
+  }
+  ellipse(ctx, x, y + 10, 46, 20);
   fillStroke(ctx, ready ? '#d6f4e8' : '#eee8ea', ready ? '#86d6b2' : '#ddd3d7', 3);
   if (ready) {
     const k = (t * 0.7) % 1;
@@ -309,9 +333,10 @@ export function drawPad(ctx, zone, type, ready, t, flash) {
 
 /** Tiny badge above the player: only the foods actually carried. Never flipped. */
 export function drawCarryBadge(ctx, x, y, inv) {
-  const items = ['milk', 'catfood'].filter(k => inv.items[k] > 0);
+  const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
   if (!items.length) return;
   const w = items.length * 34 + 6, h = 24, top = y - 114;
+  x = Math.min(Math.max(x, w / 2 + 4), WORLD.W - w / 2 - 4); // keep the badge on screen near walls
   rrect(ctx, x - w / 2, top, w, h, 12); fillStroke(ctx, 'rgba(255,255,255,0.95)', '#f6d3dd', 1.5);
   ctx.font = `700 12px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   items.forEach((k, i) => {
@@ -400,6 +425,7 @@ export function drawHeart(ctx, x, y, s, color = '#ff6b8a') {
 /** Effects: layer 'under' = tap markers, 'over' = text and particles. */
 export function drawFx(ctx, fx, layer) {
   for (const f of fx) {
+    if (f.t < 0) continue; // delayed effect, not started yet
     const k = f.t / f.life;
     if ((f.kind === 'tap') !== (layer === 'under')) continue;
     if (f.kind === 'tap') {
@@ -502,12 +528,6 @@ function kitchen(ctx) {
   drawFoodIcon(ctx, 'catfood', 370, y + 88, 1.1, 0.5);
   // counter top + props
   rrect(ctx, -6, y, W + 12, 28, 10); fillStroke(ctx, '#f6e6d6', '#ead2bb', 2);
-  for (const bx of [154, 170, 186]) { // milk bottles in a crate
-    rrect(ctx, bx - 6, y - 20, 12, 24, 4); fillStroke(ctx, '#fff', '#9cc3ea', 1.5);
-    rrect(ctx, bx - 3, y - 24, 6, 5, 2); fillStroke(ctx, '#5b8bd6', null);
-  }
-  rrect(ctx, 144, y - 4, 52, 14, 3); fillStroke(ctx, '#e7c3a0', null);
-  drawFoodIcon(ctx, 'catfood', 370, y - 2, 1.7);
   for (const px of [40, 500]) {
     ctx.fillStyle = '#7fd1a1';
     for (const [dx, dy, r] of [[-9, -22, 10], [9, -22, 10], [0, -32, 11]]) { circle(ctx, px + dx, y + dy, r); ctx.fill(); }

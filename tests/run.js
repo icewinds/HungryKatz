@@ -9,7 +9,7 @@ import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { CharacterManager } from '../js/characters.js';
 import { NpcSpawner } from '../js/npcSpawner.js';
 import { Inventory } from '../js/inventory.js';
-import { LAYOUT, MAX_MISSED } from '../js/config.js';
+import { LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, foodsForLevel } from '../js/config.js';
 
 let passed = 0;
 function test(name, fn) {
@@ -17,7 +17,7 @@ function test(name, fn) {
   catch (e) { console.error(`  ✗ ${name}\n    ${e.message}`); process.exitCode = 1; }
 }
 
-function setup(over = {}) {
+function setup(over = {}, rng = () => 0.5) { // rng 0.5 => no random tips
   const save = { ...DEFAULT_SAVE(), ...over };
   const events = [];
   const gm = new GameManager({
@@ -25,6 +25,7 @@ function setup(over = {}) {
     upgrades: new UpgradeManager(save),
     highScores: new HighScoreManager(save),
     onEvent: (t, d) => events.push([t, d]),
+    rng,
   });
   gm.startRun();
   gm.spawner.timer = Infinity; // tests spawn NPCs manually
@@ -40,6 +41,7 @@ function arrive(gm, opts) {
   assert.equal(npc.state, 'waiting');
   return npc;
 }
+const two = inv => ({ milk: inv.items.milk, catfood: inv.items.catfood });
 const MAX5 = { upgrades: { carry: 5, speed: 1, npcTime: 1 } };
 
 console.log('HungryKatz tests');
@@ -48,19 +50,19 @@ test('inventory: filling one food never touches the other', () => {
   const inv = new Inventory(5);
   assert.equal(inv.fill('milk'), 5);
   assert.equal(inv.fill('catfood'), 5);
-  assert.deepEqual(inv.items, { milk: 5, catfood: 5 });
+  assert.deepEqual(two(inv), { milk: 5, catfood: 5 });
   assert.equal(inv.fill('milk'), 0);
   assert.equal(inv.take('catfood'), true);
-  assert.deepEqual(inv.items, { milk: 5, catfood: 4 });
+  assert.deepEqual(two(inv), { milk: 5, catfood: 4 });
 });
 
 test('stations: carry 5 milk AND 5 cat food at once', () => {
-  const { gm, events } = setup(MAX5);
-  place(gm, LAYOUT.milkZone.x - 30, LAYOUT.milkZone.y); tick(gm, 0.05);
-  assert.deepEqual(gm.inventory.items, { milk: 5, catfood: 0 });
-  place(gm, LAYOUT.foodZone.x - 45, LAYOUT.foodZone.y); tick(gm, 0.05);
-  assert.deepEqual(gm.inventory.items, { milk: 5, catfood: 5 });
-  place(gm, LAYOUT.milkZone.x - 30, LAYOUT.milkZone.y); tick(gm, 0.05);
+  const { gm, events } = setup({ ...MAX5, level: 3 });
+  place(gm, LAYOUT.pads.milk.x, LAYOUT.pads.milk.y - 20); tick(gm, 0.05);
+  assert.deepEqual(two(gm.inventory), { milk: 5, catfood: 0 });
+  place(gm, LAYOUT.pads.catfood.x, LAYOUT.pads.catfood.y - 20); tick(gm, 0.05);
+  assert.deepEqual(two(gm.inventory), { milk: 5, catfood: 5 });
+  place(gm, LAYOUT.pads.milk.x, LAYOUT.pads.milk.y - 20); tick(gm, 0.05);
   assert.equal(events.filter(e => e[0] === 'pickup').length, 2, 'no pickup when already full');
 });
 
@@ -69,7 +71,7 @@ test('feeding: correct food consumes one and pays coins + score', () => {
   gm.inventory.fill('milk'); gm.inventory.fill('catfood');
   const npc = arrive(gm, { spot: LAYOUT.spots[0], request: 'milk' });
   place(gm, npc.x, npc.y); tick(gm, 1 / 60);
-  assert.deepEqual(gm.inventory.items, { milk: 4, catfood: 5 });
+  assert.deepEqual(two(gm.inventory), { milk: 4, catfood: 5 });
   assert.equal(npc.state, 'eating');
   assert.equal(save.coins, 10);
   assert.equal(gm.score, 10);
@@ -82,7 +84,7 @@ test('feeding: wrong food changes nothing', () => {
   gm.inventory.fill('milk');
   const npc = arrive(gm, { spot: LAYOUT.spots[1], request: 'catfood' });
   place(gm, npc.x, npc.y); tick(gm, 0.5);
-  assert.deepEqual(gm.inventory.items, { milk: 5, catfood: 0 });
+  assert.deepEqual(two(gm.inventory), { milk: 5, catfood: 0 });
   assert.equal(npc.state, 'waiting');
   assert.equal(save.coins, 0);
   assert.equal(gm.score, 0);
@@ -159,7 +161,7 @@ test('pathing: walks around tables instead of getting stuck', () => {
     [[t1.x, t1.y - 60], [t1.x, t1.y + 40]],     // straight through table 1
     [[t3.x - 120, t3.y - 10], [t3.x + 120, t3.y - 10]], // across table 3
     [[270, 700], [150, 300]],                   // pads area -> window bar
-    [[60, 300], [LAYOUT.foodZone.x, LAYOUT.foodZone.y]], // door -> food pad
+    [[60, 300], [LAYOUT.pads.cupcake.x, LAYOUT.pads.cupcake.y - 20]], // door -> far pad
   ];
   for (const [[sx, sy], [tx, ty]] of trips) {
     place(gm, sx, sy);
@@ -235,6 +237,36 @@ test('social seating: friends take a pair; loners sit beside someone; early game
   near.timer = 0;
   const [lone] = near.update(0.1, 0, [someone]);
   assert.equal(lone.spot, someone.spot.partner, 'lone cat sits next to the waiting cat');
+});
+
+test('menu: milk only at Lv1; foods unlock every FOOD_UNLOCK_EVERY levels', () => {
+  assert.deepEqual(foodsForLevel(1), ['milk']);
+  assert.deepEqual(foodsForLevel(1 + FOOD_UNLOCK_EVERY), ['milk', 'catfood']);
+  assert.equal(foodsForLevel(99).length, FOODS.length);
+  // locked pad gives nothing; customers only want what's on the menu
+  const { gm } = setup({ ...MAX5, level: 1 });
+  place(gm, LAYOUT.pads.catfood.x, LAYOUT.pads.catfood.y - 20); tick(gm, 0.05);
+  assert.equal(gm.inventory.count('catfood'), 0);
+  const sp = new NpcSpawner([{ at: 0, maxNpcs: 9, interval: [0, 0], patience: 9 }], LAYOUT.spots);
+  for (let i = 0; i < 50; i++) { sp.timer = 0; for (const r of sp.update(0.1, 0, [], ['milk'])) assert.equal(r.request, 'milk'); }
+  // reaching a new level announces the new food
+  const { gm: g2, save, events } = setup({ level: 2, totalEarned: 440 });
+  g2.inventory.fill('milk');
+  const npc = arrive(g2, { spot: LAYOUT.spots[0], request: 'milk' });
+  place(g2, npc.x, npc.y); tick(g2, 1 / 60);
+  assert.equal(save.level, 3);
+  assert.deepEqual(events.find(e => e[0] === 'levelUp')[1].newFoods, ['catfood']);
+});
+
+test('tips: sometimes a tip is added to coins and score', () => {
+  const tipRng = () => 0; // always tips, minimum amount
+  const { gm, save, events } = setup({}, tipRng);
+  gm.inventory.fill('milk');
+  const npc = arrive(gm, { spot: LAYOUT.spots[0], request: 'milk' });
+  place(gm, npc.x, npc.y); tick(gm, 1 / 60);
+  assert.equal(events.find(e => e[0] === 'feed')[1].tip, TIPS.min);
+  assert.equal(save.coins, 10 + TIPS.min);
+  assert.equal(gm.score, 10 + TIPS.min);
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {
