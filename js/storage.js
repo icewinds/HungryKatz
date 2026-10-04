@@ -7,7 +7,7 @@ export const DEFAULT_SAVE = () => ({
   coins: 0,
   level: 1,
   totalEarned: 0,
-  upgrades: { carry: 1, speed: 1, npcTime: 1 },
+  upgrades: { carry: 1, speed: 1, npcTime: 1, luckyTips: 1, plates: 1, reach: 1 },
   highScores: [],
   character: 'mango', // chosen player cat (art.js PLAYER_LOOKS id)
   ownedCats: [],      // cats bought with coins

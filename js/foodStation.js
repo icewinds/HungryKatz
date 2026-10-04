@@ -8,8 +8,9 @@ export class FoodStation {
     this.hintCd = 0;  // "unlocks at level X" message cooldown
   }
 
-  contains(x, y) {
-    return Math.hypot(x - this.zone.x, y - this.zone.y) <= this.zone.r;
+  /** `extra` widens the pickup zone (Quick Paws upgrade). */
+  contains(x, y, extra = 0) {
+    return Math.hypot(x - this.zone.x, y - this.zone.y) <= this.zone.r + extra;
   }
 
   update(dt) {

@@ -55,7 +55,10 @@ export class GameManager {
   get reward() { return rewardForLevel(this.save.level); }
   /** Foods on the menu right now (unlocked by restaurant level). */
   get foods() { return foodsForLevel(this.save.level); }
-  rewardFor(food) { return this.reward + (FOODS.find(f => f.id === food)?.bonus ?? 0); }
+  /** Coins for serving `food`: level reward + food bonus + Bigger Plates upgrade. */
+  rewardFor(food) {
+    return this.reward + (FOODS.find(f => f.id === food)?.bonus ?? 0) + this.upgrades.value('plates');
+  }
 
   tap(x, y, marker = true) {
     if (this.state !== 'playing' || this.paused) return;
@@ -74,7 +77,7 @@ export class GameManager {
     const foods = this.foods;
     for (const s of this.stations) {
       s.update(dt);
-      if (!s.contains(p.x, p.y)) continue;
+      if (!s.contains(p.x, p.y, this.upgrades.value('reach'))) continue;
       if (!foods.includes(s.type)) {
         if (s.hintCd <= 0) {
           s.hintCd = 2;
@@ -101,8 +104,9 @@ export class GameManager {
     }
     this.npcs = this.npcs.filter(n => n.state !== 'gone');
 
+    const reach = FEED_RADIUS + this.upgrades.value('reach'); // Quick Paws serves from further away
     for (const npc of this.npcs) {
-      if (npc.canBeFed() && Math.hypot(p.x - npc.x, p.y - npc.y) < FEED_RADIUS) this.tryFeed(npc);
+      if (npc.canBeFed() && Math.hypot(p.x - npc.x, p.y - npc.y) < reach) this.tryFeed(npc);
     }
 
     this.updateFx(dt);
@@ -138,7 +142,7 @@ export class GameManager {
       return false;
     }
     // Happy customers sometimes leave a little tip on top.
-    const tip = this.rng() < TIPS.chance ? TIPS.min + Math.floor(this.rng() * (TIPS.max - TIPS.min + 1)) : 0;
+    const tip = this.rng() < this.upgrades.value('luckyTips') ? TIPS.min + Math.floor(this.rng() * (TIPS.max - TIPS.min + 1)) : 0;
     const r = this.rewardFor(npc.request) + tip;
     this.save.coins += r;
     this.save.totalEarned += r;

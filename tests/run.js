@@ -12,7 +12,9 @@ import { EAT_TIME } from '../js/npc.js';
 import { DailyBonus, dayKey } from '../js/daily.js';
 import { TRACKS, trackForLevel } from '../js/audio.js';
 import { Inventory } from '../js/inventory.js';
-import { LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, foodsForLevel } from '../js/config.js';
+import {
+  LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
+} from '../js/config.js';
 
 let passed = 0;
 function test(name, fn) {
@@ -132,21 +134,21 @@ test(`game over after ${MAX_MISSED} misses; score saved; run reset; upgrades kep
   assert.deepEqual(save.highScores, [120]);
 });
 
-test('upgrades: spending coins does not lower run score; max level 5', () => {
+test('upgrades: spending coins does not lower run score; max level is MAX_UPGRADE_LEVEL', () => {
   const { gm, save } = setup();
   gm.inventory.fill('milk');
   const npc = arrive(gm, { spot: LAYOUT.spots[4], request: 'milk' });
   place(gm, npc.x, npc.y); tick(gm, 1 / 60);
-  save.coins = 1000;
+  save.coins = 100000;
   const up = gm.upgrades;
   assert.equal(up.buy('carry'), true);
   assert.equal(gm.score, 10);
   while (up.buy('carry'));
-  assert.equal(up.level('carry'), 5);
+  assert.equal(up.level('carry'), MAX_UPGRADE_LEVEL);
   assert.equal(up.cost('carry'), null);
   assert.equal(up.buy('carry'), false);
   gm.applyUpgrades();
-  assert.equal(gm.inventory.max, 5);
+  assert.equal(gm.inventory.max, UPGRADES.carry.values.at(-1));
 });
 
 test('high scores: top 5, sorted high to low', () => {
@@ -319,6 +321,40 @@ test('dishes and back view: every seat has a plate; bar cats face away only whil
   park(gm); tick(gm, EAT_TIME + 0.1);
   assert.equal(bar.state, 'leaving');
   assert.equal(bar.fromBehind, false, 'turns around to walk out');
+});
+
+test('new upgrades: Bigger Plates pays more, Quick Paws reaches further, Lucky Tips tips more', () => {
+  for (const [id, u] of Object.entries(UPGRADES)) {
+    assert.equal(u.values.length, MAX_UPGRADE_LEVEL, id);
+    assert.equal(u.costs.length, MAX_UPGRADE_LEVEL - 1, id);
+  }
+  // Bigger Plates: level 3 => +2 coins per serve
+  const a = setup({ upgrades: { ...DEFAULT_SAVE().upgrades, plates: 3 } });
+  a.gm.inventory.fill('milk');
+  const n1 = arrive(a.gm, { spot: LAYOUT.spots[0], request: 'milk' });
+  place(a.gm, n1.x, n1.y); tick(a.gm, 1 / 60);
+  assert.equal(a.save.coins, 10 + UPGRADES.plates.values[2]);
+  // Quick Paws: serve from just outside the normal reach
+  const gap = FEED_RADIUS + 10;
+  const near = lvl => {
+    const { gm } = setup({ upgrades: { ...DEFAULT_SAVE().upgrades, reach: lvl } });
+    gm.inventory.fill('milk');
+    const n = arrive(gm, { spot: LAYOUT.spots[0], request: 'milk' });
+    place(gm, n.x, n.y + gap); tick(gm, 1 / 60);
+    return n.state;
+  };
+  assert.equal(near(1), 'waiting', 'too far without Quick Paws');
+  assert.equal(near(4), 'eating', 'Quick Paws Lv4 (+15) reaches');
+  // Lucky Tips: rng 0.5 tips only once the chance is above 50%
+  const tipAt = lvl => {
+    const { gm, events } = setup({ upgrades: { ...DEFAULT_SAVE().upgrades, luckyTips: lvl } }, () => 0.5);
+    gm.inventory.fill('milk');
+    const n = arrive(gm, { spot: LAYOUT.spots[0], request: 'milk' });
+    place(gm, n.x, n.y); tick(gm, 1 / 60);
+    return events.find(e => e[0] === 'feed')[1].tip;
+  };
+  assert.equal(tipAt(1), 0);
+  assert.ok(tipAt(7) > 0, 'Lv7 = 55% chance beats rng 0.5');
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

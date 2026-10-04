@@ -78,8 +78,9 @@ export const SPAWN_STAGES = [
   { at: 280, maxNpcs: 6, interval: [1.2, 2.5], patience: 11 },
 ];
 
-// Tips: chance a fed customer adds a random tip (coins) on top of the payment.
-export const TIPS = { chance: 0.25, min: 2, max: 6 };
+// Tips: a fed customer may add a random tip (coins) on top of the payment.
+// The chance comes from the Lucky Tips upgrade (25% at level 1).
+export const TIPS = { min: 2, max: 6 };
 
 // Daily bonus coins for streak days 1..7 (missing a day restarts at day 1; after day 7 it loops).
 export const DAILY_REWARDS = [20, 30, 40, 50, 60, 80, 120];
@@ -87,26 +88,51 @@ export const DAILY_REWARDS = [20, 30, 40, 50, 60, 80, 120];
 export const MAX_MISSED = 10;
 export const FEED_RADIUS = 46;   // player<->NPC contact distance
 export const NPC_SPEED = 140;    // px per second
-export const MAX_UPGRADE_LEVEL = 5;
+export const MAX_UPGRADE_LEVEL = 10;
 
+// Each upgrade: `values` = effect at levels 1..10, `costs` = coins to go from level i to i+1.
 export const UPGRADES = {
   carry: {
     icon: '🥛', name: 'Carry Capacity',
     desc: 'Carry more of every food at the same time.',
-    values: [1, 2, 3, 4, 5], costs: [40, 90, 160, 260],
+    values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    costs: [40, 90, 160, 260, 380, 520, 700, 900, 1150],
     fmt: v => `${v} each`,
   },
   speed: {
     icon: '⚡', name: 'Movement Speed',
     desc: 'Your cat zooms around the café faster.',
-    values: [170, 205, 240, 275, 310], costs: [30, 70, 130, 220],
+    values: [170, 205, 240, 275, 310, 335, 360, 385, 410, 435],
+    costs: [30, 70, 130, 220, 320, 440, 580, 750, 950],
     fmt: v => `${Math.round((v / 170) * 100)}%`,
   },
   npcTime: {
     icon: '⏱️', name: 'NPC Time',
     desc: 'Hungry customers wait longer before leaving.',
-    values: [0, 3, 6, 9, 12], costs: [30, 70, 130, 220],
+    values: [0, 3, 6, 9, 12, 14, 16, 18, 20, 22],
+    costs: [30, 70, 130, 220, 320, 440, 580, 750, 950],
     fmt: v => `+${v}s`,
+  },
+  luckyTips: {
+    icon: '🍀', name: 'Lucky Tips',
+    desc: 'Happy customers leave tips more often.',
+    values: [0.25, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55, 0.6, 0.65, 0.7],
+    costs: [50, 100, 170, 260, 370, 500, 650, 820, 1000],
+    fmt: v => `${Math.round(v * 100)}%`,
+  },
+  plates: {
+    icon: '🍽️', name: 'Bigger Plates',
+    desc: 'Extra coins every time you serve a customer.',
+    values: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12],
+    costs: [60, 120, 200, 300, 420, 560, 720, 900, 1100],
+    fmt: v => `+${v}`,
+  },
+  reach: {
+    icon: '🐾', name: 'Quick Paws',
+    desc: 'Serve cats and grab food from further away.',
+    values: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45],
+    costs: [40, 80, 140, 220, 310, 420, 550, 700, 880],
+    fmt: v => `+${v}`,
   },
 };
 
