@@ -67,6 +67,7 @@
       <div class="row">
         <button class="btn secondary" data-action="openHelp">❓ How to play</button>
         <button class="btn secondary" data-action="openCharacters">🐱 Choose cat</button>
+        <button class="btn secondary" data-action="openStickers">🏅 Stickers</button>
         <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
         <button class="btn secondary" data-action="share">📤 Share</button>
         <button id="btn-install" class="btn mint hidden" data-action="install">📲 Install</button>
@@ -82,6 +83,16 @@
       <h2>Choose your café</h2>
       <p class="hint hint-tight">Start at any level you've reached. Lower levels are calmer; level up to unlock more foods, tables and a fancier café.</p>
       <div id="level-list" class="level-grid"></div>
+    </div>
+  </section>
+
+  <!-- Sticker book -->
+  <section id="screen-stickers" class="screen">
+    <div class="panel wide">
+      <button class="close-x" data-action="closeStickers" aria-label="Back">✕</button>
+      <h2>Sticker book</h2>
+      <p class="coins-big">🏅 <b id="sticker-count">0 / 0</b></p>
+      <div id="sticker-grid" class="sticker-grid"></div>
     </div>
   </section>
 
@@ -106,6 +117,8 @@
         <li><span class="tip-ico" aria-hidden="true">👑</span><span><b>VIP cats</b> wear crowns: they're impatient but pay triple!</span></li>
         <li><span class="tip-ico" aria-hidden="true">🐶</span><span>Adopt <b>café pets</b> in Upgrades for handy bonuses.</span></li>
         <li><span class="tip-ico" aria-hidden="true">🍽️</span><span>On weekends some cats order a <b>two-dish special</b>.</span></li>
+        <li><span class="tip-ico" aria-hidden="true">🏅</span><span>Collect <b>stickers</b> and buy <b>hats and aprons</b> in Choose cat.</span></li>
+        <li><span class="tip-ico" aria-hidden="true">🌸</span><span>Little chefs can pick <b>Relaxed</b> in Settings: nobody leaves sad.</span></li>
         <li><span class="tip-ico" aria-hidden="true">💰</span><span>Happy cats sometimes leave a <b>tip</b>.</span></li>
         <li><span class="tip-ico" aria-hidden="true">🎁</span><span>Come back every day for a <b>daily bonus</b>.</span></li>
         <li><span class="tip-ico" aria-hidden="true">😺</span><span>Buy new <b>chef cats</b>, or unlock the rarest ones with a high score.</span></li>
@@ -136,6 +149,10 @@
       <p class="coins-big">🪙 <b id="char-coins">0</b></p>
       <div id="char-list" class="char-grid"></div>
       <p class="hint hint-top0">Buy cats with coins, or reach a high score to unlock the rarest ones.</p>
+      <h3>👒 Wardrobe</h3>
+      <p class="hint hint-top0">Dress up your chef cat. Tap to buy, tap again to wear.</p>
+      <div id="hat-list" class="outfit-row" role="group" aria-label="Hats"></div>
+      <div id="apron-list" class="outfit-row" role="group" aria-label="Aprons"></div>
       <button class="btn" data-action="closeCharacters">Done</button>
     </div>
   </section>
@@ -152,11 +169,12 @@
       </div>
       <h3>Difficulty</h3>
       <div class="chips" role="group" aria-label="Difficulty">
+        <button class="chip" data-action="setDifficulty" data-value="relaxed">🌸 Relaxed</button>
         <button class="chip" data-action="setDifficulty" data-value="easy">😺 Easy</button>
         <button class="chip" data-action="setDifficulty" data-value="normal">🐱 Normal</button>
         <button class="chip" data-action="setDifficulty" data-value="hard">😼 Hard</button>
       </div>
-      <p class="hint hint-top0">Easy: patient customers, fewer at once. Hard: impatient and busy!</p>
+      <p class="hint hint-top0">Relaxed: nobody leaves sad, no game over. Easy: patient customers. Hard: impatient and busy!</p>
       <h3>Scene</h3>
       <div class="scene-grid" role="group" aria-label="Café scene">
         <button class="scene-chip" data-action="setScene" data-value="strawberry"><span class="swatch sw-strawberry" aria-hidden="true"></span>Strawberry Café</button>

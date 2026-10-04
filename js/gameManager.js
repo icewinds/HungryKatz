@@ -157,6 +157,7 @@ export class GameManager {
     });
     npc.requests = requests;
     npc.vip = vip;
+    npc.relaxed = !!this.difficulty.relaxed;
     npc.x -= 50 * trail; // the second friend follows a step behind
     npc.phase += trail * 0.3;
     this.npcs.push(npc);

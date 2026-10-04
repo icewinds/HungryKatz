@@ -64,7 +64,7 @@ export class NPC {
         break;
       case 'waiting':
         this.arriveT += dt;
-        this.timeLeft -= dt;
+        if (!this.relaxed) this.timeLeft -= dt; // Relaxed difficulty: they wait happily
         if (this.timeLeft <= 0) { this.timeLeft = 0; return 'expired'; }
         break;
       case 'eating':

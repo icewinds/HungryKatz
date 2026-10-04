@@ -67,6 +67,12 @@ export const PLAYER_LOOKS = [
 ];
 /** Look for a saved character id (falls back to the first cat). */
 export const playerLook = id => PLAYER_LOOKS.find(l => l.id === id) || PLAYER_LOOKS[0];
+/** Chef cat wearing a wardrobe outfit ({ hat, apron } ids from OUTFITS). Ghost keeps his gear. */
+export function dressUp(look, outfit, OUTFITS) {
+  if (look.accessory !== 'chef') return look;
+  const hat = OUTFITS.hats.find(h => h.id === outfit.hat), apron = OUTFITS.aprons.find(a => a.id === outfit.apron);
+  return { ...look, hat: hat?.id ?? 'chef', hatColor: hat?.color, acc: apron?.color ?? look.acc };
+}
 
 // ---------------------------------------------------------------- cat
 /**
@@ -400,7 +406,21 @@ function accessory(ctx, look, hx, hy, blink = false) {
       circle(ctx, hx + 6, hy - 21, 1.4); fillStroke(ctx, '#5aa9e6', null);
       break;
     }
+    case 'party': // striped cone + pompom
+      tri(ctx, [hx - 9, hy - 16], [hx + 9, hy - 16], [hx + 1, hy - 40]); fillStroke(ctx, c, ol, 1.4);
+      ctx.strokeStyle = '#ffd34d'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(hx - 6, hy - 22); ctx.lineTo(hx + 6, hy - 25); ctx.moveTo(hx - 3, hy - 30); ctx.lineTo(hx + 4, hy - 32); ctx.stroke();
+      circle(ctx, hx + 1, hy - 41, 3.2); fillStroke(ctx, '#ffd34d', ol, 1);
+      break;
+    case 'beret':
+      ellipse(ctx, hx + 2, hy - 16, 16, 6); fillStroke(ctx, c, ol, 1.4);
+      rrect(ctx, hx + 1, hy - 25, 3, 5, 1.5); fillStroke(ctx, c, null);
+      break;
     case 'chef':
+      if (look.hat && look.hat !== 'chef') { // wardrobe hat instead of the chef hat
+        accessory(ctx, { ...look, accessory: look.hat, acc: look.hatColor ?? look.acc }, hx, hy, blink);
+        break;
+      }
       for (const [x, y, r] of [[hx - 7, hy - 25, 8], [hx + 3, hy - 30, 9.5], [hx + 13, hy - 24, 7.5]]) {
         circle(ctx, x, y, r); fillStroke(ctx, '#fff', '#e3d3da', 1.6);
       }

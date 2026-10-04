@@ -14,6 +14,10 @@ export const DEFAULT_SAVE = () => ({
   ownedCats: [],      // cats bought with coins
   pets: [],           // café pets bought (PETS ids)
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
+  stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false }, // lifetime, for stickers
+  stickers: [],       // earned sticker ids (achievements.js)
+  outfit: { hat: 'chef', apron: 'classic' }, // what the chef cat wears
+  ownedOutfits: [],   // bought hats/aprons ids
   settings: { music: true, sfx: true, debug: false, difficulty: 'normal', scene: 'strawberry' },
 });
 
@@ -48,6 +52,10 @@ export const Storage = {
       character: typeof data.character === 'string' ? data.character : d.character,
       ownedCats: Array.isArray(data.ownedCats) ? data.ownedCats.filter(s => typeof s === 'string') : [],
       pets: Array.isArray(data.pets) ? data.pets.filter(s => typeof s === 'string') : [],
+      stats: { ...d.stats, ...(data.stats && typeof data.stats === 'object' ? data.stats : {}) },
+      stickers: Array.isArray(data.stickers) ? data.stickers.filter(x => typeof x === 'string') : [],
+      outfit: { ...d.outfit, ...(data.outfit && typeof data.outfit === 'object' ? data.outfit : {}) },
+      ownedOutfits: Array.isArray(data.ownedOutfits) ? data.ownedOutfits.filter(x => typeof x === 'string') : [],
       daily: {
         last: typeof data.daily?.last === 'string' ? data.daily.last : null,
         streak: Number.isInteger(data.daily?.streak) ? data.daily.streak : 0,

@@ -87,6 +87,7 @@ export const levelCrowdBonus = level => Math.floor((level - 1) / 4);
 
 // Player-chosen difficulty (Settings). patience/interval multiply, maxNpcs adds.
 export const DIFFICULTY = {
+  relaxed: { label: 'Relaxed', patience: 1, interval: 1.4, maxNpcs: -1, relaxed: true }, // nobody leaves sad, no game over
   easy:   { label: 'Easy',   patience: 1.4,  interval: 1.3, maxNpcs: -1 },
   normal: { label: 'Normal', patience: 1,    interval: 1,   maxNpcs: 0 },
   hard:   { label: 'Hard',   patience: 0.75, interval: 0.8, maxNpcs: 1 },
@@ -132,6 +133,27 @@ export const PETS = {
   parrot: { icon: '🦜', name: 'Parrot', cost: 800, desc: 'Chats up customers: +10% tip chance.' },
 };
 export const PET_BONUS = { goldfishCoins: 1, puppyPatience: 2, parrotTips: 0.1 };
+
+// Wardrobe for chef cats (Choose cat screen). Hats reuse cat accessories; aprons recolour the apron.
+export const OUTFITS = {
+  hats: [
+    { id: 'chef', name: 'Chef hat', icon: '🧑‍🍳', cost: 0 },
+    { id: 'beanie', name: 'Beanie', icon: '🧶', cost: 60, color: '#5aa9e6' },
+    { id: 'flower', name: 'Flower', icon: '🌸', cost: 80, color: '#ff8fab' },
+    { id: 'party', name: 'Party hat', icon: '🥳', cost: 120, color: '#a07be0' },
+    { id: 'beret', name: 'Beret', icon: '🎨', cost: 150, color: '#e8504f' },
+    { id: 'hat', name: 'Top hat', icon: '🎩', cost: 200, color: '#ffc94d' },
+    { id: 'crown', name: 'Crown', icon: '👑', cost: 400 },
+  ],
+  aprons: [
+    { id: 'classic', name: 'Classic', icon: '🩷', cost: 0, color: null },
+    { id: 'mint', name: 'Mint', icon: '🟢', cost: 40, color: '#6fcf9f' },
+    { id: 'sky', name: 'Sky', icon: '🔵', cost: 40, color: '#7fb3ff' },
+    { id: 'sunny', name: 'Sunny', icon: '🟡', cost: 40, color: '#ffc94d' },
+    { id: 'grape', name: 'Grape', icon: '🟣', cost: 60, color: '#a07be0' },
+    { id: 'cherry', name: 'Cherry', icon: '🔴', cost: 60, color: '#ff5d73' },
+  ],
+};
 
 export const MAX_MISSED = 10;
 export const FEED_RADIUS = 46;   // player<->NPC contact distance

@@ -207,6 +207,38 @@ export class UIManager {
     requestAnimationFrame(() => bestCard?.scrollIntoView({ block: 'center' }));
   }
 
+  /** Sticker book grid (earned stickers in colour, the rest greyed with a ?). DOM APIs only. */
+  renderStickers(all, earned) {
+    $('sticker-count').textContent = `${earned.length} / ${all.length}`;
+    const grid = $('sticker-grid');
+    grid.replaceChildren(...all.map(st => {
+      const got = earned.includes(st.id), card = document.createElement('div');
+      card.className = 'sticker' + (got ? ' got' : '');
+      const icon = document.createElement('span'); icon.className = 'sticker-icon'; icon.textContent = got ? st.icon : '❔';
+      const name = document.createElement('b'); name.textContent = st.name;
+      const desc = document.createElement('small'); desc.textContent = st.desc;
+      card.append(icon, name, desc);
+      return card;
+    }));
+  }
+
+  /** Wardrobe chips: hats and aprons with price, ✓ when worn. */
+  renderOutfits(outfits, outfit, owned, coins) {
+    const row = (kind, list, current) => list.map(o => {
+      const b = document.createElement('button');
+      const has = o.cost === 0 || owned.includes(o.id);
+      b.className = 'outfit' + (o.id === current ? ' worn' : '') + (has ? '' : ' locked') + (!has && coins < o.cost ? ' poor' : '');
+      b.dataset.action = 'pickOutfit'; b.dataset.kind = kind; b.dataset.id = o.id;
+      b.setAttribute('aria-label', `${o.name}${has ? '' : `, costs ${o.cost} coins`}${o.id === current ? ', wearing' : ''}`);
+      const i = document.createElement('span'); i.className = 'outfit-icon'; i.textContent = o.icon;
+      const t = document.createElement('small'); t.textContent = o.id === current ? '✓' : has ? o.name : `🪙${o.cost}`;
+      b.append(i, t);
+      return b;
+    });
+    $('hat-list').replaceChildren(...row('hats', outfits.hats, outfit.hat));
+    $('apron-list').replaceChildren(...row('aprons', outfits.aprons, outfit.apron));
+  }
+
   setMenuBest(best) { $('menu-best').textContent = best; }
 
   renderUpgrades(upg, coins, petsOwned = []) {

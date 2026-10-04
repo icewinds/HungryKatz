@@ -80,6 +80,7 @@ js/
   gameManager.js      rules: feeding, scoring, missed, game over (no DOM)
   player.js npc.js npcSpawner.js inventory.js foodStation.js
   upgrades.js highScores.js storage.js audio.js ui.js
+  achievements.js     sticker book (achievements + lifetime stats)
   art.js              procedural placeholder art (cats, food, café)
   config.js           ALL tuning: layout, spawn stages, upgrades, rewards
 assets/ui             app icons (regenerate: npm run icons)
@@ -97,6 +98,10 @@ tests/run.js
 - **Café growth:** `TABLES` (unlock level per table), `DECOR_STAGES` (shabby/tidy/cosy/fancy levels) and `levelCrowdBonus` in `js/config.js`.
 - **Difficulty:** `DIFFICULTY` in `js/config.js` (patience and spawn-gap multipliers, extra customers at once).
 - **Scenes:** `THEMES` in `js/scene.js`. Each scene is a colour palette, and the makeover stages apply to every scene.
+- **Stickers:** `STICKERS` in `js/achievements.js` (each has a `done(snapshot)` check).
+- **Outfits:** `OUTFITS` in `js/config.js` (hats reuse cat accessories; aprons are colours).
+- **Seasons:** `seasonFor` in `js/scene.js` picks Halloween (Oct), winter (1 Dec to 6 Jan) and Valentine's (1 to 14 Feb). Preview one with `?season=winter`, `halloween`, `valentine` or `none`.
+- **Relaxed mode:** the `relaxed` entry in `DIFFICULTY`. Customers wait forever, so there are no misses and no game over.
 - **Combos, VIPs, specials, pets:** `COMBO`, `VIP`, `SPECIALS` (which weekdays), `PETS` and `PET_BONUS` in `js/config.js`.
 - **Daily bonus:** `DAILY_REWARDS` in `js/config.js` sets the coins for each day of the 7-day streak.
 - **Secret:** during play, tap the plant on the top-left window sill 5 times quickly to unlock the Ghost cat (5 more taps switches back).

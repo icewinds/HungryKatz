@@ -3,8 +3,9 @@
 
 import {
   WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
-  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, PETS,
+  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, PETS, OUTFITS,
 } from './config.js';
+import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
 import { HighScoreManager, cleanName } from './highScores.js';
@@ -17,9 +18,9 @@ import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
-  drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, FONT,
+  drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // ---------------------------------------------------------------- managers
 const save = Storage.load();
@@ -30,6 +31,17 @@ const chars = new CharacterManager(save, highScores, persist);
 const daily = new DailyBonus(save, persist);
 
 /** Pop the daily bonus over the menu if today's reward hasn't been claimed. */
+/** Award newly earned stickers with a banner + sound. Call after anything that could earn one. */
+function checkStickers() {
+  const fresh = awardStickers(save, highScores.best());
+  if (!fresh.length) return;
+  persist();
+  setTimeout(() => audio.play('buy'), 350);
+  ui.banners(fresh.map(st => `🏅 New sticker: ${st.icon} ${st.name}!`));
+}
+/** The player cat in their wardrobe outfit. */
+const playerOutfit = () => dressUp(playerLook(chars.current()), save.outfit, OUTFITS);
+
 function maybeShowDaily() {
   const s = daily.status();
   if (s.available) ui.showDaily(s);
@@ -49,6 +61,8 @@ function onEvent(type, d) {
     case 'arrive': audio.play('arrive'); break;
     case 'wrongFood': audio.play('wrong'); break;
     case 'feed':
+      recordServe(save.stats, d);
+      checkStickers();
       ghostQuip();
       if (d.combo >= 3) setTimeout(() => audio.play('pickup'), 220); // extra jingle on a hot streak
       audio.play('feed');
@@ -75,6 +89,7 @@ function onEvent(type, d) {
         ui.banners(msgs);
       }
       ui.bump('hud-level');
+      checkStickers();
       break;
     case 'gameOver':
       lastScore = d.score;
@@ -83,6 +98,7 @@ function onEvent(type, d) {
       ui.showGameOver(d, save.playerName);
       ui.setUnlockNote(chars.unlocked().filter(id => !unlockedAtStart.includes(id)).map(id => playerLook(id).name));
       ui.show('gameover');
+      checkStickers();
       break;
   }
 }
@@ -103,7 +119,29 @@ const ui = new UIManager({
   restart: () => startGame(lastRunLevel),
   menu: goToMenu,
   quit: goToMenu,
-  openCharacters: () => { ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait); ui.show('characters'); },
+  openCharacters: () => {
+    ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait);
+    ui.renderOutfits(OUTFITS, save.outfit, save.ownedOutfits, save.coins);
+    ui.show('characters');
+  },
+  openStickers: () => { checkStickers(); ui.renderStickers(STICKERS, save.stickers); ui.show('stickers'); },
+  closeStickers: () => ui.show('menu'),
+  pickOutfit: btn => {
+    const kind = btn.dataset.kind, item = OUTFITS[kind]?.find(o => o.id === btn.dataset.id);
+    if (!item) return;
+    const owned = item.cost === 0 || save.ownedOutfits.includes(item.id);
+    if (!owned) {
+      if (save.coins < item.cost) { audio.play('wrong'); ui.banner(`Need 🪙 ${item.cost - save.coins} more coins`); return; }
+      save.coins -= item.cost;
+      save.ownedOutfits.push(item.id);
+      audio.play('buy');
+      ui.banner(`${item.icon} ${item.name} added to your wardrobe!`);
+    } else audio.play('pickup');
+    save.outfit[kind === 'hats' ? 'hat' : 'apron'] = item.id;
+    persist();
+    ui.renderOutfits(OUTFITS, save.outfit, save.ownedOutfits, save.coins);
+    ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait); // coin counts update
+  },
   closeCharacters: () => ui.show('menu'),
   pickCat: btn => {
     const id = btn.dataset.id, rule = chars.rule(id);
@@ -131,6 +169,7 @@ const ui = new UIManager({
       ui.banner(`🎁 Day ${s.day} bonus: +${coins} coins!`);
     }
     ui.show('menu');
+    checkStickers();
   },
   share: () => shareGame('Come run the cutest cat café with me! 🐱'),
   shareScore: () => shareGame(`I scored ${lastScore} in HungryKatz! 🐾 Can you beat me?`),
@@ -176,6 +215,7 @@ const ui = new UIManager({
     ui.renderUpgrades(upgrades, save.coins, save.pets);
     ui.cardEffect(id, 'bought');
     ui.banner(`${pet.icon} ${pet.name} moved into your café!`);
+    checkStickers();
   },
   toggleMusic: () => {
     save.settings.music = !save.settings.music; persist();
@@ -242,9 +282,10 @@ function startGame(level = save.level) {
   ui.show(null);
   ui.showHud(true);
   const startMsg = chars.current() === 'ghost' ? `🎖️ ${ghostLine()}` : 'Feed the hungry katz! 🐾';
-  ui.banners(gm.specialDay && gm.foods.length >= 2
-    ? [startMsg, '🍽️ Weekend specials! Some cats order two dishes for extra coins']
-    : [startMsg]);
+  const msgs = [startMsg];
+  if (gm.difficulty.relaxed) msgs.push('🌸 Relaxed mode: take your time, nobody leaves sad');
+  if (gm.specialDay && gm.foods.length >= 2) msgs.push('🍽️ Weekend specials! Some cats order two dishes for extra coins');
+  ui.banners(msgs);
 }
 
 function goToMenu() {
@@ -274,10 +315,13 @@ document.getElementById('go-name').addEventListener('submit', e => {
 document.getElementById('go-name-input').addEventListener('input', () => ui.nameMessage(''));
 
 // ---------------------------------------------------------------- scenery (theme + makeover stage)
-let scene = makeScene(save.settings.scene, gm.level);
+// Seasonal decorations by date; preview with ?season=winter|halloween|valentine|none
+const seasonParam = new URLSearchParams(location.search).get('season');
+const season = seasonParam ? (seasonParam === 'none' ? null : seasonParam) : seasonFor();
+let scene = makeScene(save.settings.scene, gm.level, season);
 /** Re-read theme/level and redraw the static café (after level up or a scene change). */
 function refreshScene() {
-  scene = makeScene(save.settings.scene, gm.level);
+  scene = makeScene(save.settings.scene, gm.level, season);
   if (bg.width > 1) buildBackground();
 }
 
@@ -348,6 +392,7 @@ function gnomeScream() {
   gnome.screamAt = t;
   audio.unlock();
   audio.play('gnome');
+  if (!save.stats.gnome) { save.stats.gnome = true; persist(); checkStickers(); }
   gm.fx.push({ kind: 'text', x: gnome.x - 40, y: gnome.y + 30, text: 'HOOO!', color: '#e8504f', size: 24, t: 0, life: 1 });
 }
 const inEggPot = p => p.x >= EGG_POT.x && p.x <= EGG_POT.x + EGG_POT.w && p.y >= EGG_POT.y && p.y <= EGG_POT.y + EGG_POT.h;
@@ -370,6 +415,7 @@ function eggTap() {
   audio.play('levelUp');
   gm.burst(gm.player.x, gm.player.y - 60, 'sparkle', 14, '#c9b48a');
   ui.banners(first ? ['🎖️ Secret cat unlocked: Ghost!', `🎖️ ${ghostLine()}`] : [`🎖️ ${ghostLine()}`]);
+  checkStickers();
 }
 canvas.addEventListener('pointermove', e => {
   if (!dragging || e.buttons === 0) return;
@@ -424,7 +470,7 @@ function render(time) {
     } else if (a.table) {
       drawTable(ctx, a.table, scene, time);
     } else if (a === p) {
-      drawCat(ctx, p.x, p.y, playerLook(chars.current()), { state: p.state, t: time, facing: p.facing, squash: p.squash });
+      drawCat(ctx, p.x, p.y, playerOutfit(), { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
       const anim = speaking.has(a) ? 'talk' : a.anim;
@@ -491,14 +537,14 @@ function drawMenuCat(time) {
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
   mctx.setTransform(2.2, 0, 0, 2.2, menuCanvas.width / 2 - 8, menuCanvas.height - 12);
-  drawCat(mctx, 0, 0, playerLook(chars.current()), { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
+  drawCat(mctx, 0, 0, playerOutfit(), { t: time, facing: 1, mood: Math.sin(time) > 0.6 ? 'happy' : null });
 }
 
 /** Static portrait for the character-select grid. */
 function drawCatPortrait(canvas, look) {
   const c = canvas.getContext('2d');
-  c.setTransform(1.7, 0, 0, 1.7, canvas.width / 2 - 8, canvas.height - 8);
-  drawCat(c, 0, 0, look, { t: 1, facing: 1 });
+  c.setTransform(1.5, 0, 0, 1.5, canvas.width / 2 - 8, canvas.height - 8);
+  drawCat(c, 0, 0, dressUp(look, save.outfit, OUTFITS), { t: 1, facing: 1 });
 }
 
 // ---------------------------------------------------------------- loop

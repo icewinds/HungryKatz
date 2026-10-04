@@ -3,7 +3,7 @@
 // A scene object is { stage: 0..3, pal: palette, level } — see makeScene().
 
 import { LAYOUT, WORLD, decorStage, tablesForLevel, spotsForLevel } from './config.js';
-import { ellipse, circle, rrect, tri, fillStroke, drawFoodIcon, hexRgb, INK, SHADOW } from './art.js';
+import { ellipse, circle, rrect, tri, fillStroke, drawFoodIcon, drawHeart, hexRgb, INK, SHADOW } from './art.js';
 
 const TAU = Math.PI * 2;
 
@@ -72,7 +72,16 @@ function palette(themeId, stage) {
 }
 
 /** Everything the scenery needs for a theme + restaurant level. */
-export const makeScene = (themeId, level) => ({ theme: THEMES[themeId] ? themeId : 'strawberry', level, stage: decorStage(level), pal: palette(themeId, decorStage(level)) });
+export const makeScene = (themeId, level, season = null) => ({ theme: THEMES[themeId] ? themeId : 'strawberry', level, season, stage: decorStage(level), pal: palette(themeId, decorStage(level)) });
+
+/** Seasonal decorations by date: Halloween (Oct), winter (1 Dec - 6 Jan), Valentine's (1-14 Feb). */
+export function seasonFor(d = new Date()) {
+  const m = d.getMonth(), day = d.getDate();
+  if (m === 9) return 'halloween';
+  if (m === 11 || (m === 0 && day <= 6)) return 'winter';
+  if (m === 1 && day <= 14) return 'valentine';
+  return null;
+}
 
 // ---------------------------------------------------------------- static background
 /** Café drawn once into an offscreen canvas (world coordinates). Rebuilt when the level/theme changes. */
@@ -316,6 +325,21 @@ export function drawWallLive(ctx, t, sc, now = new Date()) {
         ctx.quadraticCurveTo(bx + ox + 2, by + oy - 2, bx + ox + 5, by + oy - flap); ctx.stroke();
       }
     }
+    if (sc.season === 'winter') { // falling snow
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      for (let k = 0; k < 18; k++) {
+        const fx = x + ((k * 53 + i * 29) % w) + Math.sin(t * 1.5 + k) * 4, fy = y + ((t * (14 + (k % 5) * 3) + k * 37) % h);
+        circle(ctx, fx, fy, 1.3 + (k % 3) * 0.5); ctx.fill();
+      }
+    }
+    if (sc.season === 'halloween') { // bats flitting past
+      ctx.fillStyle = '#3a2f45';
+      for (let k = 0; k < 2; k++) {
+        const bx = x + ((t * 30 + k * 97 + i * 60) % (w + 40)) - 20, by = y + 30 + k * 26 + Math.sin(t * 3 + k) * 6, flap = Math.sin(t * 16 + k) * 3;
+        ctx.beginPath(); ctx.moveTo(bx, by); ctx.quadraticCurveTo(bx - 5, by - 4 - flap, bx - 10, by - flap); ctx.quadraticCurveTo(bx - 5, by + 1, bx, by + 2);
+        ctx.quadraticCurveTo(bx + 5, by + 1, bx + 10, by - flap); ctx.quadraticCurveTo(bx + 5, by - 4 - flap, bx, by); ctx.fill();
+      }
+    }
     if (st === 0) { // grimy glass
       ctx.fillStyle = 'rgba(120,95,70,0.22)';
       for (const [dx, dy, rx, ry] of [[40, 70, 34, 16], [130, 30, 28, 12], [160, 80, 24, 14]]) { ellipse(ctx, x + dx, y + dy, rx, ry); ctx.fill(); }
@@ -350,6 +374,44 @@ export function drawWallLive(ctx, t, sc, now = new Date()) {
   circle(ctx, cx, cy, 2.5); ctx.fillStyle = '#ff8fab'; ctx.fill();
   if (st >= 3) fairyLights(ctx, t);
   if (sc.theme === 'seaside') drawGnome(ctx, t);
+  if (sc.season) drawSeason(ctx, t, sc);
+}
+
+function drawSeason(ctx, t, sc) {
+  const y = LAYOUT.kitchenY;
+  if (sc.season === 'winter') {
+    if (sc.stage < 3) fairyLights(ctx, t);                          // (fancy cafés already have them)
+    ctx.fillStyle = '#ffffff';                                        // snow on the sills
+    for (const wx of [26, 320]) { rrect(ctx, wx - 4, 112, 202, 5, 3); ctx.fill(); }
+  }
+  if (sc.season === 'halloween') {                                    // glowing pumpkins on the counter
+    for (const [px, s] of [[230, 1], [300, 0.8]]) {
+      ctx.save(); ctx.translate(px, y + 2); ctx.scale(s, s);
+      ellipse(ctx, 0, -10, 15, 12); fillStroke(ctx, '#ff8a2a', '#d96a12', 1.6);
+      ctx.strokeStyle = '#d96a12'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, -21); ctx.lineTo(0, 1); ctx.stroke();
+      rrect(ctx, -2, -25, 4, 6, 2); fillStroke(ctx, '#5b8a3c', null);
+      const glow = 0.6 + 0.4 * Math.sin(t * 5 + px);
+      ctx.fillStyle = `rgba(255,220,90,${glow})`;
+      tri(ctx, [-8, -13], [-3, -13], [-5.5, -17]); ctx.fill();
+      tri(ctx, [3, -13], [8, -13], [5.5, -17]); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-8, -7); ctx.lineTo(-4, -5); ctx.lineTo(0, -7); ctx.lineTo(4, -5); ctx.lineTo(8, -7); ctx.lineTo(4, -3); ctx.lineTo(-4, -3); ctx.closePath(); ctx.fill();
+      ctx.restore();
+    }
+  }
+  if (sc.season === 'valentine') {                                    // hearts garland + floating hearts
+    ctx.strokeStyle = 'rgba(90,61,74,0.3)'; ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(0, 124); ctx.quadraticCurveTo(270, 150, 540, 124); ctx.stroke();
+    for (let i = 0; i < 12; i++) {
+      const hx = 22 + i * 45, sag = Math.sin((hx / 540) * Math.PI) * 13;
+      drawHeart(ctx, hx, 128 + sag + Math.sin(t * 2 + i) * 1.5, 12, i % 2 ? '#ff6b8a' : '#ffb3c6');
+    }
+    for (let k = 0; k < 4; k++) {
+      const p = (t * 0.12 + k * 0.25) % 1;
+      ctx.globalAlpha = Math.sin(p * Math.PI) * 0.7;
+      drawHeart(ctx, 60 + k * 130 + Math.sin(t + k) * 12, 760 - p * 520, 11, '#ff8fab');
+    }
+    ctx.globalAlpha = 1;
+  }
 }
 
 function fairyLights(ctx, t) {

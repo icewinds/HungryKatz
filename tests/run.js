@@ -5,10 +5,11 @@ import { GameManager } from '../js/gameManager.js';
 import { UpgradeManager } from '../js/upgrades.js';
 import { HighScoreManager, cleanName } from '../js/highScores.js';
 import { DEFAULT_SAVE, Storage } from '../js/storage.js';
-import { PLAYER_LOOKS, playerLook } from '../js/art.js';
+import { PLAYER_LOOKS, playerLook, dressUp } from '../js/art.js';
+import { STICKERS, awardStickers, recordServe } from '../js/achievements.js';
 import { CharacterManager } from '../js/characters.js';
 import { NpcSpawner } from '../js/npcSpawner.js';
-import { THEMES, makeScene } from '../js/scene.js';
+import { THEMES, makeScene, seasonFor } from '../js/scene.js';
 import { EAT_TIME } from '../js/npc.js';
 import { DailyBonus, dayKey } from '../js/daily.js';
 import { TRACKS, trackForLevel } from '../js/audio.js';
@@ -16,7 +17,7 @@ import { Inventory } from '../js/inventory.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus,
-  COMBO, VIP, SPECIALS, PET_BONUS,
+  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS,
 } from '../js/config.js';
 
 let passed = 0;
@@ -552,6 +553,53 @@ test('spawner: never two NPCs on the same spot; respects stage cap', () => {
     assert.ok(present.length <= 6);
     if (gm.state !== 'playing') break;
   }
+});
+
+test('relaxed: customers never run out of patience, no misses, no game over', () => {
+  const { gm } = setup({ settings: { ...DEFAULT_SAVE().settings, difficulty: 'relaxed' } });
+  const n = gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk', patience: 2 });
+  park(gm);
+  for (let i = 0; i < 60 * 60; i++) gm.update(1 / 60);
+  assert.equal(n.state, 'waiting');
+  assert.equal(gm.missed, 0);
+  assert.equal(gm.state, 'playing');
+});
+
+test('stickers: stats from serves earn stickers once; save sanitises them', () => {
+  const save = DEFAULT_SAVE();
+  assert.deepEqual(awardStickers(save, 0), []);
+  recordServe(save.stats, { npc: { requests: ['milk', 'fish'] }, tip: 3, combo: 5, vip: true });
+  const got = awardStickers(save, 600).map(s => s.id).sort();
+  assert.deepEqual(got, ['combo5', 'first', 'score500', 'special', 'vip']);
+  assert.deepEqual(awardStickers(save, 600), []); // not twice
+  assert.ok(STICKERS.every(s => s.id && s.icon && s.name && s.desc));
+  globalThis.localStorage = { getItem: () => JSON.stringify({ stickers: ['first', 5], stats: { served: 3 } }) };
+  const loaded = Storage.load();
+  delete globalThis.localStorage;
+  assert.deepEqual(loaded.stickers, ['first']);
+  assert.equal(loaded.stats.served, 3);
+  assert.equal(loaded.stats.vips, 0);
+});
+
+test('outfits: dressUp swaps hat/apron on chef cats only', () => {
+  const mango = playerLook('mango');
+  const d = dressUp(mango, { hat: 'party', apron: 'mint' }, OUTFITS);
+  assert.equal(d.hat, 'party');
+  assert.equal(d.acc, '#6fcf9f');
+  assert.equal(dressUp(mango, { hat: 'chef', apron: 'classic' }, OUTFITS).acc, mango.acc);
+  const ghost = playerLook('ghost');
+  assert.equal(dressUp(ghost, { hat: 'party', apron: 'mint' }, OUTFITS), ghost);
+});
+
+test('seasons: decorations by date', () => {
+  const s = (m, d) => seasonFor(new Date(2026, m - 1, d));
+  assert.equal(s(10, 31), 'halloween');
+  assert.equal(s(12, 1), 'winter');
+  assert.equal(s(1, 6), 'winter');
+  assert.equal(s(1, 7), null);
+  assert.equal(s(2, 14), 'valentine');
+  assert.equal(s(7, 4), null);
+  assert.equal(makeScene('strawberry', 1, 'winter').season, 'winter');
 });
 
 console.log(`${passed} passed`);
