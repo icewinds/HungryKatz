@@ -5,7 +5,8 @@
 
 import { WORLD } from './config.js';
 
-export const FONT = '"Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif';
+// In-game text face (Lilita One, single weight: draw at 400 so it is never fake-bolded).
+export const FONT = '"Lilita One", "Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif';
 const TAU = Math.PI * 2;
 export const INK = '#5a3d4a';
 // Set by game.js to icons.js renderers so canvas text shows drawn icons instead of emoji
@@ -486,7 +487,7 @@ export function drawPad(ctx, zone, type, ready, t, flash, lockedLevel = 0) {
     ellipse(ctx, x, y + 10, 46, 20); fillStroke(ctx, '#f1ebed', '#e2d8dc', 2);
     drawFoodIcon(ctx, type, x, y - 4, 1.1, 0.25);
     rrect(ctx, x - 20, y + 2, 40, 18, 9); fillStroke(ctx, '#fff', '#e2d8dc', 1.5);
-    ctx.font = `700 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = '#9a8590';
     if (canvasIcons.icon) { canvasIcons.icon(ctx, 'lock', x - 7, y + 11, 13); ctx.fillText(lockedLevel, x + 7, y + 12); }
     else ctx.fillText(`🔒${lockedLevel}`, x, y + 12);
@@ -516,7 +517,7 @@ export function drawCarryBadge(ctx, x, y, inv) {
   const w = items.length * 34 + 6, h = 24, top = y - 114;
   x = Math.min(Math.max(x, w / 2 + 4), WORLD.W - w / 2 - 4); // keep the badge on screen near walls
   rrect(ctx, x - w / 2, top, w, h, 12); fillStroke(ctx, 'rgba(255,255,255,0.95)', '#f6d3dd', 1.5);
-  ctx.font = `700 12px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   items.forEach((k, i) => {
     const ix = x - w / 2 + 13 + i * 34;
     drawFoodIcon(ctx, k, ix, top + 12, 0.55);
@@ -554,7 +555,7 @@ export function drawRequest(ctx, npc, t) {
   if (two) {
     drawFoodIcon(ctx, npc.requests[0], -10, 1, 0.62);
     drawFoodIcon(ctx, npc.requests[1], 10, 1, 0.62);
-    ctx.fillStyle = '#c43d5c'; ctx.font = `700 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#c43d5c'; ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('+', 0, 2);
   } else {
     drawFoodIcon(ctx, npc.request, 0, 1, 0.85);
@@ -579,7 +580,7 @@ export function drawChatBubble(ctx, x, y, dir, n, t) {
   } else if (kind === 'heart') drawHeart(ctx, bx, by + 1, 11);
   else if (kind === 'note') {
     if (canvasIcons.icon) canvasIcons.icon(ctx, 'note', bx, by, 20);
-    else { ctx.font = `700 15px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#8a5cc7'; ctx.fillText('♪♫', bx, by + 1); }
+    else { ctx.font = `400 15px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#8a5cc7'; ctx.fillText('♪♫', bx, by + 1); }
   } else drawFoodIcon(ctx, kind, bx, by + 1, 0.5);
 }
 
@@ -597,7 +598,7 @@ export function drawHeart(ctx, x, y, s, color = '#ff6b8a') {
 export function drawTapQueue(ctx, stops) {
   if (stops.length < 2) return; // a single stop needs no numbers
   ctx.save();
-  ctx.font = `700 13px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `400 13px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   stops.forEach((s, i) => {
     ellipse(ctx, s.x, s.y, 14, 6.5); ctx.strokeStyle = 'rgba(255,143,171,0.8)'; ctx.lineWidth = 2.5; ctx.stroke();
     circle(ctx, s.x, s.y - 14, 9); fillStroke(ctx, '#ff8fab', '#fff', 2);
@@ -620,7 +621,7 @@ export function drawFx(ctx, fx, layer) {
     } else if (f.kind === 'text') {
       ctx.globalAlpha = 1 - Math.max(0, (k - 0.6) / 0.4);
       const pop = easeOutBack(Math.min(1, f.t / 0.25));
-      ctx.font = `700 ${Math.max(1, f.size * pop)}px ${FONT}`;
+      ctx.font = `400 ${Math.max(1, f.size * pop)}px ${FONT}`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const y = f.y - easeOutCubic(k) * 50;
       ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.lineJoin = 'round';

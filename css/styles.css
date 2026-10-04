@@ -46,6 +46,9 @@
 
 * { box-sizing: border-box; }
 
+/* In-game text (HUD, carry tray, banners) uses the display face, like the canvas text */
+#hud, #hud *, #tray, #tray *, #banner, #banner * { font-family: var(--display); font-weight: 400; }
+
 /* Drawn icons (js/icons.js) replace emoji inline; sized by the surrounding text */
 .ico { display: inline-block; width: 1.3em; height: 1.3em; vertical-align: -0.3em; }
 .help-ico .ico { width: 34px; height: 34px; vertical-align: middle; }
@@ -186,7 +189,7 @@ html, body {
 .btn.big { font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: 0.3px; padding: 14px 40px; } /* 24px regular = large text */
 .btn.secondary { background: var(--cream); color: var(--ink); box-shadow: none; border: 2px solid var(--line); }
 .btn.mint { background: var(--mint); }
-.btn-upgrade { min-height: 54px; padding: 10px 22px; border-radius: 11px; font-size: 19px; background: var(--mint); }
+.btn-upgrade { min-height: 54px; padding: 10px 22px; border-radius: 11px; font-size: 20px; background: #24865b; } /* regular weight: needs 4.5:1 */
 .toggle[aria-pressed="false"] { background: #fff; border-style: dashed; } /* off, not disabled */
 .toggle[aria-pressed="false"] .ico { opacity: 0.45; }
 

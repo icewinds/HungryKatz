@@ -300,7 +300,7 @@ function drawClosedCat() {
   x.beginPath(); x.moveTo(118, 22); x.lineTo(131, 8); x.lineTo(144, 22); x.stroke();          // string
   x.fillStyle = '#c98b55'; x.strokeStyle = '#8a5a3c';
   x.beginPath(); x.roundRect(100, 22, 62, 34, 6); x.fill(); x.stroke();                       // board
-  x.fillStyle = '#fff7e8'; x.font = `700 11px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = '#fff7e8'; x.font = `400 11px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
   x.fillText('See you', 131, 33); x.fillText('soon!', 131, 46);
 }
 
@@ -582,7 +582,7 @@ function drawFirstGameHint(time) {
   ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(x - 15, by - 22); ctx.lineTo(x + 15, by - 22); ctx.lineTo(x, by); ctx.closePath();
   ctx.fillStyle = '#ec5f89'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); ctx.fill();
-  ctx.font = `700 21px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `400 21px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const lx = Math.min(Math.max(x, 70), WORLD.W - 70);
   ctx.lineWidth = 5; ctx.strokeText(label, lx, by - 38); ctx.fillStyle = '#c43d5c'; ctx.fillText(label, lx, by - 38);
   ctx.restore();
@@ -590,7 +590,7 @@ function drawFirstGameHint(time) {
 
 function drawDebug() {
   ctx.lineWidth = 2;
-  ctx.font = `600 11px ${FONT}`; ctx.textAlign = 'center';
+  ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center';
   const free = new Set(gm.spawner.freeSpots(gm.npcs));
   for (const s of LAYOUT.spots) {
     ctx.strokeStyle = free.has(s) ? '#2a2' : '#d22';
