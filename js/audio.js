@@ -28,10 +28,32 @@ const SYNTH = {
   gameOver: [[523, 0.18, 'triangle'], [440, 0.18, 'triangle', 0.2], [349, 0.18, 'triangle', 0.4], [262, 0.45, 'triangle', 0.6]],
 };
 
-// 16-step loop of eighth notes (MIDI numbers, 0 = rest)
-const MELODY = [72, 0, 76, 79, 76, 0, 74, 72, 74, 0, 77, 81, 79, 77, 76, 74];
-const BASS   = [48, 0, 0, 0, 53, 0, 0, 0, 55, 0, 0, 0, 48, 0, 55, 0];
-const STEP = 0.24;
+// Background music: one 16-step loop per restaurant level (cycles after the last).
+// melody/bass = MIDI notes per eighth-note step (0 = rest), step = seconds per step,
+// lead = oscillator type, hat = soft hi-hat tick on off-beats.
+export const TRACKS = [
+  { name: 'Morning Milk', step: 0.24, lead: 'triangle', hat: false,
+    melody: [72, 0, 76, 79, 76, 0, 74, 72, 74, 0, 77, 81, 79, 77, 76, 74],
+    bass:   [48, 0, 0, 0, 53, 0, 0, 0, 55, 0, 0, 0, 48, 0, 55, 0] },
+  { name: 'Bouncy Biscuits', step: 0.21, lead: 'square', hat: true,
+    melody: [67, 71, 74, 71, 72, 0, 71, 69, 67, 0, 69, 71, 72, 74, 71, 0],
+    bass:   [43, 0, 50, 0, 48, 0, 50, 0, 43, 0, 50, 0, 45, 0, 50, 0] },
+  { name: 'Dreamy Dozing', step: 0.29, lead: 'sine', hat: false,
+    melody: [77, 0, 76, 72, 74, 0, 72, 69, 70, 0, 72, 74, 72, 0, 69, 0],
+    bass:   [41, 0, 0, 48, 46, 0, 0, 48, 41, 0, 0, 48, 43, 0, 48, 0] },
+  { name: 'Jazzy Whiskers', step: 0.23, lead: 'triangle', hat: true,
+    melody: [69, 72, 76, 0, 74, 72, 71, 0, 72, 76, 79, 77, 76, 0, 72, 0],
+    bass:   [45, 0, 52, 0, 50, 0, 52, 0, 45, 0, 52, 0, 47, 0, 52, 0] },
+  { name: 'Zoomies', step: 0.19, lead: 'square', hat: true,
+    melody: [74, 74, 78, 81, 78, 0, 76, 74, 76, 0, 79, 78, 76, 0, 73, 0],
+    bass:   [50, 0, 57, 0, 55, 0, 57, 0, 50, 0, 57, 0, 45, 0, 57, 0] },
+  { name: 'Sweet Treats', step: 0.25, lead: 'triangle', hat: false,
+    melody: [75, 79, 82, 79, 80, 0, 79, 77, 75, 0, 77, 79, 80, 82, 79, 0],
+    bass:   [51, 0, 58, 0, 56, 0, 58, 0, 51, 0, 58, 0, 53, 0, 58, 0] },
+];
+/** Track index for a restaurant level (level 1 -> track 0, cycling). */
+export const trackForLevel = level => (Math.max(1, level) - 1) % TRACKS.length;
+const FADE = 0.7; // seconds to fade between tracks
 const midi = m => 440 * 2 ** ((m - 69) / 12);
 
 export class AudioManager {
@@ -39,6 +61,21 @@ export class AudioManager {
     this.settings = settings; // shared with the save object: { music, sfx }
     this.ctx = null;
     this.musicOn = false;
+    this.trackIndex = 0;
+    this.track = TRACKS[0];
+    this.pending = null; // track waiting for the fade-out to finish
+  }
+
+  /** Switch background music (e.g. on level up); crossfades if music is playing. */
+  setTrack(i) {
+    if (i === this.trackIndex) return;
+    this.trackIndex = i;
+    if (!this.ctx || !this.musicOn || SOUND_FILES.music) { this.track = TRACKS[i]; return; }
+    const g = this.musicGain.gain, now = this.ctx.currentTime;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(g.value, now);
+    g.linearRampToValueAtTime(0, now + FADE);
+    this.pending = { track: TRACKS[i], at: now + FADE };
   }
 
   /** Must be called from a user gesture (browser autoplay rules). */
@@ -88,17 +125,31 @@ export class AudioManager {
     if (!this.ctx) return;
     this.musicOn = true;
     this.step = 0;
+    if (this.pending) { this.track = this.pending.track; this.pending = null; }
+    const g = this.musicGain.gain;
+    g.cancelScheduledValues(this.ctx.currentTime);
+    g.setValueAtTime(1, this.ctx.currentTime);
     this.nextTime = this.ctx.currentTime + 0.1;
     this.timer = setInterval(() => this.schedule(), 60);
   }
 
   schedule() {
     while (this.nextTime < this.ctx.currentTime + 0.3) {
-      const m = MELODY[this.step % 16], b = BASS[this.step % 16];
-      if (m) this.note(midi(m), STEP * 0.9, 'triangle', 0.05, this.nextTime, this.musicGain);
-      if (b) this.note(midi(b), STEP * 1.8, 'sine', 0.08, this.nextTime, this.musicGain);
+      if (this.pending && this.nextTime >= this.pending.at) { // fade-out done: start the new tune
+        this.track = this.pending.track;
+        this.pending = null;
+        this.step = 0;
+        const g = this.musicGain.gain;
+        g.setValueAtTime(0, this.nextTime);
+        g.linearRampToValueAtTime(1, this.nextTime + FADE);
+      }
+      const { melody, bass, step, lead, hat } = this.track, i = this.step % 16;
+      const leadVol = lead === 'square' ? 0.03 : lead === 'sine' ? 0.06 : 0.05; // square is louder
+      if (melody[i]) this.note(midi(melody[i]), step * 0.9, lead, leadVol, this.nextTime, this.musicGain);
+      if (bass[i]) this.note(midi(bass[i]), step * 1.8, 'sine', 0.08, this.nextTime, this.musicGain);
+      if (hat && i % 2) this.note(7000, 0.03, 'square', 0.006, this.nextTime, this.musicGain);
       this.step++;
-      this.nextTime += STEP;
+      this.nextTime += step;
     }
   }
 

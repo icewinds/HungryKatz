@@ -9,6 +9,7 @@ import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { CharacterManager } from '../js/characters.js';
 import { NpcSpawner } from '../js/npcSpawner.js';
 import { DailyBonus, dayKey } from '../js/daily.js';
+import { TRACKS, trackForLevel } from '../js/audio.js';
 import { Inventory } from '../js/inventory.js';
 import { LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, foodsForLevel } from '../js/config.js';
 
@@ -287,6 +288,20 @@ test('daily bonus: once per day, streak grows, missed day resets, loops after da
   // month boundary still counts as consecutive
   const s2 = { ...DEFAULT_SAVE(), daily: { last: dayKey(new Date(2026, 9, 31)), streak: 2 } };
   assert.equal(new DailyBonus(s2).status(new Date(2026, 10, 1)).day, 3);
+});
+
+test('music: each level gets a track, cycling; every track is a valid 16-step loop', () => {
+  assert.equal(trackForLevel(1), 0);
+  assert.equal(trackForLevel(2), 1);
+  assert.equal(trackForLevel(TRACKS.length + 1), 0, 'cycles after the last track');
+  assert.equal(trackForLevel(0), 0, 'never negative');
+  for (const t of TRACKS) {
+    assert.equal(t.melody.length, 16, t.name);
+    assert.equal(t.bass.length, 16, t.name);
+    assert.ok(t.step > 0.1 && t.step < 0.5, t.name);
+    assert.ok(['sine', 'square', 'triangle', 'sawtooth'].includes(t.lead), t.name);
+  }
+  assert.equal(new Set(TRACKS.map(t => t.melody.join())).size, TRACKS.length, 'tracks are all different');
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

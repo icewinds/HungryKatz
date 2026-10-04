@@ -96,4 +96,5 @@ tests/run.js
 - **Daily bonus:** `DAILY_REWARDS` in `js/config.js` sets the coins for each day of the 7-day streak.
 - **Characters:** `CHARACTER_UNLOCKS` in `js/config.js` holds coin prices and high-score targets.
 - **Real sprites:** each function in `js/art.js` (`drawCat`, `drawFoodIcon`, `drawBackground`) only takes a position and animation state (`idle`/`walk`/`eat`, mood `happy`/`sad`, `facing`). Replace its body with `ctx.drawImage(spriteSheet, …)`. The rest of the game won't need changes.
+- **Music:** `TRACKS` in `js/audio.js` holds one 16-step loop per restaurant level (cycling). Set `SOUND_FILES.music` to use a single recorded track instead.
 - **Real audio:** set paths in `SOUND_FILES` in `js/audio.js` (e.g. `click: 'assets/audio/click.mp3'`) and add the files to `ASSETS` in `service-worker.js`.

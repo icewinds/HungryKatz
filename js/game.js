@@ -5,7 +5,7 @@ import { WORLD, LAYOUT, MAX_MISSED, FOODS, levelProgress, foodUnlockLevel } from
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
 import { HighScoreManager } from './highScores.js';
-import { AudioManager } from './audio.js';
+import { AudioManager, trackForLevel } from './audio.js';
 import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
 import { CharacterManager } from './characters.js';
@@ -31,6 +31,7 @@ function maybeShowDaily() {
 }
 let unlockedAtStart = [];
 const audio = new AudioManager(save.settings);
+audio.setTrack(trackForLevel(save.level)); // music matches the restaurant level
 const debug = { on: new URLSearchParams(location.search).has('debug') || save.settings.debug };
 const gm = new GameManager({ save, persist, upgrades, highScores, onEvent });
 
@@ -48,6 +49,7 @@ function onEvent(type, d) {
     case 'missed': audio.play('sad'); ui.bump('hud-paws'); ui.flashMiss(); break;
     case 'levelUp':
       audio.play('levelUp');
+      audio.setTrack(trackForLevel(d.level)); // new level, new tune
       ui.banner(d.newFoods.length
         ? `🎉 Level ${d.level}! New on the menu: ${d.newFoods.map(f => FOOD_LABEL[f]).join(', ')}`
         : `🎉 Restaurant Level ${d.level}! Customers now pay ${d.reward}`);
