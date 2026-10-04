@@ -8,8 +8,9 @@ import { DEFAULT_SAVE, Storage } from '../js/storage.js';
 import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { CharacterManager } from '../js/characters.js';
 import { NpcSpawner } from '../js/npcSpawner.js';
+import { DailyBonus, dayKey } from '../js/daily.js';
 import { Inventory } from '../js/inventory.js';
-import { LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, foodsForLevel } from '../js/config.js';
+import { LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, foodsForLevel } from '../js/config.js';
 
 let passed = 0;
 function test(name, fn) {
@@ -267,6 +268,25 @@ test('tips: sometimes a tip is added to coins and score', () => {
   assert.equal(events.find(e => e[0] === 'feed')[1].tip, TIPS.min);
   assert.equal(save.coins, 10 + TIPS.min);
   assert.equal(gm.score, 10 + TIPS.min);
+});
+
+test('daily bonus: once per day, streak grows, missed day resets, loops after day 7', () => {
+  const save = DEFAULT_SAVE();
+  const db = new DailyBonus(save);
+  const day = d => new Date(2026, 9, d, 10); // Oct d, 10:00 local
+  assert.equal(db.claim(day(1)), DAILY_REWARDS[0]);
+  assert.equal(db.claim(day(1)), 0, 'only once per day');
+  assert.equal(db.status(new Date(2026, 9, 1, 23, 59)).available, false);
+  assert.equal(db.claim(day(2)), DAILY_REWARDS[1], 'next day continues streak');
+  assert.equal(db.claim(day(4)), DAILY_REWARDS[0], 'skipped a day: back to day 1');
+  for (let d = 5; d <= 10; d++) db.claim(day(d)); // days 2..7
+  assert.equal(save.daily.streak, 7);
+  assert.equal(db.claim(day(11)), DAILY_REWARDS[0], 'loops after day 7');
+  const [d1, d2] = DAILY_REWARDS, all = DAILY_REWARDS.reduce((a, b) => a + b);
+  assert.equal(save.coins, d1 + d2 + all + d1, 'day1, day2, (reset) days 1-7, (loop) day1');
+  // month boundary still counts as consecutive
+  const s2 = { ...DEFAULT_SAVE(), daily: { last: dayKey(new Date(2026, 9, 31)), streak: 2 } };
+  assert.equal(new DailyBonus(s2).status(new Date(2026, 10, 1)).day, 3);
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

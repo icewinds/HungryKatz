@@ -71,6 +71,9 @@ export const SPAWN_STAGES = [
 // Tips: chance a fed customer adds a random tip (coins) on top of the payment.
 export const TIPS = { chance: 0.25, min: 2, max: 6 };
 
+// Daily bonus coins for streak days 1..7 (missing a day restarts at day 1; after day 7 it loops).
+export const DAILY_REWARDS = [20, 30, 40, 50, 60, 80, 120];
+
 export const MAX_MISSED = 10;
 export const FEED_RADIUS = 46;   // player<->NPC contact distance
 export const NPC_SPEED = 140;    // px per second

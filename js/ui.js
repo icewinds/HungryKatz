@@ -63,6 +63,17 @@ export class UIManager {
     }
   }
 
+  /** Daily bonus card: past streak days ticked, today's tile highlighted. */
+  showDaily({ day, reward, rewards }) {
+    $('daily-reward').textContent = reward;
+    $('daily-days').innerHTML = rewards.map((r, i) => `
+      <div class="daily-day ${i < day - 1 ? 'done' : ''} ${i === day - 1 ? 'today' : ''} ${i === rewards.length - 1 ? 'big' : ''}">
+        <span class="dd-label">Day ${i + 1}</span>
+        <b>${i < day - 1 ? '✓' : `🪙${r}`}</b>
+      </div>`).join('');
+    this.show('daily');
+  }
+
   setLevelProgress(p) {
     const v = Math.round(p * 100) / 100;
     if (this.hudCache.lvlp === v) return;

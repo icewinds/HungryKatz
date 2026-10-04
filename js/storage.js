@@ -11,6 +11,7 @@ export const DEFAULT_SAVE = () => ({
   highScores: [],
   character: 'mango', // chosen player cat (art.js PLAYER_LOOKS id)
   ownedCats: [],      // cats bought with coins
+  daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
   settings: { music: true, sfx: true, debug: false },
 });
 
@@ -37,6 +38,10 @@ export const Storage = {
       highScores: Array.isArray(data.highScores) ? data.highScores.filter(Number.isFinite).slice(0, 5) : [],
       character: typeof data.character === 'string' ? data.character : d.character,
       ownedCats: Array.isArray(data.ownedCats) ? data.ownedCats.filter(s => typeof s === 'string') : [],
+      daily: {
+        last: typeof data.daily?.last === 'string' ? data.daily.last : null,
+        streak: Number.isInteger(data.daily?.streak) ? data.daily.streak : 0,
+      },
       settings: { ...d.settings, ...data.settings },
     };
   },

@@ -9,6 +9,7 @@ import { AudioManager } from './audio.js';
 import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
 import { CharacterManager } from './characters.js';
+import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
@@ -21,6 +22,13 @@ const persist = () => Storage.save(save);
 const upgrades = new UpgradeManager(save, persist);
 const highScores = new HighScoreManager(save, persist);
 const chars = new CharacterManager(save, highScores, persist);
+const daily = new DailyBonus(save, persist);
+
+/** Pop the daily bonus over the menu if today's reward hasn't been claimed. */
+function maybeShowDaily() {
+  const s = daily.status();
+  if (s.available) ui.showDaily(s);
+}
 let unlockedAtStart = [];
 const audio = new AudioManager(save.settings);
 const debug = { on: new URLSearchParams(location.search).has('debug') || save.settings.debug };
@@ -81,6 +89,15 @@ const ui = new UIManager({
       ui.charEffect(id, 'poor');
       ui.banner(rule.coins ? `Need 🪙 ${rule.coins - save.coins} more coins` : `Reach a best score of ${rule.score} 🏆`);
     }
+  },
+  claimDaily: () => {
+    const s = daily.status(), coins = daily.claim();
+    if (coins) {
+      audio.unlock();
+      audio.play('levelUp');
+      ui.banner(`🎁 Day ${s.day} bonus: +${coins} coins!`);
+    }
+    ui.show('menu');
   },
   openSettings: () => ui.show('settings'),
   closeSettings: () => ui.show('menu'),
@@ -149,6 +166,7 @@ function goToMenu() {
   ui.showHud(false);
   ui.setMenuBest(highScores.best());
   ui.show('menu');
+  maybeShowDaily();
 }
 
 // ---------------------------------------------------------------- canvas + scaling
@@ -337,6 +355,7 @@ document.addEventListener('visibilitychange', () => {
     if (gm.state === 'playing' && !gm.paused) { gm.paused = true; ui.show('pause'); }
   } else {
     audio.resume();
+    if (ui.current === 'menu') maybeShowDaily(); // app left open overnight
   }
 });
 
@@ -370,6 +389,7 @@ syncToggles();
 ui.setInstall({ available: false, standalone: isStandalone() });
 ui.setMenuBest(highScores.best());
 ui.show('menu');
+maybeShowDaily();
 requestAnimationFrame(frame);
 
 window.hungryKatz = { gm, save, upgrades, highScores }; // console access for testing

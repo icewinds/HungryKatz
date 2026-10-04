@@ -216,6 +216,26 @@ html, body {
 .best { font-size: 17px; margin: 16px 0; }
 .best b { color: var(--gold); }
 
+/* Daily bonus */
+.daily-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+.daily-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 2px;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  background: var(--cream);
+}
+.daily-day .dd-label { font-size: 12px; color: var(--ink-soft); }
+.daily-day b { font-size: 15px; color: var(--gold); }
+.daily-day.done { background: var(--mint-soft); }
+.daily-day.done b { color: #2f9e6e; }
+.daily-day.today { border-color: var(--pink); background: #fff0f4; animation: pulse 0.8s infinite alternate; }
+.daily-day.big { grid-column: span 2; }
+.daily-day.big b { font-size: 19px; }
+
 /* Character select */
 .char-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
 .char {
