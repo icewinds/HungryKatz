@@ -184,17 +184,19 @@ function drawCatBack(ctx, look, { t, state, sad }) {
   const ol = look.dark, eat = state === 'eat', talk = state === 'talk';
   const white = look.pattern === 'socks' || look.pattern === 'tuxedo';
 
-  // tail curling up beside the body
-  const sway = Math.sin(t * 2.6) * 5;
-  ctx.beginPath(); ctx.moveTo(10, -8); ctx.quadraticCurveTo(32, -10, 26 + sway, -34);
-  ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
-  ctx.strokeStyle = look.tail ?? look.fur; ctx.lineWidth = 5; ctx.stroke();
 
   // sitting body with the pattern across its back, hind paws peeking out
   ellipse(ctx, 0, -18, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); backPattern(ctx, look); ctx.restore();
   ellipse(ctx, 0, -18, 18, 17); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
   for (const px of [-10, 10]) { ellipse(ctx, px, -2, 6.5, 3.5); fillStroke(ctx, white ? '#fff' : look.fur, ol, 1.6); }
+
+  // tail: from the bottom middle, swishing slowly side to side while waiting (in front: we're behind the cat)
+  const swish = Math.sin(t * 2.2) * 15 + Math.sin(t * 5.3) * 2; // big slow swing + a little flick
+  ctx.beginPath(); ctx.moveTo(0, -5);
+  ctx.quadraticCurveTo(swish * 0.5, 9, swish * 1.25, -12 + Math.abs(swish) * 0.25);
+  ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
+  ctx.strokeStyle = look.tail ?? look.fur; ctx.lineWidth = 5; ctx.stroke();
 
   // head: dips while eating, turns toward its friend while chatting
   const hx = talk ? 3 + Math.sin(t * 7) : 0;
