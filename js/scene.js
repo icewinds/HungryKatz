@@ -135,7 +135,7 @@ export function drawBackground(ctx, sc) {
   }
 
   // doorway + welcome mat on the left wall (the door itself swings open live: drawDoor)
-  rrect(ctx, -6, 280, 18, 100, 6); fillStroke(ctx, DAYLIGHT, null);
+  rrect(ctx, -6, DOOR.hy - DOOR.H, 18, DOOR.W + DOOR.H, 6); fillStroke(ctx, DAYLIGHT, null);
   rrect(ctx, 8, 298, 42, 64, 12); fillStroke(ctx, p.mat, p.matEdge, 2);
   if (st === 0) { ctx.strokeStyle = p.matEdge; ctx.lineWidth = 1.5; for (let y = 304; y < 360; y += 8) { ctx.beginPath(); ctx.moveTo(8, y); ctx.lineTo(3, y + 3); ctx.stroke(); } }
 
@@ -480,6 +480,9 @@ export function drawPets(ctx, pets, t) {
 
 // ---------------------------------------------------------------- the front door
 const DAYLIGHT = '#fff3d6';
+// Door leaf: hinged on the floor at (hx, hy), W wide along the wall, H tall. Shut, it lies flush in the
+// wall and (seen from this angle) covers the strip hy-H .. hy+W, the same footprint the open leaf swings from.
+const DOOR = { hx: 6, hy: 282, W: 96, H: 104 };
 /** The front door on the left wall, swung open by `open` (0 shut .. 1 wide open), hinged at the back
  *  jamb so it opens toward the wall and cats walk in front of it. Daylight spills in while open. */
 export function drawDoor(ctx, sc, open) {
@@ -492,21 +495,25 @@ export function drawDoor(ctx, sc, open) {
   }
   if (open < 0.25) { // shut: the door lies flush in the wall, fading as it swings away
     ctx.save(); ctx.globalAlpha = 1 - open * 4;
-    rrect(ctx, -6, 280, 18, 100, 6); fillStroke(ctx, p.door, null);
+    const top = DOOR.hy - DOOR.H, len = DOOR.W + DOOR.H;
+    rrect(ctx, -6, top, 18, len, 6); fillStroke(ctx, p.door, 'rgba(90,61,74,0.25)', 1.5);
+    rrect(ctx, -2, top + 12, 9, len * 0.42, 3); fillStroke(ctx, 'rgba(255,255,255,0.3)', null);       // panels
+    rrect(ctx, -2, top + len * 0.52, 9, len * 0.42, 3); fillStroke(ctx, 'rgba(255,255,255,0.3)', null);
+    circle(ctx, 8, DOOR.hy + DOOR.W * 0.55, 3); fillStroke(ctx, '#ffd34d', '#c99a00', 1);          // knob
     ctx.restore();
   }
   if (open <= 0.01) return;
   // The door leaf stands upright: its bottom edge swings across the floor around the hinge,
   // and its face (96 wide, 104 tall) turns toward us. Map leaf coords (u along, v up) to the floor.
-  const a = open * 1.35, W = 96, H = 104;
+  const a = open * 1.35, { W, H, hx, hy } = DOOR;
   ctx.save();
-  ctx.transform(Math.sin(a), Math.cos(a), 0, -1, 6, 282);
+  ctx.transform(Math.sin(a), Math.cos(a), 0, -1, hx, hy);
   rrect(ctx, 0, 0, W, H, 5); fillStroke(ctx, p.door, 'rgba(90,61,74,0.35)', 1.5);
   rrect(ctx, 10, 12, 32, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1); // panels
   rrect(ctx, 54, 12, 32, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1);
   rrect(ctx, W - 4, 0, 4, H, 2); fillStroke(ctx, 'rgba(90,61,74,0.18)', null);                          // edge
   ctx.restore();
   // knob drawn upright (not squashed by the leaf's skew)
-  const kx = 6 + Math.sin(a) * (W - 9), ky = 282 + Math.cos(a) * (W - 9) - H * 0.45;
+  const kx = hx + Math.sin(a) * (W - 9), ky = hy + Math.cos(a) * (W - 9) - H * 0.45;
   circle(ctx, kx, ky, 3.4); fillStroke(ctx, '#ffd34d', '#c99a00', 1.2);
 }

@@ -511,7 +511,10 @@ function render(time) {
   ctx.save();
   ctx.beginPath(); ctx.rect(0, -200, WORLD.W, WORLD.H + 400); ctx.clip(); // cats outside the walls stay hidden until they reach the door
   drawWallLive(ctx, time, scene);
-  drawDoor(ctx, scene, doorOpenness(npcs));
+  const door = doorOpenness(npcs);
+  if (door > 0.08 && lastDoor <= 0.08) audio.play('bell'); // ding-ding as the door starts to open
+  lastDoor = door;
+  drawDoor(ctx, scene, door);
   drawPets(ctx, save.pets, time);
 
   const menu = gm.foods;
@@ -573,6 +576,7 @@ function render(time) {
   if (debug.on) drawDebug();
 }
 
+let lastDoor = 0;
 /** How far the front door is open: wide while a cat is walking through it, eased shut as they pass. */
 function doorOpenness(npcs) {
   let open = 0;
