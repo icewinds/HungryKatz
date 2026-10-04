@@ -388,9 +388,9 @@ test('high score names: named entries, rename after game over, clean input, old 
 
 test('café growth: more tables/seats by level, makeover stages, busier at higher levels', () => {
   assert.equal(tablesForLevel(1).length, 1);
-  assert.equal(spotsForLevel(1).length, 6, 'bar + one table');
+  assert.equal(spotsForLevel(1).length, 8, 'bar + one 4-seat table');
   assert.equal(tablesForLevel(9).length, TABLES.length);
-  assert.equal(spotsForLevel(9).length, 4 + TABLES.length * 2);
+  assert.equal(spotsForLevel(9).length, 4 + TABLES.length * 4);
   assert.deepEqual([1, 2, 3, 5, 8, 20].map(decorStage), [0, 0, 1, 2, 3, 3]);
   assert.ok(levelCrowdBonus(9) > levelCrowdBonus(1));
   assert.deepEqual([1, 3, 5, 9, 20].map(levelCrowdBonus), [0, 1, 2, 4, 6]);
@@ -552,7 +552,7 @@ test('spawner: never two NPCs on the same spot; respects stage cap', () => {
     gm.update(1 / 60);
     const present = gm.npcs.filter(n => n.state !== 'leaving');
     assert.equal(new Set(present.map(n => n.spot)).size, present.length);
-    assert.ok(present.length <= 6);
+    assert.ok(present.length <= 7); // hardest stage cap (level 1 has 8 seats)
     if (gm.state !== 'playing') break;
   }
 });

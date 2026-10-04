@@ -39,8 +39,8 @@ export class NPC {
   canBeFed() { return this.state === 'waiting'; }
 
   feed() { this.state = 'eating'; this.eatT = EAT_TIME; this.squash = 1; }
-  /** Seated at the window bar facing the window: drawn from behind. */
-  get fromBehind() { return this.spot.row === 'bar' && (this.state === 'waiting' || this.state === 'eating'); }
+  /** Seated with their back to us (window bar, front of a table): drawn from behind. */
+  get fromBehind() { return !!this.spot.back && (this.state === 'waiting' || this.state === 'eating'); }
 
   leave(mood) {
     this.state = 'leaving';

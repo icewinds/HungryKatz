@@ -221,15 +221,16 @@ export function drawTable(ctx, t, sc, time = 0) {
   ellipse(ctx, t.x, t.y - 26, 46, 24); fillStroke(ctx, p.cloth, st >= 3 ? '#e3b94f' : p.clothRim, 3);
   ellipse(ctx, t.x, t.y - 27, 34, 16); ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
   if (st >= 2) { // vase + flower
-    rrect(ctx, t.x - 4, t.y - 38, 8, 12, 3); fillStroke(ctx, '#a9dcf5', null);
-    circle(ctx, t.x, t.y - 43, 4.5); fillStroke(ctx, '#ff8fab', null);
-    circle(ctx, t.x, t.y - 43, 1.8); fillStroke(ctx, '#ffd166', null);
+    rrect(ctx, t.x - 22, t.y - 28, 8, 12, 3); fillStroke(ctx, '#a9dcf5', null);  // front-left, clear of the plates
+    circle(ctx, t.x - 18, t.y - 33, 4.5); fillStroke(ctx, '#ff8fab', null);
+    circle(ctx, t.x - 18, t.y - 33, 1.8); fillStroke(ctx, '#ffd166', null);
   }
   if (st >= 3) { // little candle with a flickering flame
-    rrect(ctx, t.x + 14, t.y - 36, 5, 9, 1.5); fillStroke(ctx, '#fff7e0', '#e3b94f', 1);
+    const cx = t.x + 22, cy = t.y - 44; // back-right, between the back and side plates
+    rrect(ctx, cx - 2.5, cy, 5, 9, 1.5); fillStroke(ctx, '#fff7e0', '#e3b94f', 1);
     const f = 1 + Math.sin(time * 13 + t.x) * 0.15;
-    ellipse(ctx, t.x + 16.5, t.y - 40, 2.2 * f, 3.6 * f); ctx.fillStyle = '#ffb347'; ctx.fill();
-    ellipse(ctx, t.x + 16.5, t.y - 39, 1, 1.8); ctx.fillStyle = '#fff6c2'; ctx.fill();
+    ellipse(ctx, cx, cy - 4, 2.2 * f, 3.6 * f); ctx.fillStyle = '#ffb347'; ctx.fill();
+    ellipse(ctx, cx, cy - 3, 1, 1.8); ctx.fillStyle = '#fff6c2'; ctx.fill();
   }
 }
 

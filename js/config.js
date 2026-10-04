@@ -28,7 +28,8 @@ export const TABLES = [
   { x: 130, y: 615, level: 7 },
   { x: 410, y: 615, level: 9 },
 ];
-const SEAT_DX = 66;                      // seats sit either side of each table
+const SEAT_DX = 66;                      // side seats sit either side of each table
+const SEAT_BACK = -34, SEAT_FRONT = 30;  // seat behind the table (faces us) and in front (back to us)
 const blockerOf = t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 });
 
 export const LAYOUT = {
@@ -45,12 +46,15 @@ export const LAYOUT = {
   // One pickup pad per food, evenly spaced in front of the kitchen counter
   pads: Object.fromEntries(FOODS.map((f, i) => [f.id, { x: 70 + i * 100, y: 752, r: 44 }])),
   // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction.
-  // Spots come in side-by-side pairs (linked via `partner` below) that face each other.
+  // Spots come in pairs (linked via `partner` below) that chat: bar neighbours, the two side seats
+  // of a table, and its back + front seats. `back` = seated with their back to us.
   spots: [
-    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1, level: 1 })),
+    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1, level: 1, back: true })),
     ...TABLES.flatMap((t, i) => [
       { id: `T${i + 1}a`, row: 'table', table: t, x: t.x - SEAT_DX, y: t.y, face: 1, level: t.level },
       { id: `T${i + 1}b`, row: 'table', table: t, x: t.x + SEAT_DX, y: t.y, face: -1, level: t.level },
+      { id: `T${i + 1}c`, row: 'table', table: t, x: t.x, y: t.y + SEAT_BACK, face: 1, level: t.level },
+      { id: `T${i + 1}d`, row: 'table', table: t, x: t.x, y: t.y + SEAT_FRONT, face: 1, level: t.level, back: true },
     ]),
   ],
 };
@@ -59,12 +63,15 @@ for (let i = 0; i < LAYOUT.spots.length; i += 2) {
   a.partner = b;
   b.partner = a;
 }
+// Dish offsets on a table top per seat letter (the front seat's dish peeks out beside its back).
+const TABLE_PLATES = { a: { x: -28, y: -34 }, b: { x: 28, y: -34 }, c: { x: 0, y: -44 }, d: { x: 16, y: -24 } };
 // Where a served dish sits for each spot. `z` = depth-sort key (bar dishes sit on the
 // back counter, table dishes on top of their table).
 for (const s of LAYOUT.spots) {
   s.plate = s.row === 'bar'
     ? { x: s.x + s.face * 26, y: LAYOUT.windowBar.y + 14, z: 0 }
-    : { x: s.table.x - s.face * 20, y: s.table.y - 28, z: s.table.y + 9 };
+    : { ...TABLE_PLATES[s.id.at(-1)], z: s.table.y + 9 };
+  if (s.row === 'table') { s.plate.x += s.table.x; s.plate.y += s.table.y; }
 }
 
 // What's open at a restaurant level (memoised so callers get stable arrays).
