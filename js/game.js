@@ -21,7 +21,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
 canvasIcons.text = fillRichText;
@@ -508,7 +508,10 @@ function render(time) {
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
 
   const { player: p, npcs, inventory: inv } = gm;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, -200, WORLD.W, WORLD.H + 400); ctx.clip(); // cats outside the walls stay hidden until they reach the door
   drawWallLive(ctx, time, scene);
+  drawDoor(ctx, scene, doorOpenness(npcs));
   drawPets(ctx, save.pets, time);
 
   const menu = gm.foods;
@@ -566,7 +569,19 @@ function render(time) {
   drawFx(ctx, gm.fx, 'over');
   drawFirstGameHint(time);
 
+  ctx.restore();
   if (debug.on) drawDebug();
+}
+
+/** How far the front door is open: wide while a cat is walking through it, eased shut as they pass. */
+function doorOpenness(npcs) {
+  let open = 0;
+  for (const n of npcs) {
+    if (n.state !== 'entering' && n.state !== 'leaving') continue;
+    const d = Math.hypot(n.x - LAYOUT.door.x, n.y - LAYOUT.door.y);
+    open = Math.max(open, 1 - Math.min(1, Math.max(0, (d - 35) / 70)));
+  }
+  return open * open * (3 - 2 * open); // smoothstep
 }
 
 /** First game only: point at the milk pad, then at a hungry cat, until the first serve. */
