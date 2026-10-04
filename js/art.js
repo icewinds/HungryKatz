@@ -97,9 +97,10 @@ export function drawCat(ctx, x, y, look, o = {}) {
   }
 
   // tail
-  const sway = Math.sin(t * (walk ? 9 : 2.6)) * 6;
+  // walking: quick small wag; sitting/waiting: big slow sway with a little flick, whole tail bending
+  const sway = walk ? Math.sin(t * 9) * 6 : Math.sin(t * 2.2) * 13 + Math.sin(t * 5.3) * 2;
   ctx.beginPath(); ctx.moveTo(-14, -16);
-  ctx.quadraticCurveTo(-34, -18, -30 + sway, -44);
+  ctx.quadraticCurveTo(-34 + sway * 0.4, -18, -30 + sway, -44 + Math.abs(sway) * 0.3);
   ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
   ctx.strokeStyle = look.tail ?? look.fur; ctx.lineWidth = 5; ctx.stroke();
 
