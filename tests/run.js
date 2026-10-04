@@ -223,7 +223,7 @@ test('characters: coin cats are bought once; score cats unlock from best score',
 test('character: choice persists; unknown ids fall back to the default cat', () => {
   Storage.save({ ...DEFAULT_SAVE(), character: 'oreo' });
   assert.equal(Storage.load().character, 'oreo');
-  assert.equal(playerLook('oreo').name, 'Oreo');
+  assert.equal(playerLook('oreo').name, 'Frankie');
   assert.equal(playerLook('nope').id, PLAYER_LOOKS[0].id);
   Storage.reset();
   assert.equal(Storage.load().character, PLAYER_LOOKS[0].id);

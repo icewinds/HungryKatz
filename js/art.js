@@ -56,7 +56,7 @@ const CHEF = { accessory: 'chef', size: 1.08, seed: 0 };
 export const PLAYER_LOOKS = [
   { id: 'mango', name: 'Mango', fur: '#f4a259', light: '#fff1dc', dark: '#c0702c', pattern: 'stripes', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', ...CHEF },
   { id: 'smokey', name: 'Smokey', fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes', acc: '#7fb3ff', eye: '#d4a017', patch: '#fff', ...CHEF },
-  { id: 'oreo', name: 'Oreo', fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', ...CHEF },
+  { id: 'oreo', name: 'Frankie', fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', ...CHEF }, // id kept so saves still work
   { id: 'mochi', name: 'Snowy', fur: '#fdfbf7', light: '#ffffff', dark: '#cdbfb3', pattern: 'patch', acc: '#6fcf9f', eye: '#9bbf3a', patchR: 6.5, // white body, small tan patch
     patch: '#d6a273', headPatch: '#4a3328', ear: '#d9a273', tail: '#4a3328', ...CHEF }, // id kept so owned/selected saves still work
   { id: 'lilac', name: 'Lilac', fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks', acc: '#ffc94d', eye: '#8a5cc7', patch: '#fff', ...CHEF },
