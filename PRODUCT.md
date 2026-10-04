@@ -51,7 +51,7 @@ A hand-made, family game: built for one child, grown feature by feature from her
 
 ## Evidence on Hand
 
-- The live game and its source in this repo, plus the app icons in `assets/ui` and the Fredoka font (OFL) in `assets/fonts`.
+- The live game and its source in this repo, plus the app icons in `assets/ui` and the Fredoka and Lilita One fonts (both OFL) in `assets/fonts`.
 - There are no player testimonials, reviews, download counts or press. Do not invent any.
 
 ## Product Principles

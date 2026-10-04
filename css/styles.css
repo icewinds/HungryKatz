@@ -17,6 +17,17 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
+/* Lilita One, self-hosted (SIL Open Font License: assets/fonts/OFL-LilitaOne.txt). Display face for
+   the logo, screen titles and big buttons; Fredoka stays for everything people read. */
+@font-face {
+  font-family: 'Lilita One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../assets/fonts/lilita-one-latin.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 :root {
   --pink: #ec5f89;        /* 3.2:1 with white button text */
   --pink-d: #c43d5c;      /* 5:1 for headings and small text */
@@ -30,6 +41,7 @@
   --red: #ff6b8a;
   --shadow: 0 6px 18px rgba(90, 61, 74, 0.12);
   --font: "Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
+  --display: "Lilita One", var(--font);
 }
 
 * { box-sizing: border-box; }
@@ -171,7 +183,7 @@ html, body {
   transition: transform 0.1s, filter 0.1s;
 }
 .btn:active { transform: scale(0.96); filter: brightness(0.95); }
-.btn.big { font-size: 22px; padding: 14px 40px; }
+.btn.big { font-family: var(--display); font-weight: 400; font-size: 24px; letter-spacing: 0.3px; padding: 14px 40px; } /* 24px regular = large text */
 .btn.secondary { background: var(--cream); color: var(--ink); box-shadow: none; border: 2px solid var(--line); }
 .btn.mint { background: var(--mint); }
 .btn-upgrade { min-height: 54px; padding: 10px 22px; border-radius: 11px; font-size: 19px; background: var(--mint); }
@@ -218,7 +230,7 @@ html, body {
   animation: pop 0.4s cubic-bezier(.34, 1.56, .64, 1);
 }
 .panel.wide { width: min(440px, 100%); }
-.panel h2 { margin: 2px 0 14px; font-size: 28px; color: var(--pink-d); }
+.panel h2 { margin: 2px 0 14px; font-family: var(--display); font-weight: 400; font-size: 30px; letter-spacing: 0.3px; color: var(--pink-d); }
 .panel h3 { margin: 16px 0 6px; font-size: 16px; color: var(--ink-soft); }
 
 .close-x {
@@ -242,7 +254,7 @@ html, body {
 .menu-grid .btn { padding-inline: 8px; font-size: 17px; white-space: nowrap; }
 .menu-grid .btn.mint { background: #24865b; } /* 17px is small text: needs 4.5:1 */
 .menu-grid > .btn:has(+ .hidden), .menu-grid > .btn:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; min-width: 50%; }
-.logo { margin: 0; font-size: 50px; line-height: 1; font-weight: 700; }
+.logo { margin: 0; font-family: var(--display); font-size: 54px; line-height: 1; font-weight: 400; letter-spacing: 0.5px; }
 .logo span { color: var(--pink); }
 .logo .katz { color: #e07a10; }
 #menu-cat { display: block; margin: 6px auto 0; width: 200px; height: 190px; }
@@ -371,7 +383,7 @@ html, body {
 }
 
 /* Game over */
-.panel h2.gameover { margin-bottom: 2px; font-size: 32px; }
+.panel h2.gameover { margin-bottom: 2px; font-size: 34px; }
 #go-cat { display: block; width: 180px; height: 120px; margin: -6px auto 0; }
 .go-sub { margin: 0 0 10px; color: var(--ink-soft); }
 .go-relaxed { margin: 12px 0 0; padding: 10px 12px; background: #fff0f4; border-radius: 9px; }
