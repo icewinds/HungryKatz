@@ -611,3 +611,15 @@ html, body {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
   #miss-flash { display: none; }
 }
+
+/* Settings: save backup */
+.code-box {
+  display: block; width: 100%; margin: 8px 0 0; padding: 10px 12px;
+  border: 2px solid #f2d78a; border-radius: 7px; background: #fff; color: var(--ink);
+  font: 400 13px/1.35 ui-monospace, Menlo, Consolas, monospace; word-break: break-all; resize: vertical;
+  user-select: text; -webkit-user-select: text;
+}
+.code-box:focus { outline: 3px solid var(--pink-d); outline-offset: 1px; border-color: var(--pink); }
+.restore-box { margin-top: 12px; padding: 12px; border-radius: 9px; background: #fff0f4; text-align: left; }
+.restore-box label { font-weight: 700; }
+.restore-box .btn { width: 100%; margin-top: 4px; }

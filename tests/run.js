@@ -622,4 +622,21 @@ test('taps queue up: the cat visits every tapped spot in order', () => {
   assert.equal(gm.queue.length, 0);
 });
 
+test('backup code: round-trips the save, rejects broken codes, sanitises the result', () => {
+  const s = DEFAULT_SAVE();
+  s.coins = 321; s.level = 4; s.playerName = 'Cálleigh'; s.stickers = ['first', 'vip']; s.ownedCats = ['ghost'];
+  const code = Storage.toCode(s);
+  assert.ok(code.startsWith('HK1.'));
+  assert.deepEqual(Storage.fromCode(code), Storage.fromCode(Storage.toCode(Storage.fromCode(code))));
+  const back = Storage.fromCode('  ' + code.slice(0, 50) + '\n' + code.slice(50) + ' '); // pasted with line breaks
+  assert.equal(back.coins, 321);
+  assert.equal(back.playerName, 'Cálleigh');
+  assert.deepEqual(back.stickers, ['first', 'vip']);
+  for (const bad of [code.slice(0, -4), 'not a code', code.replace('HK1', 'HK9'), '']) assert.throws(() => Storage.fromCode(bad));
+  const evil = Storage.toCode({ coins: 'lots', level: 2, stickers: [1, 'first'] }); // valid code, bad fields
+  const clean = Storage.fromCode(evil);
+  assert.equal(clean.coins, 0);
+  assert.deepEqual(clean.stickers, ['first']);
+});
+
 console.log(`${passed} passed`);

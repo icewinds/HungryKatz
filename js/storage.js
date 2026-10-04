@@ -30,12 +30,10 @@ function read() {
   return mem[KEY] ?? null;
 }
 
-export const Storage = {
-  load() {
+/** Clean up any save-shaped object (from storage or a backup code): unknown or bad fields fall back to defaults. */
+function sanitize(data) {
     const d = DEFAULT_SAVE();
-    let data;
-    try { data = JSON.parse(read()); } catch { data = null; }
-    if (!data || typeof data !== 'object') return d;
+    if (!data || typeof data !== 'object' || Array.isArray(data)) return d;
     const num = (v, def) => (Number.isFinite(v) ? v : def);
     return {
       coins: num(data.coins, 0),
@@ -64,6 +62,36 @@ export const Storage = {
       },
       settings: { ...d.settings, ...data.settings },
     };
+}
+
+// Backup codes: "HK1.<checksum>.<base64url of the save JSON>". The checksum catches codes that were
+// cut short or mistyped, so a broken paste never replaces a good café.
+const CODE_PREFIX = 'HK1';
+const checksum = str => { let h = 0x811c9dc5; for (let i = 0; i < str.length; i++) h = Math.imul(h ^ str.charCodeAt(i), 0x01000193); return (h >>> 0).toString(36); };
+const toB64 = str => btoa(String.fromCharCode(...new TextEncoder().encode(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+const fromB64 = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0)));
+
+export const Storage = {
+  load() {
+    let data;
+    try { data = JSON.parse(read()); } catch { data = null; }
+    return sanitize(data);
+  },
+  /** One-line backup code for the whole save. */
+  toCode(data) {
+    const json = JSON.stringify(data);
+    return `${CODE_PREFIX}.${checksum(json)}.${toB64(json)}`;
+  },
+  /** Read a backup code back into a clean save; throws an Error with a player-friendly message. */
+  fromCode(code) {
+    const parts = String(code).replace(/\s+/g, '').split('.');
+    if (parts[0] !== CODE_PREFIX || parts.length !== 3) throw new Error("That doesn't look like a HungryKatz backup code.");
+    let json;
+    try { json = fromB64(parts[2]); } catch { throw new Error('That code is damaged. Copy the whole code and try again.'); }
+    if (checksum(json) !== parts[1]) throw new Error('That code is incomplete. Copy the whole code and try again.');
+    let data;
+    try { data = JSON.parse(json); } catch { throw new Error('That code is damaged. Copy the whole code and try again.'); }
+    return sanitize(data);
   },
   save(data) {
     const raw = JSON.stringify(data);

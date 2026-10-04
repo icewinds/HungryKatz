@@ -102,6 +102,7 @@ tests/run.js
 - **Stickers:** `STICKERS` in `js/achievements.js` (each has a `done(snapshot)` check).
 - **Outfits:** `OUTFITS` in `js/config.js` (hats reuse cat accessories; aprons are colours).
 - **Seasons:** `seasonFor` in `js/scene.js` picks Halloween (Oct), winter (1 Dec to 6 Jan) and Valentine's (1 to 14 Feb). Preview one with `?season=winter`, `halloween`, `valentine` or `none`.
+- **Save backup:** Settings > Save backup copies a one-line code (`HK1.<checksum>.<base64 save>`, see `Storage.toCode` / `fromCode` in `js/storage.js`); Restore checks it and asks before replacing the café.
 - **Relaxed mode:** the `relaxed` entry in `DIFFICULTY`. Customers wait forever, so there are no misses and no game over.
 - **Combos, VIPs, specials, pets:** `COMBO`, `VIP`, `SPECIALS` (which weekdays), `PETS` and `PET_BONUS` in `js/config.js`.
 - **Daily bonus:** `DAILY_REWARDS` in `js/config.js` sets the coins for each day of the 7-day streak.

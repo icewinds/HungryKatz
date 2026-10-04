@@ -189,9 +189,40 @@ const ui = new UIManager({
   shareScore: () => shareGame(`I scored ${lastScore} in HungryKatz! 🐾 Can you beat me?`),
   openHelp: () => ui.show('help'),
   closeHelp: () => ui.show('menu'),
+  copyBackup: async () => {
+    const code = Storage.toCode(save), msg = document.getElementById('backup-msg'), box = document.getElementById('backup-code');
+    try {
+      await navigator.clipboard.writeText(code);
+      box.classList.add('hidden');
+      msg.textContent = 'Copied! Paste it somewhere safe, like a message to yourself.';
+    } catch { // no clipboard access: show the code to copy by hand
+      box.value = code; box.classList.remove('hidden'); box.focus(); box.select();
+      msg.textContent = 'Copy this code and keep it somewhere safe.';
+    }
+    audio.play('pickup');
+  },
+  showRestore: () => {
+    const box = document.getElementById('restore-box');
+    box.classList.toggle('hidden');
+    if (!box.classList.contains('hidden')) document.getElementById('restore-input').focus();
+  },
+  restoreBackup: () => {
+    const input = document.getElementById('restore-input'), msg = document.getElementById('restore-msg');
+    let backup;
+    try { backup = Storage.fromCode(input.value); } catch (e) { msg.textContent = e.message; audio.play('wrong'); return; }
+    msg.textContent = '';
+    const ok = confirm(`Replace this café (level ${save.level}, ${save.coins} coins) with your backup (level ${backup.level}, ${backup.coins} coins)?`);
+    if (!ok) return;
+    Storage.save(backup);
+    location.reload();
+  },
   setDifficulty: btn => { save.settings.difficulty = btn.dataset.value; persist(); syncToggles(); },
   setScene: btn => { save.settings.scene = btn.dataset.value; persist(); refreshScene(); syncToggles(); },
-  openSettings: () => ui.show('settings'),
+  openSettings: () => {
+    for (const id of ['backup-code', 'restore-box']) document.getElementById(id).classList.add('hidden');
+    document.getElementById('backup-msg').textContent = '';
+    ui.show('settings');
+  },
   closeSettings: () => ui.show('menu'),
   pause: () => {
     if (gm.state !== 'playing') return;

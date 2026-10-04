@@ -308,6 +308,18 @@ export const ICONS = {
     ctx.strokeStyle = '#5aa9e6'; ctx.lineWidth = 4.5;
     for (const d of [-1, 1]) { ctx.save(); ctx.translate(d * 6, -d * 6); ctx.rotate(-Math.PI / 4); rrect(ctx, -11, -6, 22, 12, 6); ctx.stroke(); ctx.restore(); }
   },
+  clipboard(ctx) {
+    rrect(ctx, -14, -16, 28, 36, 4); fillStroke(ctx, '#c98b55', OL, LW);
+    rrect(ctx, -10, -10, 20, 26, 2); fillStroke(ctx, '#fff', null);
+    rrect(ctx, -7, -20, 14, 8, 3); fillStroke(ctx, '#c9b7c0', OL, 1.8);
+    ctx.strokeStyle = '#b7a4ad'; ctx.lineWidth = 2; ctx.beginPath();
+    for (const y of [-3, 3, 9]) { ctx.moveTo(-6, y); ctx.lineTo(6, y); } ctx.stroke();
+  },
+  restore(ctx) {
+    ctx.beginPath(); ctx.moveTo(-18, 2); ctx.lineTo(-12, 18); ctx.lineTo(12, 18); ctx.lineTo(18, 2); ctx.lineTo(8, 2); ctx.lineTo(5, 8); ctx.lineTo(-5, 8); ctx.lineTo(-8, 2); ctx.closePath();
+    fillStroke(ctx, '#7fb3ff', OL, LW);
+    arrow(ctx, 0, -20, 0, 2, '#24865b', 3.6);
+  },
   question(ctx) { // a locked sticker slot
     ctx.strokeStyle = '#b7a4ad'; ctx.lineWidth = 3.6; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.arc(0, -6, 7, Math.PI * 1.1, Math.PI * 0.45); ctx.lineTo(0, 4); ctx.stroke();
@@ -324,7 +336,7 @@ const EMOJI = {
   '🐶': 'puppy', '💰': 'bag', '💖': 'heart', '✨': 'sparkles', '🔗': 'link', '❓': 'help', '⚙': 'gear', '📲': 'install', '👆': 'tap',
   '🍣': 'sushi', '🧁': 'cupcake', '👒': 'sunhat', '🧹': 'broom', '🧙': 'gnome', '🐟': 'goldfish', '🦜': 'parrot', '🧑‍🍳': 'chefhat',
   '🧶': 'beanie', '🥳': 'partyhat', '🎨': 'beret', '🎩': 'tophat', '🩷': 'apronPink', '🟢': 'apronMint', '🔵': 'apronSky', '🟡': 'apronSunny',
-  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question',
+  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore',
 };
 const EMOJI_RE = /\p{Extended_Pictographic}️?(?:‍\p{Extended_Pictographic}️?)*/gu;
 export const iconFor = emoji => EMOJI[emoji.replace(/️/g, '')];

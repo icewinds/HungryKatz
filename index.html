@@ -200,6 +200,20 @@
         <button class="scene-chip" data-action="setScene" data-value="seaside"><span class="swatch sw-seaside" aria-hidden="true"></span>Seaside Diner</button>
         <button class="scene-chip" data-action="setScene" data-value="moonlight"><span class="swatch sw-moonlight" aria-hidden="true"></span>Moonlight Bistro</button>
       </div>
+      <h3>Save backup</h3>
+      <p class="hint hint-top0">Keep your café safe or move it to a new phone: copy your backup code and send it to yourself.</p>
+      <div class="menu-grid">
+        <button class="btn secondary" data-action="copyBackup">📋 Copy code</button>
+        <button class="btn secondary" data-action="showRestore">📥 Restore</button>
+      </div>
+      <p id="backup-msg" class="name-msg" role="status"></p>
+      <textarea id="backup-code" class="code-box hidden" rows="3" readonly aria-label="Your backup code"></textarea>
+      <div id="restore-box" class="restore-box hidden">
+        <label for="restore-input">Paste your backup code</label>
+        <textarea id="restore-input" class="code-box" rows="3" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="HK1..."></textarea>
+        <p id="restore-msg" class="name-msg error" role="alert"></p>
+        <button class="btn" data-action="restoreBackup">Restore my café</button>
+      </div>
     </div>
   </section>
 
