@@ -8,11 +8,11 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 const inside = (p, r) => p.x > r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y + r.h;
 
 /** Keep a point inside the walkable area and outside furniture (pushed out via the nearest edge). */
-export function constrain(p) {
+export function constrain(p, blockers = LAYOUT.blockers) {
   const w = LAYOUT.walk;
   p.x = clamp(p.x, w.minX, w.maxX);
   p.y = clamp(p.y, w.minY, w.maxY);
-  for (const b of LAYOUT.blockers) {
+  for (const b of blockers) {
     if (!inside(p, b)) continue;
     const d = [p.x - b.x, b.x + b.w - p.x, p.y - b.y, b.y + b.h - p.y];
     const m = Math.min(...d);
@@ -36,19 +36,25 @@ function hits(a, b, r) {
   }
   return t0 < t1;
 }
-const blocked = (a, b) => LAYOUT.blockers.some(r => hits(a, b, r));
+const blocked = (a, b, blockers) => blockers.some(r => hits(a, b, r));
 
 const M = 10; // clearance around furniture corners
-const CORNERS = LAYOUT.blockers.flatMap(r => [
-  { x: r.x - M, y: r.y - M }, { x: r.x + r.w + M, y: r.y - M },
-  { x: r.x - M, y: r.y + r.h + M }, { x: r.x + r.w + M, y: r.y + r.h + M },
-]).filter(p => !LAYOUT.blockers.some(r => inside(p, r)));
+const cornerCache = new WeakMap(); // blockers array -> padded corner nodes
+function cornersOf(blockers) {
+  if (!cornerCache.has(blockers)) {
+    cornerCache.set(blockers, blockers.flatMap(r => [
+      { x: r.x - M, y: r.y - M }, { x: r.x + r.w + M, y: r.y - M },
+      { x: r.x - M, y: r.y + r.h + M }, { x: r.x + r.w + M, y: r.y + r.h + M },
+    ]).filter(p => !blockers.some(r => inside(p, r))));
+  }
+  return cornerCache.get(blockers);
+}
 
 /** Shortest waypoint list from `from` to `to` (excluding `from`) that avoids furniture. */
-export function route(from, to) {
+export function route(from, to, blockers = LAYOUT.blockers) {
   const goal = { x: to.x, y: to.y };
-  if (!blocked(from, goal)) return [goal];
-  const nodes = [from, ...CORNERS, goal], n = nodes.length;
+  if (!blocked(from, goal, blockers)) return [goal];
+  const nodes = [from, ...cornersOf(blockers), goal], n = nodes.length;
   const dist = Array(n).fill(Infinity), prev = Array(n).fill(-1), done = Array(n).fill(false);
   dist[0] = 0;
   for (;;) {
@@ -57,7 +63,7 @@ export function route(from, to) {
     if (u < 0 || dist[u] === Infinity || u === n - 1) break;
     done[u] = true;
     for (let v = 0; v < n; v++) {
-      if (done[v] || blocked(nodes[u], nodes[v])) continue;
+      if (done[v] || blocked(nodes[u], nodes[v], blockers)) continue;
       const d = dist[u] + Math.hypot(nodes[u].x - nodes[v].x, nodes[u].y - nodes[v].y);
       if (d < dist[v]) { dist[v] = d; prev[v] = u; }
     }

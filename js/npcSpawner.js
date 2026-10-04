@@ -23,30 +23,34 @@ export class NpcSpawner {
   }
 
   /** Spots nobody is standing at or walking towards. Leaving cats free their spot. */
-  freeSpots(npcs) {
+  freeSpots(npcs, spots = this.spots) {
     const taken = new Set(npcs.filter(present).map(n => n.spot));
-    return this.spots.filter(s => !taken.has(s));
+    return spots.filter(s => !taken.has(s));
   }
 
   activeCount(npcs) { return npcs.filter(present).length; }
 
-  randomFreeSpot(npcs) {
-    const free = this.freeSpots(npcs);
+  randomFreeSpot(npcs, spots = this.spots) {
+    const free = this.freeSpots(npcs, spots);
     return free.length ? free[Math.floor(this.rng() * free.length)] : null;
   }
 
-  /** Returns a list of spawn requests { spot, request, patience, trail? } (usually 0 or 1, 2 for friends). */
-  update(dt, runTime, npcs, foods = [FOOD.MILK, FOOD.CATFOOD]) {
+  /**
+   * Returns a list of spawn requests { spot, request, patience, trail? } (usually 0 or 1, 2 for friends).
+   * `tuning` (optional): { spots: open seats, maxBonus: extra customers allowed, intervalMult: spawn-gap multiplier }.
+   */
+  update(dt, runTime, npcs, foods = [FOOD.MILK, FOOD.CATFOOD], tuning = {}) {
     const st = this.stage(runTime);
     this.timer -= dt;
     if (this.timer > 0) return [];
-    const free = this.freeSpots(npcs), room = st.maxNpcs - this.activeCount(npcs);
+    const free = this.freeSpots(npcs, tuning.spots), maxNpcs = Math.max(1, st.maxNpcs + (tuning.maxBonus || 0));
+    const room = maxNpcs - this.activeCount(npcs);
     if (!free.length || room <= 0) {
       this.timer = 0.6; // restaurant full, check again shortly
       return [];
     }
     const [lo, hi] = st.interval;
-    this.timer = lo + this.rng() * (hi - lo);
+    this.timer = (lo + this.rng() * (hi - lo)) * (tuning.intervalMult || 1);
     const pick = list => list[Math.floor(this.rng() * list.length)];
     const req = spot => ({ spot, request: pick(foods), patience: st.patience }); // only foods on the menu
 

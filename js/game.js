@@ -1,7 +1,7 @@
 // Entry point: wires managers together, owns the canvas, input, render loop,
 // PWA install/offline hooks and the debug panel.
 
-import { WORLD, LAYOUT, MAX_MISSED, FOODS, levelProgress, foodUnlockLevel } from './config.js';
+import { WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel } from './config.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
 import { HighScoreManager, cleanName } from './highScores.js';
@@ -13,9 +13,10 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
-  drawHeart, drawFx, drawChatBubble, drawWallLive, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, FONT,
+  drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
+  drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables } from './scene.js';
 
 // ---------------------------------------------------------------- managers
 const save = Storage.load();
@@ -54,9 +55,16 @@ function onEvent(type, d) {
     case 'levelUp':
       audio.play('levelUp');
       audio.setTrack(trackForLevel(d.level)); // new level, new tune
-      ui.banner(d.newFoods.length
-        ? `🎉 Level ${d.level}! New on the menu: ${d.newFoods.map(f => FOOD_LABEL[f]).join(', ')}`
-        : `🎉 Restaurant Level ${d.level}! Customers now pay ${d.reward}`);
+      {
+        const before = scene, msgs = [];
+        refreshScene();
+        msgs.push(d.newFoods.length
+          ? `🎉 Level ${d.level}! New on the menu: ${d.newFoods.map(f => FOOD_LABEL[f]).join(', ')}`
+          : `🎉 Restaurant Level ${d.level}! Customers now pay ${d.reward}`);
+        if (sceneTables(scene).length > sceneTables(before).length) msgs.push('🪑 A new table! More hungry katz can visit');
+        if (scene.stage > before.stage) msgs.push(`✨ Café makeover! Your café is now ${DECOR_STAGES[scene.stage].name.toLowerCase()}`);
+        ui.banners(msgs);
+      }
       ui.bump('hud-level');
       break;
     case 'gameOver':
@@ -107,6 +115,8 @@ const ui = new UIManager({
   },
   openHelp: () => ui.show('help'),
   closeHelp: () => ui.show('menu'),
+  setDifficulty: btn => { save.settings.difficulty = btn.dataset.value; persist(); syncToggles(); },
+  setScene: btn => { save.settings.scene = btn.dataset.value; persist(); refreshScene(); syncToggles(); },
   openSettings: () => ui.show('settings'),
   closeSettings: () => ui.show('menu'),
   pause: () => { if (gm.state !== 'playing') return; gm.paused = true; ui.show('pause'); },
@@ -194,6 +204,14 @@ document.getElementById('go-name').addEventListener('submit', e => {
 });
 document.getElementById('go-name-input').addEventListener('input', () => ui.nameMessage(''));
 
+// ---------------------------------------------------------------- scenery (theme + makeover stage)
+let scene = makeScene(save.settings.scene, save.level);
+/** Re-read theme/level and redraw the static café (after level up or a scene change). */
+function refreshScene() {
+  scene = makeScene(save.settings.scene, save.level);
+  if (bg.width > 1) buildBackground();
+}
+
 // ---------------------------------------------------------------- canvas + scaling
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -219,7 +237,7 @@ function buildBackground() {
   bg.height = Math.max(1, Math.ceil(WORLD.H * k));
   const b = bg.getContext('2d');
   b.setTransform(k, 0, 0, k, 0, 0);
-  drawBackground(b);
+  drawBackground(b, scene);
 }
 
 const toWorld = (cx, cy) => ({ x: (cx - view.ox) / view.scale, y: (cy - view.oy) / view.scale });
@@ -244,13 +262,13 @@ document.addEventListener('pointerdown', () => { audio.unlock(); audio.startMusi
 function render(time) {
   const { dpr, scale, ox, oy, w, h } = view;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#efd5bb'; ctx.fillRect(0, 0, w, h);                // letterbox: kitchen counter
-  ctx.fillStyle = '#fde7ed'; ctx.fillRect(0, 0, w, oy + 172 * scale); // letterbox: wall
+  ctx.fillStyle = scene.pal.counterFront; ctx.fillRect(0, 0, w, h);          // letterbox: kitchen counter
+  ctx.fillStyle = scene.pal.wall; ctx.fillRect(0, 0, w, oy + 172 * scale); // letterbox: wall
   ctx.drawImage(bg, ox, oy, WORLD.W * scale, WORLD.H * scale);
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
 
   const { player: p, npcs, inventory: inv } = gm;
-  drawWallLive(ctx, time);
+  drawWallLive(ctx, time, scene);
 
   const menu = gm.foods;
   for (const s of gm.stations) {
@@ -270,7 +288,7 @@ function render(time) {
     if ((n.id < mate.id) === (turn === 0) || mate.state !== 'waiting') speaking.add(n);
   }
 
-  const tables = LAYOUT.tables.map(t => ({ table: t, y: t.y + 8 }));
+  const tables = sceneTables(scene).map(t => ({ table: t, y: t.y + 8 }));
   // Served dishes sit on the table/bar while the cat eats, then an empty plate fades out.
   const DISH_FADE = 1.5;
   const dishes = npcs
@@ -282,7 +300,7 @@ function render(time) {
       const n = a.dish, pl = n.spot.plate, eating = n.state === 'eating';
       drawDish(ctx, pl.x, pl.y, n.request, eating ? Math.min(1, n.eatT / EAT_TIME) : 0, eating ? 1 : 1 - n.leaveT / DISH_FADE);
     } else if (a.table) {
-      drawTable(ctx, a.table);
+      drawTable(ctx, a.table, scene, time);
     } else if (a === p) {
       drawCat(ctx, p.x, p.y, playerLook(chars.current()), { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {

@@ -3,17 +3,17 @@
 // real sprite sheets later means replacing these bodies with ctx.drawImage()
 // calls (images go in /assets/cats, /assets/food, /assets/backgrounds).
 
-import { LAYOUT, WORLD } from './config.js';
+import { WORLD } from './config.js';
 
 export const FONT = '"Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif';
 const TAU = Math.PI * 2;
-const INK = '#5a3d4a';
+export const INK = '#5a3d4a';
 
-const ellipse = (ctx, x, y, rx, ry) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); };
-const circle = (ctx, x, y, r) => ellipse(ctx, x, y, r, r);
-const rrect = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
-const tri = (ctx, a, b, c) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.closePath(); };
-const fillStroke = (ctx, fill, stroke, lw = 2) => {
+export const ellipse = (ctx, x, y, rx, ry) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); };
+export const circle = (ctx, x, y, r) => ellipse(ctx, x, y, r, r);
+export const rrect = (ctx, x, y, w, h, r) => { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); };
+export const tri = (ctx, a, b, c) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.closePath(); };
+export const fillStroke = (ctx, fill, stroke, lw = 2) => {
   ctx.fillStyle = fill; ctx.fill();
   if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
 };
@@ -400,7 +400,7 @@ export function drawFoodIcon(ctx, type, x, y, s = 1, alpha = 1) {
 }
 
 // ---------------------------------------------------------------- overlays
-const SHADOW = 'rgba(120,70,60,0.13)';
+export const SHADOW = 'rgba(120,70,60,0.13)';
 
 /** Flat pickup pad on the floor; pulses while the player can still pick up. Locked pads show their unlock level. */
 export function drawPad(ctx, zone, type, ready, t, flash, lockedLevel = 0) {
@@ -443,18 +443,6 @@ export function drawCarryBadge(ctx, x, y, inv) {
     drawFoodIcon(ctx, k, ix, top + 12, 0.55);
     ctx.fillStyle = INK; ctx.fillText(inv.items[k], ix + 9, top + 13);
   });
-}
-
-/** Round café table; drawn per frame so cats behind it are occluded. */
-export function drawTable(ctx, t) {
-  ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill();
-  ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, '#d2a98d', null);
-  rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, '#ddb79b', null);
-  ellipse(ctx, t.x, t.y - 26, 46, 24); fillStroke(ctx, '#fff', '#f1cfd8', 3);
-  ellipse(ctx, t.x, t.y - 27, 34, 16); ctx.strokeStyle = '#fbe9ee'; ctx.lineWidth = 2; ctx.stroke();
-  rrect(ctx, t.x - 4, t.y - 38, 8, 12, 3); fillStroke(ctx, '#a9dcf5', null);
-  circle(ctx, t.x, t.y - 43, 4.5); fillStroke(ctx, '#ff8fab', null);
-  circle(ctx, t.x, t.y - 43, 1.8); fillStroke(ctx, '#ffd166', null);
 }
 
 /** Request bubble with circular countdown ring. */
@@ -552,63 +540,7 @@ export function drawFx(ctx, fx, layer) {
   ctx.globalAlpha = 1;
 }
 
-// ---------------------------------------------------------------- background
-/** Static café, drawn once into an offscreen canvas (world coordinates). */
-export function drawBackground(ctx) {
-  const { W, H } = WORLD;
-  // wood plank floor
-  ctx.fillStyle = '#f8eadb'; ctx.fillRect(0, 0, W, H);
-  ctx.strokeStyle = '#f0dcc6'; ctx.lineWidth = 2;
-  for (let y = 172, r = 0; y < H; y += 38, r++) {
-    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-    for (let x = (r % 3) * 70 + 40; x < W; x += 210) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 38); ctx.stroke(); }
-  }
-
-  // back wall, windows, clock
-  ctx.fillStyle = '#fde7ed'; ctx.fillRect(0, 0, W, 172);
-  ctx.fillStyle = '#fff5f8'; ctx.fillRect(0, 128, W, 44);
-  ctx.fillStyle = '#f6cfd9'; ctx.fillRect(0, 126, W, 3); ctx.fillRect(0, 169, W, 3);
-  // (windows and clock are animated: see drawWallLive)
-
-  // window bar with saucers, cushions for every seat
-  const b = LAYOUT.windowBar;
-  rrect(ctx, b.x + 4, b.y + 10, b.w, b.h, 12); ctx.fillStyle = SHADOW; ctx.fill();
-  rrect(ctx, b.x, b.y + 22, b.w, b.h - 22, 10); fillStroke(ctx, '#ddb08d', null);
-  rrect(ctx, b.x - 6, b.y, b.w + 12, 30, 12); fillStroke(ctx, '#f1cdab', null);
-  rrect(ctx, b.x + 6, b.y + 4, b.w - 12, 4, 2); fillStroke(ctx, '#fbe3cd', null);
-  for (const s of LAYOUT.spots) {
-    if (s.row === 'bar') { ellipse(ctx, s.x, b.y + 15, 13, 5); fillStroke(ctx, '#fff', '#f1d4dc', 1.5); }
-    ellipse(ctx, s.x, s.y, 22, 8); fillStroke(ctx, '#fbd3de', '#f3b4c5', 2);
-  }
-
-  // door + welcome mat on the left wall
-  rrect(ctx, -6, 280, 18, 100, 6); fillStroke(ctx, '#ecbccb', null);
-  rrect(ctx, 8, 298, 42, 64, 12); fillStroke(ctx, '#d6f2e6', '#ade3cc', 2);
-
-  kitchen(ctx);
-}
-
-// ---------------------------------------------------------------- live wall: sky + clock
-const WINDOWS = [{ x: 26, y: 22, w: 194, h: 96 }, { x: 320, y: 22, w: 194, h: 96 }];
-// Clouds live in one strip spanning both windows, so they drift from pane to pane.
-const CLOUDS = [
-  { x: 0, y: 52, s: 1, v: 9 }, { x: 150, y: 78, s: 0.75, v: 6 }, { x: 290, y: 44, s: 1.15, v: 8 },
-  { x: 420, y: 84, s: 0.7, v: 5 }, { x: 520, y: 60, s: 0.9, v: 7 },
-];
-// Sky colour through a day (local hour -> colour), interpolated.
-// Purple/pink steps at dawn and dusk keep the blend from going muddy grey.
-const SKY = [
-  [0, '#1e2a5a'], [5, '#2b3a74'], [5.8, '#8a74b8'], [6.5, '#ffc8a8'], [8, '#d6effa'], [17, '#d6effa'],
-  [18.3, '#ffcfa0'], [19.2, '#ffa9a0'], [19.8, '#e58fb4'], [20.3, '#8a74b8'], [21, '#2f3570'], [24, '#1e2a5a'],
-];
-const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
-function skyColor(hour) {
-  let i = 0;
-  while (i < SKY.length - 2 && hour >= SKY[i + 1][0]) i++;
-  const [h0, c0] = SKY[i], [h1, c1] = SKY[i + 1], k = (hour - h0) / (h1 - h0);
-  const [a, b] = [hexRgb(c0), hexRgb(c1)];
-  return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * k)).join()})`;
-}
+export const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 
 /**
  * Desaturated copy of a cat look (for customers who gave up). Cheaper than ctx.filter,
@@ -625,64 +557,6 @@ export function greyLook(look) {
   return out;
 }
 
-/** Animated windows (drifting clouds, sun/moon, stars, birds) and a real-time wall clock. */
-export function drawWallLive(ctx, t, now = new Date()) {
-  const hour = now.getHours() + now.getMinutes() / 60;
-  const night = hour < 6 || hour >= 20.5;
-  const sky = skyColor(hour);
-  for (const [i, { x, y, w, h }] of WINDOWS.entries()) {
-    ctx.save();
-    rrect(ctx, x, y, w, h, 16); ctx.fillStyle = sky; ctx.fill(); ctx.clip();
-    if (night) {
-      for (let k = 0; k < 14; k++) { // twinkling stars
-        const sx = x + ((k * 73 + i * 31) % w), sy = y + ((k * 41) % (h - 20)) + 6;
-        ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 2 + k);
-        circle(ctx, sx, sy, 1.4); ctx.fillStyle = '#fff'; ctx.fill();
-      }
-      ctx.globalAlpha = 1;
-    }
-    if (i === 0) { // sun or moon
-      const by = y + 34 + Math.sin(t * 0.5) * 3;
-      ctx.globalAlpha = 0.3; circle(ctx, x + 40, by, 20); ctx.fillStyle = night ? '#fff6d0' : '#ffe08a'; ctx.fill();
-      ctx.globalAlpha = 1; circle(ctx, x + 40, by, 13); ctx.fillStyle = night ? '#fff6d0' : '#ffd166'; ctx.fill();
-      if (night) { circle(ctx, x + 46, by - 4, 11); ctx.fillStyle = sky; ctx.fill(); } // crescent
-    }
-    ctx.fillStyle = night ? 'rgba(160,170,220,0.55)' : '#fff';
-    for (const c of CLOUDS) {
-      const cx = ((c.x + t * c.v) % 600) - 40;
-      for (const [dx, dy, r] of [[-14, 4, 10], [0, -2, 14], [15, 4, 10]]) { circle(ctx, cx + dx * c.s, c.y + dy * c.s, r * c.s); ctx.fill(); }
-    }
-    if (!night) { // a pair of birds every ~22s
-      const bx = ((t * 45) % 1000) - 60, by = 46 + Math.sin(t * 1.5) * 6, flap = Math.sin(t * 12) * 3;
-      ctx.strokeStyle = '#6b5a66'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
-      for (const [ox, oy] of [[0, 0], [16, 8]]) {
-        ctx.beginPath();
-        ctx.moveTo(bx + ox - 5, by + oy - flap); ctx.quadraticCurveTo(bx + ox - 2, by + oy - 2, bx + ox, by + oy);
-        ctx.quadraticCurveTo(bx + ox + 2, by + oy - 2, bx + ox + 5, by + oy - flap); ctx.stroke();
-      }
-    }
-    ctx.restore();
-    // frame, mullion, sill and potted plant on top
-    rrect(ctx, x, y, w, h, 16); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.fillRect(x + w / 2 - 2, y, 4, h);
-    rrect(ctx, x - 6, y + h - 2, w + 12, 8, 4); fillStroke(ctx, '#fff', null);
-    ctx.fillStyle = '#7fd1a1';
-    for (const [dx, dy, r] of [[-6, -12, 6], [6, -12, 6], [0, -18, 6]]) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
-    rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, '#f6a07c', null);
-  }
-  // wall clock showing the real time
-  const cx = 270, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
-  circle(ctx, cx, cy, 25); fillStroke(ctx, '#fff', '#f2b8c8', 4);
-  ctx.strokeStyle = INK; ctx.lineCap = 'round';
-  const hand = (a, len, lw) => {
-    ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.sin(a) * len, cy - Math.cos(a) * len); ctx.stroke();
-  };
-  hand((hr / 12) * TAU, 10, 3.5);
-  hand((m / 60) * TAU, 16, 2.5);
-  circle(ctx, cx, cy, 2.5); ctx.fillStyle = '#ff8fab'; ctx.fill();
-}
-
 /** Red broken-heart badge over a customer who gave up. */
 export function drawMissBadge(ctx, x, y, t) {
   const by = y + Math.sin(t * 5) * 2.5, s = 1 + Math.sin(t * 9) * 0.06;
@@ -695,23 +569,3 @@ export function drawMissBadge(ctx, x, y, t) {
   ctx.restore();
 }
 
-function kitchen(ctx) {
-  const y = LAYOUT.kitchenY, { W, H } = WORLD;
-  ctx.fillStyle = SHADOW; ctx.fillRect(0, y - 6, W, 8);
-  // counter front with mint tile band, under-counter fridge and cupboard
-  ctx.fillStyle = '#efd5bb'; ctx.fillRect(0, y + 24, W, H - y - 24);
-  ctx.fillStyle = '#c9eedf'; ctx.fillRect(0, y + 24, W, 16);
-  ctx.strokeStyle = '#b3e3cf'; ctx.lineWidth = 2;
-  for (let x = 24; x < W; x += 24) { ctx.beginPath(); ctx.moveTo(x, y + 24); ctx.lineTo(x, y + 40); ctx.stroke(); }
-  rrect(ctx, 110, y + 50, 120, 74, 10); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
-  for (const bx of [136, 160, 184, 208]) { rrect(ctx, bx - 6, y + 74, 12, 30, 4); fillStroke(ctx, '#fff', '#9cc3ea', 1.5); }
-  rrect(ctx, 310, y + 50, 120, 74, 10); fillStroke(ctx, '#f6e2cd', '#e6c6a6', 3);
-  drawFoodIcon(ctx, 'catfood', 370, y + 88, 1.1, 0.5);
-  // counter top + props
-  rrect(ctx, -6, y, W + 12, 28, 10); fillStroke(ctx, '#f6e6d6', '#ead2bb', 2);
-  for (const px of [40, 500]) {
-    ctx.fillStyle = '#7fd1a1';
-    for (const [dx, dy, r] of [[-9, -22, 10], [9, -22, 10], [0, -32, 11]]) { circle(ctx, px + dx, y + dy, r); ctx.fill(); }
-    rrect(ctx, px - 12, y - 16, 24, 20, 5); fillStroke(ctx, '#f6a07c', null);
-  }
-}

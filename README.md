@@ -94,6 +94,9 @@ tests/run.js
 - **Upgrades and costs:** `UPGRADES` in `js/config.js`.
 - **Menu:** `FOODS` and `FOOD_UNLOCK_EVERY` in `js/config.js`. Milk is on the menu from level 1, and each following food unlocks every N restaurant levels. `bonus` is extra coins per serve.
 - **Tips:** `TIPS` in `js/config.js` sets the chance of a tip and its minimum and maximum amount.
+- **Café growth:** `TABLES` (unlock level per table), `DECOR_STAGES` (shabby/tidy/cosy/fancy levels) and `levelCrowdBonus` in `js/config.js`.
+- **Difficulty:** `DIFFICULTY` in `js/config.js` (patience and spawn-gap multipliers, extra customers at once).
+- **Scenes:** `THEMES` in `js/scene.js`. Each scene is a colour palette, and the makeover stages apply to every scene.
 - **Daily bonus:** `DAILY_REWARDS` in `js/config.js` sets the coins for each day of the 7-day streak.
 - **Characters:** `CHARACTER_UNLOCKS` in `js/config.js` holds coin prices and high-score targets.
 - **Real sprites:** each function in `js/art.js` (`drawCat`, `drawFoodIcon`, `drawBackground`) only takes a position and animation state (`idle`/`walk`/`eat`, mood `happy`/`sad`, `facing`). Replace its body with `ctx.drawImage(spriteSheet, …)`. The rest of the game won't need changes.

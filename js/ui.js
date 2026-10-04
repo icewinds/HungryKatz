@@ -104,6 +104,9 @@ export class UIManager {
     el.classList.add('on');
   }
 
+  /** Several banners one after another (e.g. level up + new table + makeover). */
+  banners(list) { list.forEach((t, i) => setTimeout(() => this.banner(t), i * 2600)); }
+
   banner(text) {
     const b = $('banner');
     b.textContent = text;
@@ -120,6 +123,11 @@ export class UIManager {
     set('.toggle-music', settings.music, '🎵 Music');
     set('.toggle-sfx', settings.sfx, '🔊 Sound FX');
     set('.toggle-debug', debugOn, '🐞 Debug');
+    // one-of-several choices (difficulty, scene)
+    const current = { setDifficulty: settings.difficulty || 'normal', setScene: settings.scene || 'strawberry' };
+    for (const b of document.querySelectorAll('[data-action=setDifficulty],[data-action=setScene]')) {
+      b.setAttribute('aria-pressed', current[b.dataset.action] === b.dataset.value);
+    }
   }
 
   /**

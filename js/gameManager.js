@@ -3,7 +3,7 @@
 //   pickup, arrive, feed, wrongFood, missed, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, levelForEarned, rewardForLevel, foodsForLevel, foodUnlockLevel,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, rewardForLevel, foodsForLevel, foodUnlockLevel,
 } from './config.js';
 import { Player } from './player.js';
 import { NPC } from './npc.js';
@@ -53,6 +53,11 @@ export class GameManager {
   }
 
   get reward() { return rewardForLevel(this.save.level); }
+  /** Tables (as walk blockers) and seats open at the current restaurant level. */
+  get blockers() { return blockersForLevel(this.save.level); }
+  get spots() { return spotsForLevel(this.save.level); }
+  /** Player-chosen difficulty from Settings. */
+  get difficulty() { return DIFFICULTY[this.save.settings?.difficulty] ?? DIFFICULTY.normal; }
   /** Foods on the menu right now (unlocked by restaurant level). */
   get foods() { return foodsForLevel(this.save.level); }
   /** Coins for serving `food`: level reward + food bonus + Bigger Plates upgrade. */
@@ -62,8 +67,8 @@ export class GameManager {
 
   tap(x, y, marker = true) {
     if (this.state !== 'playing' || this.paused) return;
-    const p = constrain({ x, y });
-    this.player.moveTo(route(this.player, p));
+    const p = constrain({ x, y }, this.blockers);
+    this.player.moveTo(route(this.player, p, this.blockers));
     if (marker) this.fx.push({ kind: 'tap', x: p.x, y: p.y, t: 0, life: 0.45 });
   }
 
@@ -71,7 +76,8 @@ export class GameManager {
     if (this.state !== 'playing' || this.paused) return;
     this.runTime += dt;
     const p = this.player;
-    p.update(dt, constrain);
+    const blockers = this.blockers;
+    p.update(dt, q => constrain(q, blockers));
 
     // food stations: each only fills its own food type, and only once it's on the menu
     const foods = this.foods;
@@ -94,7 +100,9 @@ export class GameManager {
       }
     }
 
-    for (const spawn of this.spawner.update(dt, this.runTime, this.npcs, foods)) this.spawnNpc(spawn);
+    const diff = this.difficulty;
+    const tuning = { spots: this.spots, maxBonus: levelCrowdBonus(this.save.level) + diff.maxNpcs, intervalMult: diff.interval };
+    for (const spawn of this.spawner.update(dt, this.runTime, this.npcs, foods, tuning)) this.spawnNpc(spawn);
 
     for (const npc of this.npcs) {
       const ev = npc.update(dt);
@@ -115,14 +123,15 @@ export class GameManager {
 
   /** Spawn a customer. Every field is optional (debug tools pass only `request`). */
   spawnNpc({ spot, request, patience, trail = 0 } = {}) {
-    spot ??= this.spawner.randomFreeSpot(this.npcs);
+    spot ??= this.spawner.randomFreeSpot(this.npcs, this.spots);
     if (!spot) return null;
     if (!request) { const foods = this.foods; request = foods[Math.floor(this.rng() * foods.length)]; }
     patience ??= this.spawner.stage(this.runTime).patience;
     const npc = new NPC({
       spot, request,
       look: randomLook(this.rng),
-      patience: patience + this.upgrades.value('npcTime'),
+      patience: patience * this.difficulty.patience + this.upgrades.value('npcTime'),
+      blockers: this.blockers,
     });
     npc.x -= 50 * trail; // the second friend follows a step behind
     npc.phase += trail * 0.3;

@@ -13,7 +13,7 @@ export const DEFAULT_SAVE = () => ({
   character: 'mango', // chosen player cat (art.js PLAYER_LOOKS id)
   ownedCats: [],      // cats bought with coins
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
-  settings: { music: true, sfx: true, debug: false },
+  settings: { music: true, sfx: true, debug: false, difficulty: 'normal', scene: 'strawberry' },
 });
 
 function read() {

@@ -7,7 +7,8 @@ let nextId = 1;
 export const EAT_TIME = 1.6; // seconds a fed cat spends eating its dish
 
 export class NPC {
-  constructor({ spot, request, look, patience }) {
+  constructor({ spot, request, look, patience, blockers = LAYOUT.blockers }) {
+    this.blockers = blockers;   // tables currently in the café (for walking around them)
     this.id = nextId++;
     this.spot = spot;
     this.request = request;      // 'milk' | 'catfood'
@@ -16,7 +17,7 @@ export class NPC {
     this.timeLeft = patience;
     this.x = LAYOUT.entry.x;
     this.y = LAYOUT.entry.y;
-    this.path = [{ ...LAYOUT.door }, ...route(LAYOUT.door, spot)]; // walks around tables
+    this.path = [{ ...LAYOUT.door }, ...route(LAYOUT.door, spot, blockers)]; // walks around tables
     // 'entering' -> 'waiting' -> ('eating' ->) 'leaving' -> 'gone'
     this.state = 'entering';
     this.mood = null;            // 'happy' | 'sad' while leaving
@@ -44,7 +45,7 @@ export class NPC {
   leave(mood) {
     this.state = 'leaving';
     this.mood = mood;
-    this.path = [...route(this, LAYOUT.door), { ...LAYOUT.exit }];
+    this.path = [...route(this, LAYOUT.door, this.blockers), { ...LAYOUT.exit }];
   }
 
   /** Returns an event name ('arrived' | 'expired' | 'fedDone' | 'gone') or null. */

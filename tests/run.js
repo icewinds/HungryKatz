@@ -8,12 +8,14 @@ import { DEFAULT_SAVE, Storage } from '../js/storage.js';
 import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { CharacterManager } from '../js/characters.js';
 import { NpcSpawner } from '../js/npcSpawner.js';
+import { THEMES, makeScene } from '../js/scene.js';
 import { EAT_TIME } from '../js/npc.js';
 import { DailyBonus, dayKey } from '../js/daily.js';
 import { TRACKS, trackForLevel } from '../js/audio.js';
 import { Inventory } from '../js/inventory.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
+  TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus,
 } from '../js/config.js';
 
 let passed = 0;
@@ -160,12 +162,13 @@ test('high scores: top 5, sorted high to low', () => {
 });
 
 test('pathing: walks around tables instead of getting stuck', () => {
-  const { gm } = setup();
-  const [t1, , t3] = LAYOUT.tables;
+  const { gm } = setup({ level: 9 }); // every table open
+  const [mid, topL, topR] = LAYOUT.tables;
   const trips = [
-    [[t1.x, t1.y - 60], [t1.x, t1.y + 40]],     // straight through table 1
-    [[t3.x - 120, t3.y - 10], [t3.x + 120, t3.y - 10]], // across table 3
-    [[270, 700], [150, 300]],                   // pads area -> window bar
+    [[topL.x, topL.y - 60], [topL.x, topL.y + 40]],       // straight through a top table
+    [[mid.x - 120, mid.y - 10], [mid.x + 120, mid.y - 10]], // across the middle table
+    [[topR.x - 100, topR.y - 10], [topR.x + 90, topR.y - 10]], // across a top table to the wall
+    [[270, 700], [150, 300]],                             // pads area -> window bar
     [[60, 300], [LAYOUT.pads.cupcake.x, LAYOUT.pads.cupcake.y - 20]], // door -> far pad
   ];
   for (const [[sx, sy], [tx, ty]] of trips) {
@@ -178,7 +181,7 @@ test('pathing: walks around tables instead of getting stuck', () => {
 });
 
 test('pathing: customers walk around tables to every seat', () => {
-  const { gm } = setup();
+  const { gm } = setup({ level: 9 }); // every table open
   park(gm);
   for (const spot of LAYOUT.spots) gm.spawnNpc({ spot, request: 'milk', patience: 999 });
   const inTable = n => LAYOUT.blockers.some(r => n.x > r.x && n.x < r.x + r.w && n.y > r.y && n.y < r.y + r.h);
@@ -378,6 +381,53 @@ test('high score names: named entries, rename after game over, clean input, old 
   gm.score = 50;
   gm.endRun();
   assert.deepEqual(s2.highScores, [{ score: 50, name: 'Calleigh' }]);
+});
+
+test('café growth: more tables/seats by level, makeover stages, busier at higher levels', () => {
+  assert.equal(tablesForLevel(1).length, 1);
+  assert.equal(spotsForLevel(1).length, 6, 'bar + one table');
+  assert.equal(tablesForLevel(9).length, TABLES.length);
+  assert.equal(spotsForLevel(9).length, 4 + TABLES.length * 2);
+  assert.deepEqual([1, 2, 3, 5, 8, 20].map(decorStage), [0, 0, 1, 2, 3, 3]);
+  assert.ok(levelCrowdBonus(9) > levelCrowdBonus(1));
+  // spawner only seats customers at open tables
+  const { gm } = setup({ level: 1 });
+  gm.spawner.timer = 0; gm.runTime = 1000;
+  park(gm);
+  for (let i = 0; i < 60 * 30; i++) gm.update(1 / 60);
+  const open = new Set(spotsForLevel(1));
+  assert.ok(gm.npcs.every(n => open.has(n.spot)), 'no customer at a table that is not built yet');
+});
+
+test('difficulty: easy is more patient and calmer, hard is impatient and busier', () => {
+  const patienceAt = difficulty => {
+    const { gm } = setup({ settings: { ...DEFAULT_SAVE().settings, difficulty } });
+    return gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk', patience: 10 }).patience;
+  };
+  assert.equal(patienceAt('normal'), 10);
+  assert.equal(patienceAt('easy'), 10 * DIFFICULTY.easy.patience);
+  assert.equal(patienceAt('hard'), 10 * DIFFICULTY.hard.patience);
+  const maxCrowd = difficulty => {
+    const { gm } = setup({ level: 9, settings: { ...DEFAULT_SAVE().settings, difficulty } });
+    gm.spawner.timer = 0; gm.runTime = 1000; park(gm);
+    let peak = 0;
+    for (let i = 0; i < 60 * 60; i++) { gm.update(1 / 60); peak = Math.max(peak, gm.spawner.activeCount(gm.npcs)); }
+    return peak;
+  };
+  assert.ok(maxCrowd('hard') > maxCrowd('easy'), 'hard allows more customers at once');
+});
+
+test('scenes: every theme has a full palette at every makeover stage', () => {
+  const keys = Object.keys(THEMES.strawberry);
+  for (const [id, th] of Object.entries(THEMES)) {
+    assert.deepEqual(Object.keys(th).sort(), [...keys].sort(), id);
+    for (let lvl of [1, 3, 5, 8]) {
+      const sc = makeScene(id, lvl);
+      assert.ok(/^#[0-9a-f]{6}$/.test(sc.pal.wall), `${id} L${lvl} wall ${sc.pal.wall}`);
+    }
+  }
+  assert.notEqual(makeScene('strawberry', 1).pal.wall, makeScene('strawberry', 8).pal.wall, 'shabby looks faded');
+  assert.equal(makeScene('nope', 1).pal.name, THEMES.strawberry.name, 'unknown scene falls back');
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

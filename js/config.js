@@ -17,11 +17,19 @@ export const foodUnlockLevel = id => 1 + FOODS.findIndex(f => f.id === id) * FOO
 /** Food ids on the menu at a restaurant level, in unlock order. */
 export const foodsForLevel = level => FOODS.filter(f => foodUnlockLevel(f.id) <= level).map(f => f.id);
 
-// Café floor plan: back wall + window bar (top), three round tables (middle),
-// kitchen counter with two flat pickup pads (bottom). Door on the left wall.
+// Café floor plan: back wall + window bar (top), up to five round tables (middle),
+// kitchen counter with one pickup pad per food (bottom). Door on the left wall.
+// The café starts small and gains a table at the levels listed below.
 const BAR_Y = 258;                       // feet of cats sitting at the window bar
-const TABLES = [{ x: 150, y: 440 }, { x: 390, y: 440 }, { x: 270, y: 615 }];
+export const TABLES = [
+  { x: 270, y: 520, level: 1 },          // the first, slightly wobbly table
+  { x: 130, y: 420, level: 3 },
+  { x: 410, y: 420, level: 5 },
+  { x: 130, y: 615, level: 7 },
+  { x: 410, y: 615, level: 9 },
+];
 const SEAT_DX = 66;                      // seats sit either side of each table
+const blockerOf = t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 });
 
 export const LAYOUT = {
   walk: { minX: 26, maxX: 514, minY: 248, maxY: 790 }, // where the player may stand
@@ -32,17 +40,17 @@ export const LAYOUT = {
   windowBar: { x: 90, y: 168, w: 360, h: 54 },
   tables: TABLES,
   kitchenY: 800,              // top of the kitchen counter
-  // Solid furniture (feet can't enter); pathing.js routes around these
-  blockers: TABLES.map(t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 })),
+  // Solid furniture for ALL tables (feet can't enter); see blockersForLevel for the active ones
+  blockers: TABLES.map(blockerOf),
   // One pickup pad per food, evenly spaced in front of the kitchen counter
   pads: Object.fromEntries(FOODS.map((f, i) => [f.id, { x: 70 + i * 100, y: 752, r: 44 }])),
   // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction.
   // Spots come in side-by-side pairs (linked via `partner` below) that face each other.
   spots: [
-    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1 })),
+    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1, level: 1 })),
     ...TABLES.flatMap((t, i) => [
-      { id: `T${i + 1}a`, row: 'table', x: t.x - SEAT_DX, y: t.y, face: 1 },
-      { id: `T${i + 1}b`, row: 'table', x: t.x + SEAT_DX, y: t.y, face: -1 },
+      { id: `T${i + 1}a`, row: 'table', table: t, x: t.x - SEAT_DX, y: t.y, face: 1, level: t.level },
+      { id: `T${i + 1}b`, row: 'table', table: t, x: t.x + SEAT_DX, y: t.y, face: -1, level: t.level },
     ]),
   ],
 };
@@ -54,13 +62,35 @@ for (let i = 0; i < LAYOUT.spots.length; i += 2) {
 // Where a served dish sits for each spot. `z` = depth-sort key (bar dishes sit on the
 // back counter, table dishes on top of their table).
 for (const s of LAYOUT.spots) {
-  if (s.row === 'bar') {
-    s.plate = { x: s.x + s.face * 26, y: LAYOUT.windowBar.y + 14, z: 0 };
-  } else {
-    const t = TABLES.find(t => Math.abs(t.x - s.x) === SEAT_DX && t.y === s.y);
-    s.plate = { x: t.x - s.face * 20, y: t.y - 28, z: t.y + 9 };
-  }
+  s.plate = s.row === 'bar'
+    ? { x: s.x + s.face * 26, y: LAYOUT.windowBar.y + 14, z: 0 }
+    : { x: s.table.x - s.face * 20, y: s.table.y - 28, z: s.table.y + 9 };
 }
+
+// What's open at a restaurant level (memoised so callers get stable arrays).
+const memo = (fn, cache = new Map()) => level => cache.get(level) ?? cache.set(level, fn(level)).get(level);
+export const tablesForLevel = memo(level => TABLES.filter(t => t.level <= level));
+export const blockersForLevel = memo(level => tablesForLevel(level).map(t => LAYOUT.blockers[TABLES.indexOf(t)]));
+export const spotsForLevel = memo(level => LAYOUT.spots.filter(s => s.level <= level));
+
+// Café makeover: the restaurant starts shabby and gets nicer as it levels up.
+export const DECOR_STAGES = [
+  { level: 1, name: 'Shabby' },
+  { level: 3, name: 'Tidy' },
+  { level: 5, name: 'Cosy' },
+  { level: 8, name: 'Fancy' },
+];
+export const decorStage = level => DECOR_STAGES.reduce((st, d, i) => (level >= d.level ? i : st), 0);
+
+// Busier café at higher levels: extra customers allowed at once (on top of the run stage).
+export const levelCrowdBonus = level => Math.floor((level - 1) / 4);
+
+// Player-chosen difficulty (Settings). patience/interval multiply, maxNpcs adds.
+export const DIFFICULTY = {
+  easy:   { label: 'Easy',   patience: 1.4,  interval: 1.3, maxNpcs: -1 },
+  normal: { label: 'Normal', patience: 1,    interval: 1,   maxNpcs: 0 },
+  hard:   { label: 'Hard',   patience: 0.75, interval: 0.8, maxNpcs: 1 },
+};
 
 // Social seating: chance two friends arrive together (when the stage allows 2+),
 // and chance a lone cat picks a seat next to someone already waiting.
@@ -76,6 +106,7 @@ export const SPAWN_STAGES = [
   { at: 130, maxNpcs: 4, interval: [2.0, 3.5], patience: 13 },
   { at: 200, maxNpcs: 5, interval: [1.6, 3.0], patience: 12 },
   { at: 280, maxNpcs: 6, interval: [1.2, 2.5], patience: 11 },
+  { at: 380, maxNpcs: 7, interval: [1.0, 2.2], patience: 10 },
 ];
 
 // Tips: a fed customer may add a random tip (coins) on top of the payment.
