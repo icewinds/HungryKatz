@@ -19,7 +19,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, EGG_POT } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // ---------------------------------------------------------------- managers
 const save = Storage.load();
@@ -281,6 +281,7 @@ canvas.addEventListener('pointerdown', e => {
   dragging = true;
   const p = toWorld(e.clientX, e.clientY);
   if (gm.state === 'playing' && !gm.paused && inEggPot(p)) return eggTap();
+  if (gm.state === 'playing' && !gm.paused && scene.theme === 'seaside' && inRect(p, GNOME_SPOT)) return gnomeScream();
   gm.tap(p.x, p.y);
 });
 
@@ -302,6 +303,16 @@ function ghostQuip() {
   gm.fx.push({ kind: 'text', x, y: p.y - 150, text: ghostLine(), color: '#3a3936', size: 17, t: -0.4, life: 2.6 });
 }
 
+const inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
+/** Seaside Diner gnome: one tap = one scream (with a short cooldown so it can't be spammed into noise). */
+function gnomeScream() {
+  const t = performance.now() / 1000;
+  if (t - gnome.screamAt < 0.6) return;
+  gnome.screamAt = t;
+  audio.unlock();
+  audio.play('gnome');
+  gm.fx.push({ kind: 'text', x: gnome.x - 40, y: gnome.y + 30, text: 'HOOO!', color: '#e8504f', size: 24, t: 0, life: 1 });
+}
 const inEggPot = p => p.x >= EGG_POT.x && p.x <= EGG_POT.x + EGG_POT.w && p.y >= EGG_POT.y && p.y <= EGG_POT.y + EGG_POT.h;
 let eggTaps = 0, eggLast = 0, preGhostCat = null;
 function eggTap() {

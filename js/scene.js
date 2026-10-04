@@ -72,7 +72,7 @@ function palette(themeId, stage) {
 }
 
 /** Everything the scenery needs for a theme + restaurant level. */
-export const makeScene = (themeId, level) => ({ level, stage: decorStage(level), pal: palette(themeId, decorStage(level)) });
+export const makeScene = (themeId, level) => ({ theme: THEMES[themeId] ? themeId : 'strawberry', level, stage: decorStage(level), pal: palette(themeId, decorStage(level)) });
 
 // ---------------------------------------------------------------- static background
 /** Café drawn once into an offscreen canvas (world coordinates). Rebuilt when the level/theme changes. */
@@ -230,6 +230,35 @@ export const sceneTables = sc => tablesForLevel(sc.level);
 // ---------------------------------------------------------------- live wall: sky, clock, lights
 /** Tap area (world coords) of the top-left window-sill plant: 5 taps = secret Ghost cat. */
 export const EGG_POT = { x: 28, y: 76, w: 56, h: 48 };
+/** Seaside Diner only: a garden gnome on the right window sill who screams when tapped. */
+export const GNOME_SPOT = { x: 446, y: 70, w: 50, h: 52 };
+export const gnome = { x: 471, y: 116, screamAt: -1e9 }; // screamAt = render time (s) of the last tap
+
+function drawGnome(ctx, t) {
+  const since = t - gnome.screamAt, scream = since >= 0 && since < 0.8;
+  const jump = scream ? Math.sin((since / 0.8) * Math.PI) * 10 : 0;
+  const shake = scream ? Math.sin(since * 60) * 1.2 : 0;
+  ctx.save();
+  ctx.translate(gnome.x + shake, gnome.y - jump);
+  if (scream) ctx.scale(1.12, 1.12);
+  ellipse(ctx, -4, 0, 4, 2.2); fillStroke(ctx, '#6b4a3a', null);       // boots
+  ellipse(ctx, 4, 0, 4, 2.2); fillStroke(ctx, '#6b4a3a', null);
+  rrect(ctx, -8, -14, 16, 13, 6); fillStroke(ctx, '#5b8bd6', '#3f6fb8', 1.2); // shirt
+  rrect(ctx, -8, -8, 16, 3, 1.5); fillStroke(ctx, '#6b4a3a', null);    // belt
+  circle(ctx, 0, -19, 6); fillStroke(ctx, '#ffd7c2', '#e8b9a2', 1);    // face
+  ctx.beginPath(); ctx.moveTo(-6.5, -19); ctx.quadraticCurveTo(-5, -5, 0, -4); ctx.quadraticCurveTo(5, -5, 6.5, -19);
+  fillStroke(ctx, '#ffffff', '#ddd7cf', 1);                           // beard
+  ctx.fillStyle = '#2b2230';
+  if (scream) { // wide eyes + big round mouth
+    circle(ctx, -2.6, -21, 1.6); ctx.fill(); circle(ctx, 2.6, -21, 1.6); ctx.fill();
+    ellipse(ctx, 0, -12.5, 2.4, 3.4); fillStroke(ctx, '#5a1f2a', null);
+  } else {
+    circle(ctx, -2.4, -20.5, 1); ctx.fill(); circle(ctx, 2.4, -20.5, 1); ctx.fill();
+  }
+  circle(ctx, 0, -18, 2.2); fillStroke(ctx, '#ff9f8a', null);          // nose
+  tri(ctx, [-7.5, -22], [7.5, -22], [2, -42]); fillStroke(ctx, '#e8504f', '#c43d3d', 1.2); // hat
+  ctx.restore();
+}
 const WINDOWS = [{ x: 26, y: 22, w: 194, h: 96 }, { x: 320, y: 22, w: 194, h: 96 }];
 // Clouds live in one strip spanning both windows, so they drift from pane to pane.
 const CLOUDS = [
@@ -320,6 +349,7 @@ export function drawWallLive(ctx, t, sc, now = new Date()) {
   hand((m / 60) * TAU, 16, 2.5);
   circle(ctx, cx, cy, 2.5); ctx.fillStyle = '#ff8fab'; ctx.fill();
   if (st >= 3) fairyLights(ctx, t);
+  if (sc.theme === 'seaside') drawGnome(ctx, t);
 }
 
 function fairyLights(ctx, t) {

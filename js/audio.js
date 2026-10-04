@@ -6,6 +6,7 @@
 export const SOUND_FILES = {
   music: null, click: null, pickup: null, feed: null, coin: null,
   arrive: null, sad: null, wrong: null, levelUp: null, gameOver: null, buy: null, tip: null,
+  gnome: null, // e.g. 'assets/audio/gnome.mp3' to use your own clip
 };
 
 // note = [freqHz, durationSec, waveType, delaySec = 0, slideToHz = freq]
@@ -97,9 +98,42 @@ export class AudioManager {
     if (file) { const a = new Audio(file); a.volume = 0.7; a.play().catch(() => {}); return; }
     if (!this.ctx) return;
     const now = this.ctx.currentTime;
+    if (name === 'gnome') { this.gnomeVoice(now); return; }
     for (const [f, d, type, delay = 0, slide] of SYNTH[name] || []) {
       this.note(f, d, type, 0.12, now + delay, this.sfxGain, slide);
     }
+  }
+
+  /** Squeaky garden-gnome "HOOO!": sawtooth voice through "oo" formants, pitch whoop + vibrato, breathy h. */
+  gnomeVoice(when) {
+    const ctx = this.ctx, out = ctx.createGain();
+    out.gain.setValueAtTime(0.0001, when);
+    out.gain.exponentialRampToValueAtTime(0.5, when + 0.06);
+    out.gain.setValueAtTime(0.5, when + 0.5);
+    out.gain.exponentialRampToValueAtTime(0.0001, when + 0.85);
+    out.connect(this.sfxGain);
+    const o = ctx.createOscillator();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(520, when);
+    o.frequency.exponentialRampToValueAtTime(780, when + 0.14);
+    o.frequency.exponentialRampToValueAtTime(640, when + 0.85);
+    const lfo = ctx.createOscillator(), wobble = ctx.createGain();
+    lfo.frequency.value = 7; wobble.gain.value = 20;
+    lfo.connect(wobble); wobble.connect(o.frequency);
+    for (const [f, q, g] of [[520, 4, 1], [1050, 6, 0.45], [2600, 8, 0.12]]) { // "oo" vowel formants
+      const bp = ctx.createBiquadFilter(), gg = ctx.createGain();
+      bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = q; gg.gain.value = g;
+      o.connect(bp); bp.connect(gg); gg.connect(out);
+    }
+    const len = 0.1, buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * len), ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const h = ctx.createBufferSource(), hp = ctx.createBiquadFilter(), hg = ctx.createGain();
+    h.buffer = buf; hp.type = 'highpass'; hp.frequency.value = 1400;
+    hg.gain.setValueAtTime(0.3, when); hg.gain.exponentialRampToValueAtTime(0.0001, when + len);
+    h.connect(hp); hp.connect(hg); hg.connect(this.sfxGain);
+    h.start(when);
+    o.start(when + 0.04); lfo.start(when + 0.04);
+    o.stop(when + 0.9); lfo.stop(when + 0.9);
   }
 
   note(freq, dur, type, vol, when, dest, slideTo) {
