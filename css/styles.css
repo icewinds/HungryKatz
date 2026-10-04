@@ -134,7 +134,7 @@ html, body {
   border-radius: 18px;
   padding: 12px 22px;
   min-height: 48px;
-  font: 600 19px var(--font);
+  font: 700 19px var(--font); /* bold 19px+ counts as large text: 3:1 contrast */
   color: #fff;
   background: var(--pink);
   box-shadow: var(--shadow);
@@ -145,7 +145,7 @@ html, body {
 .btn.big { font-size: 22px; padding: 14px 40px; }
 .btn.secondary { background: var(--cream); color: var(--ink); box-shadow: none; border: 2px solid var(--line); }
 .btn.mint { background: var(--mint); }
-.btn-upgrade { min-height: 54px; padding: 10px 22px; border-radius: 22px; font-size: 18px; background: var(--mint); }
+.btn-upgrade { min-height: 54px; padding: 10px 22px; border-radius: 22px; font-size: 19px; background: var(--mint); }
 .toggle[aria-pressed="false"] { color: var(--ink-soft); background: #f6f1f3; }
 
 .icon-btn {
@@ -322,7 +322,7 @@ html, body {
 .bar { display: flex; gap: 4px; margin-top: 7px; }
 .seg { flex: 1; height: 7px; border-radius: 4px; background: #f3e3e8; }
 .seg.on { background: var(--pink); }
-.btn.buy { min-width: 82px; min-height: 44px; padding: 8px 12px; font-size: 16px; background: var(--mint); }
+.btn.buy { min-width: 82px; min-height: 44px; padding: 8px 12px; font-size: 16px; background: #24865b; } /* small text: 4.5:1 */
 .btn.buy.poor { background: #e4dadf; color: #9a8590; box-shadow: none; }
 .btn.buy.max { background: #ffe39a; color: #8a6200; box-shadow: none; cursor: default; }
 .upg.bought { animation: bought 0.5s cubic-bezier(.34, 1.56, .64, 1); }
@@ -367,7 +367,7 @@ html, body {
   -webkit-user-select: text;
 }
 .name-row input:focus { outline: none; border-color: var(--pink); }
-.btn.save-name { min-width: 84px; padding: 8px 14px; font-size: 17px; background: var(--mint); }
+.btn.save-name { min-width: 84px; padding: 8px 14px; font-size: 17px; background: #24865b; } /* small text: 4.5:1 */
 .name-msg { margin: 6px 2px 0; min-height: 18px; font-size: 13px; color: #24865b; }
 .name-msg.error { color: #c43d5c; }
 
