@@ -83,6 +83,7 @@ js/
   art.js              procedural placeholder art (cats, food, café)
   config.js           ALL tuning: layout, spawn stages, upgrades, rewards
 assets/ui             app icons (regenerate: npm run icons)
+assets/fonts          Fredoka font, self-hosted (SIL Open Font License, see OFL.txt)
 assets/cats|food|backgrounds|audio   drop real art/audio here
 tests/run.js
 ```

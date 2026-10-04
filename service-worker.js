@@ -1,6 +1,6 @@
 // Offline support: precache the app shell, then network-first with cache fallback.
 // BUMP CACHE when you deploy so players get the new files.
-const CACHE = 'hungrykatz-v18';
+const CACHE = 'hungrykatz-v19';
 const ASSETS = [
   './',
   './index.html',
@@ -23,6 +23,8 @@ const ASSETS = [
   './js/pathing.js',
   './js/characters.js',
   './js/daily.js',
+  './assets/fonts/fredoka-latin.woff2',
+  './assets/fonts/fredoka-latin-ext.woff2',
   './assets/ui/icon-192.png',
   './assets/ui/icon-512.png',
   './assets/ui/icon-maskable-512.png',
@@ -44,7 +46,7 @@ self.addEventListener('fetch', e => {
   const req = e.request;
   if (req.method !== 'GET' || !req.url.startsWith('http')) return;
 
-  // Network first (always fresh), cache as offline fallback. Also caches Google Fonts.
+  // Network first (always fresh), cache as offline fallback.
   e.respondWith(
     fetch(req).then(async res => {
       if (res.ok || res.type === 'opaque') {
