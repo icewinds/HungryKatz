@@ -231,7 +231,8 @@ html, body {
 }
 .help-ico { font-size: 26px; flex: none; width: 34px; text-align: center; }
 .help-tips { padding: 0 4px; margin: 0 0 16px; list-style: none; text-align: left; font-size: 14px; line-height: 1.5; }
-.help-tips li { margin: 4px 0; }
+.help-tips li { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; }
+.tip-ico { flex: none; width: 22px; text-align: center; } /* emoji column: wrapped lines align with the text */
 .dedication {
   margin: 0 0 16px;
   padding: 14px 12px;
