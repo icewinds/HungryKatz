@@ -12,7 +12,8 @@ export const DEFAULT_SAVE = () => ({
   playerName: '',     // last name typed on Game Over (prefills the next one)
   character: 'mango', // chosen player cat (art.js PLAYER_LOOKS id)
   ownedCats: [],      // cats bought with coins
-  pets: [],           // café pets bought (PETS ids)
+  pets: [],           // café pets bought and at the café (PETS ids)
+  petsAway: [],       // bought pets sent home (no bonus; can come back free)
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
   stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false }, // lifetime, for stickers
   stickers: [],       // earned sticker ids (achievements.js)
@@ -52,6 +53,7 @@ export const Storage = {
       character: typeof data.character === 'string' ? data.character : d.character,
       ownedCats: Array.isArray(data.ownedCats) ? data.ownedCats.filter(s => typeof s === 'string') : [],
       pets: Array.isArray(data.pets) ? data.pets.filter(s => typeof s === 'string') : [],
+      petsAway: Array.isArray(data.petsAway) ? data.petsAway.filter(s => typeof s === 'string') : [],
       stats: { ...d.stats, ...(data.stats && typeof data.stats === 'object' ? data.stats : {}) },
       stickers: Array.isArray(data.stickers) ? data.stickers.filter(x => typeof x === 'string') : [],
       outfit: { ...d.outfit, ...(data.outfit && typeof data.outfit === 'object' ? data.outfit : {}) },

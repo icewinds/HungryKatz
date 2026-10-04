@@ -184,7 +184,7 @@ const ui = new UIManager({
   openUpgrades: () => {
     if (gm.state !== 'playing') return;
     gm.paused = true; // stops timers, movement and spawning
-    ui.renderUpgrades(upgrades, save.coins, save.pets);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
     ui.show('upgrades');
   },
   closeUpgrades: () => { gm.applyUpgrades(); gm.paused = false; ui.show(null); },
@@ -193,7 +193,7 @@ const ui = new UIManager({
     if (upgrades.buy(id)) {
       audio.play('buy');
       gm.applyUpgrades();
-      ui.renderUpgrades(upgrades, save.coins, save.pets);
+      ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
       ui.cardEffect(id, 'bought');
     } else {
       audio.play('wrong');
@@ -212,10 +212,27 @@ const ui = new UIManager({
     save.pets.push(id);
     persist();
     audio.play('buy');
-    ui.renderUpgrades(upgrades, save.coins, save.pets);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
     ui.cardEffect(id, 'bought');
     ui.banner(`${pet.icon} ${pet.name} moved into your café!`);
     checkStickers();
+  },
+  togglePet: btn => { // owned pets can go home (no bonus) and come back for free
+    const id = btn.dataset.id, pet = PETS[id];
+    if (!pet) return;
+    if (save.pets.includes(id)) {
+      save.pets = save.pets.filter(p => p !== id);
+      save.petsAway.push(id);
+      audio.play('click');
+      ui.banner(`${pet.icon} ${pet.name} went home for a nap`);
+    } else if (save.petsAway.includes(id)) {
+      save.petsAway = save.petsAway.filter(p => p !== id);
+      save.pets.push(id);
+      audio.play('pickup');
+      ui.banner(`${pet.icon} ${pet.name} is back in your café!`);
+    } else return;
+    persist();
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
   },
   toggleMusic: () => {
     save.settings.music = !save.settings.music; persist();

@@ -241,7 +241,7 @@ export class UIManager {
 
   setMenuBest(best) { $('menu-best').textContent = best; }
 
-  renderUpgrades(upg, coins, petsOwned = []) {
+  renderUpgrades(upg, coins, petsOwned = [], petsAway = []) {
     $('upg-coins').textContent = coins;
     $('upg-list').innerHTML = Object.entries(UPGRADES).map(([id, u]) => {
       const lvl = upg.level(id), max = upg.isMax(id), cost = upg.cost(id);
@@ -260,13 +260,14 @@ export class UIManager {
         </button>
       </div>`;
     }).join('') + '<h3 class="pets-title">🐾 Café pets</h3>' + Object.entries(PETS).map(([id, p]) => {
-      const owned = petsOwned.includes(id);
+      const home = petsOwned.includes(id), away = petsAway.includes(id);
+      const btn = home ? `<button class="btn buy max" data-action="togglePet" data-id="${id}">Send home 🏠</button>`
+        : away ? `<button class="btn buy" data-action="togglePet" data-id="${id}">Bring back 🐾</button>`
+        : `<button class="btn buy ${coins < p.cost ? 'poor' : ''}" data-action="buyPet" data-id="${id}">🪙 ${p.cost}</button>`;
       return `<div class="upg pet" data-id="${id}">
         <div class="upg-ico">${p.icon}</div>
         <div class="upg-body"><div class="upg-name">${p.name}</div><div class="upg-desc">${p.desc}</div></div>
-        <button class="btn buy ${owned ? 'max' : coins < p.cost ? 'poor' : ''}" data-action="buyPet" data-id="${id}" ${owned ? 'disabled' : ''}>
-          ${owned ? 'Home ✓' : `🪙 ${p.cost}`}
-        </button>
+        ${btn}
       </div>`;
     }).join('');
   }
