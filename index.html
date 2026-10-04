@@ -7,7 +7,20 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self'; media-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <meta name="referrer" content="no-referrer">
   <title>HungryKatz</title>
-  <meta name="description" content="Feed the hungry cats in your cosy cat café!">
+  <meta name="description" content="Feed hungry cats, unlock new foods and fix up your café. Free to play on your phone, works offline.">
+  <meta name="apple-mobile-web-app-title" content="HungryKatz">
+  <link rel="canonical" href="https://icewinds.github.io/HungryKatz/">
+  <!-- Link previews (WhatsApp, Facebook, Messages, X, ...) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="HungryKatz">
+  <meta property="og:title" content="HungryKatz – run the cutest cat café!">
+  <meta property="og:description" content="Feed hungry cats, unlock new foods and fix up your café. Free to play on your phone, works offline.">
+  <meta property="og:url" content="https://icewinds.github.io/HungryKatz/">
+  <meta property="og:image" content="https://icewinds.github.io/HungryKatz/assets/ui/share-preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="HungryKatz: cartoon cats sitting at tables in a pink café, with a chef cat">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="theme-color" content="#ff8fab">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -55,6 +68,7 @@
         <button class="btn secondary" data-action="openHelp">❓ How to play</button>
         <button class="btn secondary" data-action="openCharacters">🐱 Choose cat</button>
         <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
+        <button class="btn secondary" data-action="share">📤 Share</button>
         <button id="btn-install" class="btn mint hidden" data-action="install">📲 Install</button>
       </div>
       <p id="install-hint" class="hint">Tip: in Chrome on Android tap <b>⋮</b> → <b>Add to Home screen</b> (or <b>Install app</b>) to play full-screen, even offline.</p>
@@ -196,6 +210,7 @@
       <ol id="go-scores" class="scores"></ol>
       <div class="stack">
         <button class="btn big" data-action="restart">↻ Play Again</button>
+        <button class="btn mint" data-action="shareScore">📤 Share my score</button>
         <button class="btn secondary" data-action="menu">🏠 Main Menu</button>
       </div>
     </div>

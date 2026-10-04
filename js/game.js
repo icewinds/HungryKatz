@@ -76,6 +76,7 @@ function onEvent(type, d) {
       ui.bump('hud-level');
       break;
     case 'gameOver':
+      lastScore = d.score;
       audio.play('gameOver');
       ui.showHud(false);
       ui.showGameOver(d, save.playerName);
@@ -130,6 +131,8 @@ const ui = new UIManager({
     }
     ui.show('menu');
   },
+  share: () => shareGame('Come run the cutest cat café with me! 🐱'),
+  shareScore: () => shareGame(`I scored ${lastScore} in HungryKatz! 🐾 Can you beat me?`),
   openHelp: () => ui.show('help'),
   closeHelp: () => ui.show('menu'),
   setDifficulty: btn => { save.settings.difficulty = btn.dataset.value; persist(); syncToggles(); },
@@ -187,6 +190,20 @@ function syncToggles() {
 }
 
 let lastRunLevel = save.level;
+let lastScore = 0;
+
+// ---------------------------------------------------------------- sharing
+const GAME_URL = 'https://icewinds.github.io/HungryKatz/';
+/** Phone share sheet when available; otherwise copy the link. */
+async function shareGame(text) {
+  try {
+    if (navigator.share) { await navigator.share({ title: 'HungryKatz', text, url: GAME_URL }); return; }
+    await navigator.clipboard.writeText(`${text} ${GAME_URL}`);
+    ui.banner('🔗 Link copied! Paste it to a friend');
+  } catch (e) {
+    if (e?.name !== 'AbortError') ui.banner(`🔗 ${GAME_URL}`); // share/copy unavailable: show the link
+  }
+}
 const PREVIEW_LEVELS = 9; // picker previews locked levels up to here (all tables/foods unlocked by 9)
 /** What a level's café looks like, for the level picker. */
 function describeLevel(level) {
@@ -524,6 +541,12 @@ resize();
 document.fonts?.ready.then(buildBackground); // redraw the sign once Fredoka loads
 syncToggles();
 ui.setInstall({ available: false, standalone: isStandalone() });
+if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+  // iPhone/iPad: no install button; explain Safari's Add to Home Screen instead
+  const hint = document.getElementById('install-hint');
+  hint.replaceChildren('Tip: on iPhone, open this in Safari, tap ', Object.assign(document.createElement('b'), { textContent: 'Share ⬆️' }),
+    ' then ', Object.assign(document.createElement('b'), { textContent: 'Add to Home Screen' }), ' to play full-screen, even offline.');
+}
 ui.setMenuBest(highScores.best());
 ui.show('menu');
 maybeShowDaily();
