@@ -91,5 +91,8 @@ tests/run.js
 
 - **Difficulty:** edit `SPAWN_STAGES` in `js/config.js`. Each stage sets the time it starts, the max cats at once, the spawn interval and patience.
 - **Upgrades and costs:** `UPGRADES` in `js/config.js`.
+- **Menu:** `FOODS` and `FOOD_UNLOCK_EVERY` in `js/config.js`. Milk is on the menu from level 1, and each following food unlocks every N restaurant levels. `bonus` is extra coins per serve.
+- **Tips:** `TIPS` in `js/config.js` sets the chance of a tip and its minimum and maximum amount.
+- **Characters:** `CHARACTER_UNLOCKS` in `js/config.js` holds coin prices and high-score targets.
 - **Real sprites:** each function in `js/art.js` (`drawCat`, `drawFoodIcon`, `drawBackground`) only takes a position and animation state (`idle`/`walk`/`eat`, mood `happy`/`sad`, `facing`). Replace its body with `ctx.drawImage(spriteSheet, …)`. The rest of the game won't need changes.
 - **Real audio:** set paths in `SOUND_FILES` in `js/audio.js` (e.g. `click: 'assets/audio/click.mp3'`) and add the files to `ASSETS` in `service-worker.js`.
