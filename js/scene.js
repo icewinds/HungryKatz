@@ -114,7 +114,9 @@ export function drawBackground(ctx, sc) {
   const b = LAYOUT.windowBar;
   rrect(ctx, b.x + 4, b.y + 10, b.w, b.h, 12); ctx.fillStyle = SHADOW; ctx.fill();
   rrect(ctx, b.x, b.y + 22, b.w, b.h - 22, 10); fillStroke(ctx, p.barFront, null);
+  if (sc.theme !== 'seaside') clipped(ctx, () => rrect(ctx, b.x, b.y + 22, b.w, b.h - 22, 10), () => woodGrain(ctx, b.x, b.y + 24, b.w, b.h - 24, 7));
   rrect(ctx, b.x - 6, b.y, b.w + 12, 30, 12); fillStroke(ctx, p.bar, null);
+  if (sc.theme !== 'seaside') clipped(ctx, () => rrect(ctx, b.x - 6, b.y, b.w + 12, 30, 12), () => woodGrain(ctx, b.x - 6, b.y + 6, b.w + 12, 24, 3));
   rrect(ctx, b.x + 6, b.y + 4, b.w - 12, 4, 2); fillStroke(ctx, p.barHi, null);
   if (st === 0) { // scratches
     ctx.strokeStyle = 'rgba(80,50,30,0.25)'; ctx.lineWidth = 1.5;
@@ -129,6 +131,8 @@ export function drawBackground(ctx, sc) {
       rrect(ctx, s.x - 17, s.y - 9, 34, 16, 3); fillStroke(ctx, p.wood, p.woodDark, 2);
       ctx.strokeStyle = p.woodDark; ctx.lineWidth = 1.2;
       ctx.beginPath(); ctx.moveTo(s.x - 15, s.y - 1); ctx.lineTo(s.x + 15, s.y - 1); ctx.stroke();
+      clipped(ctx, () => rrect(ctx, s.x - 17, s.y - 9, 34, 16, 3), () => woodGrain(ctx, s.x - 17, s.y - 9, 34, 16, s.x + s.y));
+      ctx.fillStyle = p.woodDark; for (const nx of [-13, 13]) for (const ny of [-5, 3]) { circle(ctx, s.x + nx, s.y + ny, 0.9); ctx.fill(); } // nails
     } else {
       ellipse(ctx, s.x, s.y, 22, 8); fillStroke(ctx, p.cushion, p.cushionEdge, 2);
     }
@@ -139,7 +143,90 @@ export function drawBackground(ctx, sc) {
   rrect(ctx, 8, 298, 42, 64, 12); fillStroke(ctx, p.mat, p.matEdge, 2);
   if (st === 0) { ctx.strokeStyle = p.matEdge; ctx.lineWidth = 1.5; for (let y = 304; y < 360; y += 8) { ctx.beginPath(); ctx.moveTo(8, y); ctx.lineTo(3, y + 3); ctx.stroke(); } }
 
+  if (st <= 1) { cardboardBoxes(ctx); oldBroom(ctx); } // cleared away once the café gets cosy
+
   kitchen(ctx, sc);
+}
+
+// ---------------------------------------------------------------- wood grain + clutter
+const GRAIN = 'rgba(90,50,20,0.5)';
+/** Run `draw` clipped to the path that `shape` builds. */
+function clipped(ctx, shape, draw) {
+  ctx.save(); shape(); ctx.clip(); draw(); ctx.restore();
+}
+/** Wood grain inside the current clip: gently wavy lines along the board, plus a knot on bigger pieces.
+ *  `vertical` runs the grain up a leg or handle. Deterministic per `seed` so the background never shimmers. */
+function woodGrain(ctx, x, y, w, h, seed = 1, vertical = false) {
+  let r = Math.abs(Math.round(seed * 9301)) % 233280;
+  const rnd = () => (r = (r * 9301 + 49297) % 233280) / 233280;
+  const across = vertical ? w : h, along = vertical ? h : w, n = Math.max(2, Math.round(across / 6));
+  ctx.save();
+  ctx.strokeStyle = GRAIN; ctx.lineWidth = 1; ctx.globalAlpha *= 0.55;
+  const pt = (a, c) => (vertical ? [x + c, y + a] : [x + a, y + c]);
+  for (let i = 0; i < n; i++) {
+    const c0 = ((i + 0.3 + rnd() * 0.4) / n) * across, amp = 0.6 + rnd() * 1.4, ph = rnd() * 6;
+    ctx.beginPath();
+    for (let a = 0; a <= along; a += 6) ctx.lineTo(...pt(a, c0 + Math.sin(a / 15 + ph) * amp));
+    ctx.stroke();
+  }
+  if (along * across > 700) { // a knot
+    const [kx, ky] = pt(along * (0.2 + rnd() * 0.6), across * (0.3 + rnd() * 0.4));
+    ellipse(ctx, kx, ky, vertical ? 1.6 : 3.4, vertical ? 3.4 : 1.6); ctx.stroke();
+    ellipse(ctx, kx, ky, vertical ? 0.7 : 1.4, vertical ? 1.4 : 0.7); ctx.fillStyle = GRAIN; ctx.fill();
+  }
+  ctx.restore();
+}
+
+/** Empty cardboard boxes stacked in the top-right corner (left over from moving in). */
+function cardboardBoxes(ctx) {
+  const FACE = '#d6a56b', SIDE = '#bf8c52', TOP = '#e7bf86', EDGE = '#9c6c38', TAPE = '#efdcae';
+  // box with its front-bottom-left corner at (x, y): front w x h, receding d up and to the right
+  const box = (x, y, w, h, d, open) => {
+    const dy = d * 0.6;
+    ctx.beginPath(); ctx.moveTo(x + w, y); ctx.lineTo(x + w, y - h); ctx.lineTo(x + w + d, y - h - dy); ctx.lineTo(x + w + d, y - dy); ctx.closePath();
+    fillStroke(ctx, SIDE, EDGE, 1.2);                                                                   // side
+    rrect(ctx, x, y - h, w, h, 1.5); fillStroke(ctx, FACE, EDGE, 1.2);                                    // front
+    ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + d, y - h - dy); ctx.lineTo(x + w + d, y - h - dy); ctx.lineTo(x + w, y - h); ctx.closePath();
+    if (!open) {
+      fillStroke(ctx, TOP, EDGE, 1.2);
+      ctx.strokeStyle = TAPE; ctx.lineWidth = 4;                                                          // packing tape
+      ctx.beginPath(); ctx.moveTo(x + w / 2, y - h + 8); ctx.lineTo(x + w / 2, y - h); ctx.lineTo(x + w / 2 + d, y - h - dy); ctx.stroke();
+      ctx.fillStyle = 'rgba(156,108,56,0.45)'; // paw stamp
+      ellipse(ctx, x + 12, y - h / 2 + 3, 4, 3.2); ctx.fill();
+      for (const [px, py] of [[-4, -4], [0, -6], [4, -4]]) { circle(ctx, x + 12 + px, y - h / 2 + 3 + py, 1.4); ctx.fill(); }
+      return;
+    }
+    fillStroke(ctx, '#7a5530', EDGE, 1.2);                                                                // empty inside
+    for (const [ax, ay, bx, by, lean] of [[x, y - h, x + d, y - h - dy, -1], [x + w, y - h, x + w + d, y - h - dy, 1]]) {
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.lineTo(bx + lean * 9, by - 10); ctx.lineTo(ax + lean * 9, ay - 10); ctx.closePath();
+      fillStroke(ctx, TOP, EDGE, 1.2);                                                                    // side flaps up
+    }
+    ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + w, y - h); ctx.lineTo(x + w - 2, y - h + 9); ctx.lineTo(x + 2, y - h + 9); ctx.closePath();
+    fillStroke(ctx, '#c99560', EDGE, 1.2);                                                                // front flap folded down
+  };
+  // flattened box leaning on the right wall, then the stack
+  ctx.beginPath(); ctx.moveTo(522, 268); ctx.lineTo(540, 270); ctx.lineTo(540, 196); ctx.lineTo(530, 194); ctx.closePath();
+  fillStroke(ctx, SIDE, EDGE, 1.2);
+  ellipse(ctx, 494, 268, 40, 6); ctx.fillStyle = SHADOW; ctx.fill();
+  box(462, 268, 46, 30, 14, false);
+  box(468, 236, 34, 22, 11, true);
+}
+
+/** An old broom leaning on the right wall: frayed bristles, taped handle. */
+function oldBroom(ctx) {
+  ellipse(ctx, 519, 694, 16, 4); ctx.fillStyle = SHADOW; ctx.fill();
+  ctx.save();
+  ctx.translate(518, 692); ctx.rotate(0.2); // leans right, against the wall
+  rrect(ctx, -2.5, -128, 5, 112, 2.5); fillStroke(ctx, '#b07a48', '#7d5230', 1);                      // handle
+  clipped(ctx, () => rrect(ctx, -2.5, -128, 5, 112, 2.5), () => woodGrain(ctx, -2.5, -128, 5, 112, 11, true));
+  rrect(ctx, -3.2, -96, 6.4, 7, 1.5); fillStroke(ctx, '#d8d0c4', '#a89a88', 0.8);                     // old tape wrap
+  rrect(ctx, -6, -18, 12, 6, 2); fillStroke(ctx, '#8f8f97', '#66666e', 1);                             // ferrule
+  ctx.beginPath(); ctx.moveTo(-6, -12); ctx.lineTo(6, -12); ctx.lineTo(13, 2); ctx.lineTo(4, 0); ctx.lineTo(-2, 3); ctx.lineTo(-12, 1); ctx.closePath();
+  fillStroke(ctx, '#d9b866', '#a8863a', 1.2);                                                          // worn, uneven bristles
+  ctx.strokeStyle = '#a8863a'; ctx.lineWidth = 0.9;
+  for (const [x0, x1, y1] of [[-3, -8, 1], [0, -1, 2], [3, 6, 0], [5, 11, 1]]) { ctx.beginPath(); ctx.moveTo(x0, -11); ctx.lineTo(x1, y1); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(10, 1); ctx.lineTo(15, 4); ctx.moveTo(-11, 0); ctx.lineTo(-15, 3); ctx.stroke();  // stray bristles
+  ctx.restore();
 }
 
 function shabbyFloor(ctx) {
@@ -210,9 +297,11 @@ export function drawTable(ctx, t, sc, time = 0) {
   ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill();
   ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, p.woodDark, null);
   rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, p.wood, null);
+  clipped(ctx, () => rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4), () => woodGrain(ctx, t.x - 5, t.y - 24, 10, 25, t.x, true));
   if (st === 0) { // bare, slightly tilted wooden top with a crack
     ctx.save(); ctx.translate(t.x, t.y - 26); ctx.rotate(-0.04);
     ellipse(ctx, 0, 0, 44, 22); fillStroke(ctx, p.wood, p.woodDark, 2.5);
+    clipped(ctx, () => ellipse(ctx, 0, 0, 42.5, 20.5), () => woodGrain(ctx, -44, -22, 88, 44, t.x + t.y));
     ctx.strokeStyle = p.woodDark; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(-10, -12); ctx.lineTo(-4, -4); ctx.lineTo(-9, 4); ctx.stroke();
     ctx.restore();
