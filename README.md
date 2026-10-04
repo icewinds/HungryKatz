@@ -81,6 +81,7 @@ js/
   player.js npc.js npcSpawner.js inventory.js foodStation.js
   upgrades.js highScores.js storage.js audio.js ui.js
   achievements.js     sticker book (achievements + lifetime stats)
+  icons.js            drawn icon set: replaces emoji in all UI text (add new emoji to its EMOJI map)
   art.js              procedural placeholder art (cats, food, café)
   config.js           ALL tuning: layout, spawn stages, upgrades, rewards
 assets/ui             app icons (regenerate: npm run icons)

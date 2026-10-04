@@ -6,6 +6,7 @@ import {
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, PETS, OUTFITS,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
+import { watchIcons, fillRichText, drawIcon } from './icons.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
 import { HighScoreManager, cleanName } from './highScores.js';
@@ -18,9 +19,14 @@ import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
-  drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, PLAYER_LOOKS, playerLook, dressUp, FONT,
+  drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+
+// Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
+canvasIcons.text = fillRichText;
+canvasIcons.icon = drawIcon;
+watchIcons();
 
 // ---------------------------------------------------------------- managers
 const save = Storage.load();
@@ -41,6 +47,8 @@ function checkStickers() {
 }
 /** The player cat in their wardrobe outfit. */
 const playerOutfit = () => dressUp(playerLook(chars.current()), save.outfit, OUTFITS);
+/** Your cat trying on a hat (wardrobe previews). */
+const hatLook = hat => dressUp(playerLook(chars.current() === 'ghost' ? 'mango' : chars.current()), { ...save.outfit, hat }, OUTFITS);
 
 function maybeShowDaily() {
   const s = daily.status();
@@ -95,7 +103,8 @@ function onEvent(type, d) {
       lastScore = d.score;
       audio.play('gameOver');
       ui.showHud(false);
-      ui.showGameOver(d, save.playerName);
+      ui.showGameOver(d, save.playerName, save.settings.difficulty !== 'relaxed' && d.fed < 15);
+      drawClosedCat();
       ui.setUnlockNote(chars.unlocked().filter(id => !unlockedAtStart.includes(id)).map(id => playerLook(id).name));
       ui.show('gameover');
       checkStickers();
@@ -121,9 +130,14 @@ const ui = new UIManager({
   quit: goToMenu,
   openCharacters: () => {
     ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait);
-    ui.renderOutfits(OUTFITS, save.outfit, save.ownedOutfits, save.coins);
+    ui.renderOutfits(OUTFITS, save.outfit, save.ownedOutfits, save.coins, hatLook);
+    showCharTab('cats');
     ui.show('characters');
   },
+  charTab: btn => showCharTab(btn.dataset.tab),
+  askQuit: () => { document.getElementById('quit-confirm').classList.remove('hidden'); document.querySelector('#quit-confirm [data-action="quit"]').focus(); },
+  cancelQuit: () => document.getElementById('quit-confirm').classList.add('hidden'),
+  playRelaxed: () => { save.settings.difficulty = 'relaxed'; persist(); syncToggles(); startGame(lastRunLevel); },
   openStickers: () => { checkStickers(); ui.renderStickers(STICKERS, save.stickers); ui.show('stickers'); },
   closeStickers: () => ui.show('menu'),
   pickOutfit: btn => {
@@ -139,7 +153,7 @@ const ui = new UIManager({
     } else audio.play('pickup');
     save.outfit[kind === 'hats' ? 'hat' : 'apron'] = item.id;
     persist();
-    ui.renderOutfits(OUTFITS, save.outfit, save.ownedOutfits, save.coins);
+    ui.renderOutfits(OUTFITS, save.outfit, save.ownedOutfits, save.coins, hatLook);
     ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait); // coin counts update
   },
   closeCharacters: () => ui.show('menu'),
@@ -179,7 +193,12 @@ const ui = new UIManager({
   setScene: btn => { save.settings.scene = btn.dataset.value; persist(); refreshScene(); syncToggles(); },
   openSettings: () => ui.show('settings'),
   closeSettings: () => ui.show('menu'),
-  pause: () => { if (gm.state !== 'playing') return; gm.paused = true; ui.show('pause'); },
+  pause: () => {
+    if (gm.state !== 'playing') return;
+    gm.paused = true;
+    document.getElementById('quit-confirm').classList.add('hidden');
+    ui.show('pause');
+  },
   resume: () => { gm.paused = false; ui.show(null); },
   openUpgrades: () => {
     if (gm.state !== 'playing') return;
@@ -263,7 +282,30 @@ function syncToggles() {
   document.getElementById('debug-panel').hidden = !debug.on;
 }
 
+/** Choose cat: switch between the Cats and Wardrobe tabs. */
+function showCharTab(tab) {
+  for (const t of ['cats', 'wardrobe']) {
+    document.getElementById(`tab-${t}`).hidden = t !== tab;
+    document.getElementById(`tab-btn-${t}`).setAttribute('aria-selected', t === tab);
+  }
+}
+
+/** Game over art: your chef cat by a "See you soon!" sign. */
+function drawClosedCat() {
+  const c = document.getElementById('go-cat'), x = c.getContext('2d');
+  x.setTransform(2, 0, 0, 2, 0, 0); // 360x240 backing for a 180x120 box
+  x.clearRect(0, 0, 180, 120);
+  drawCat(x, 64, 112, playerOutfit(), { t: 1, facing: 1, mood: 'happy' });
+  x.strokeStyle = '#a8703f'; x.lineWidth = 2;
+  x.beginPath(); x.moveTo(118, 22); x.lineTo(131, 8); x.lineTo(144, 22); x.stroke();          // string
+  x.fillStyle = '#c98b55'; x.strokeStyle = '#8a5a3c';
+  x.beginPath(); x.roundRect(100, 22, 62, 34, 6); x.fill(); x.stroke();                       // board
+  x.fillStyle = '#fff7e8'; x.font = `700 11px ${FONT}`; x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillText('See you', 131, 33); x.fillText('soon!', 131, 46);
+}
+
 let lastRunLevel = save.level;
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let lastScore = 0;
 
 // ---------------------------------------------------------------- sharing
@@ -435,6 +477,17 @@ function eggTap() {
   ui.banners(first ? ['🎖️ Secret cat unlocked: Ghost!', `🎖️ ${ghostLine()}`] : [`🎖️ ${ghostLine()}`]);
   checkStickers();
 }
+document.addEventListener('keydown', e => {
+  if (e.target.closest?.('input, textarea')) return;
+  const open = document.querySelector('.screen.active');
+  if (e.key === 'Escape') {
+    if (!open) { if (gm.state === 'playing') ui.handlers.pause(); return; }
+    open.querySelector('[data-action="resume"], [data-action="closeUpgrades"], .close-x')?.click();
+  } else if ((e.key === ' ' || e.key === 'p') && !open && gm.state === 'playing') {
+    e.preventDefault();
+    ui.handlers.pause();
+  }
+});
 canvas.addEventListener('pointermove', e => {
   if (!dragging || e.buttons === 0) return;
   if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 20) return; // finger wobble is still a tap
@@ -493,7 +546,7 @@ function render(time) {
     } else if (a === p) {
       drawCat(ctx, p.x, p.y, playerOutfit(), { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {
-      const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
+      const shake = a.state === 'waiting' && a.frac < 0.3 && !reduceMotion.matches ? Math.sin(time * 40) * 1.2 : 0;
       const anim = speaking.has(a) ? 'talk' : a.anim;
       // missed customers fade to grey (cached palette; ctx.filter is very slow on phones)
       const look = a.mood === 'sad' ? (a.greyLook ??= greyLook(a.look)) : a.look;
@@ -511,8 +564,28 @@ function render(time) {
   }
   if (gm.state === 'playing') drawCarryBadge(ctx, p.x, p.y, inv);
   drawFx(ctx, gm.fx, 'over');
+  drawFirstGameHint(time);
 
   if (debug.on) drawDebug();
+}
+
+/** First game only: point at the milk pad, then at a hungry cat, until the first serve. */
+function drawFirstGameHint(time) {
+  if (save.stats.served > 0 || gm.state !== 'playing') return;
+  const hasMilk = gm.inventory.count('milk') > 0;
+  const cat = hasMilk && gm.npcs.find(n => n.state === 'waiting');
+  const pad = LAYOUT.pads.milk;
+  if (hasMilk && !cat) return;
+  const [x, y, label] = hasMilk ? [cat.x, cat.y - 150, 'Bring it here!'] : [pad.x, pad.y - 58, 'Grab milk!'];
+  const by = y - (reduceMotion.matches ? 0 : Math.abs(Math.sin(time * 4)) * 8);
+  ctx.save();
+  ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(x - 15, by - 22); ctx.lineTo(x + 15, by - 22); ctx.lineTo(x, by); ctx.closePath();
+  ctx.fillStyle = '#ec5f89'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); ctx.fill();
+  ctx.font = `700 21px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const lx = Math.min(Math.max(x, 70), WORLD.W - 70);
+  ctx.lineWidth = 5; ctx.strokeText(label, lx, by - 38); ctx.fillStyle = '#c43d5c'; ctx.fillText(label, lx, by - 38);
+  ctx.restore();
 }
 
 function drawDebug() {
@@ -628,8 +701,10 @@ window.addEventListener('resize', resize);
 resize();
 document.fonts?.ready.then(buildBackground); // redraw the sign once Fredoka loads
 syncToggles();
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+ui.installTip = isIOS || /Android/i.test(navigator.userAgent);
 ui.setInstall({ available: false, standalone: isStandalone() });
-if (/iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+if (isIOS) {
   // iPhone/iPad: no install button; explain Safari's Add to Home Screen instead
   const hint = document.getElementById('install-hint');
   hint.replaceChildren('Tip: on iPhone, open this in Safari, tap ', Object.assign(document.createElement('b'), { textContent: 'Share ⬆️' }),

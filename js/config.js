@@ -183,10 +183,10 @@ export const UPGRADES = {
     desc: 'Your cat zooms around the café faster.',
     values: [170, 205, 240, 275, 310, 335, 360, 385, 410, 435],
     costs: [30, 70, 130, 220, 320, 440, 580, 750, 950],
-    fmt: v => `${Math.round((v / 170) * 100)}%`,
+    fmt: v => (v > 170 ? `+${Math.round((v / 170 - 1) * 100)}%` : 'normal'),
   },
   npcTime: {
-    icon: '⏱️', name: 'NPC Time',
+    icon: '⏱️', name: 'Patience',
     desc: 'Hungry customers wait longer before leaving.',
     values: [0, 3, 6, 9, 12, 14, 16, 18, 20, 22],
     costs: [30, 70, 130, 220, 320, 440, 580, 750, 950],
@@ -204,14 +204,14 @@ export const UPGRADES = {
     desc: 'Extra coins every time you serve a customer.',
     values: [0, 1, 2, 3, 4, 5, 6, 8, 10, 12],
     costs: [60, 120, 200, 300, 420, 560, 720, 900, 1100],
-    fmt: v => `+${v}`,
+    fmt: v => `+${v} coin${v === 1 ? '' : 's'}`,
   },
   reach: {
     icon: '🐾', name: 'Quick Paws',
     desc: 'Serve cats and grab food from further away.',
     values: [0, 5, 10, 15, 20, 25, 30, 35, 40, 45],
     costs: [40, 80, 140, 220, 310, 420, 550, 700, 880],
-    fmt: v => `+${v}`,
+    fmt: v => `+${Math.round((v / FEED_RADIUS) * 100)}%`,
   },
 };
 

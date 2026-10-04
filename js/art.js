@@ -8,6 +8,9 @@ import { WORLD } from './config.js';
 export const FONT = '"Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif';
 const TAU = Math.PI * 2;
 export const INK = '#5a3d4a';
+// Set by game.js to icons.js renderers so canvas text shows drawn icons instead of emoji
+// (art.js stays free of DOM-only imports for the Node tests).
+export const canvasIcons = { text: null, icon: null };
 
 export const ellipse = (ctx, x, y, rx, ry) => { ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, TAU); };
 export const circle = (ctx, x, y, r) => ellipse(ctx, x, y, r, r);
@@ -354,7 +357,7 @@ function headPattern(ctx, look, hx, hy) {
   }
 }
 
-function accessory(ctx, look, hx, hy, blink = false) {
+export function accessory(ctx, look, hx, hy, blink = false) {
   const c = look.acc, ol = 'rgba(90,61,74,0.75)';
   switch (look.accessory) {
     case 'bow': {
@@ -484,7 +487,9 @@ export function drawPad(ctx, zone, type, ready, t, flash, lockedLevel = 0) {
     drawFoodIcon(ctx, type, x, y - 4, 1.1, 0.25);
     rrect(ctx, x - 20, y + 2, 40, 18, 9); fillStroke(ctx, '#fff', '#e2d8dc', 1.5);
     ctx.font = `700 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#9a8590'; ctx.fillText(`🔒${lockedLevel}`, x, y + 12);
+    ctx.fillStyle = '#9a8590';
+    if (canvasIcons.icon) { canvasIcons.icon(ctx, 'lock', x - 7, y + 11, 13); ctx.fillText(lockedLevel, x + 7, y + 12); }
+    else ctx.fillText(`🔒${lockedLevel}`, x, y + 12);
     return;
   }
   ellipse(ctx, x, y + 10, 46, 20);
@@ -573,8 +578,8 @@ export function drawChatBubble(ctx, x, y, dir, n, t) {
     }
   } else if (kind === 'heart') drawHeart(ctx, bx, by + 1, 11);
   else if (kind === 'note') {
-    ctx.font = `700 15px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillStyle = '#8a5cc7'; ctx.fillText('♪♫', bx, by + 1);
+    if (canvasIcons.icon) canvasIcons.icon(ctx, 'note', bx, by, 20);
+    else { ctx.font = `700 15px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#8a5cc7'; ctx.fillText('♪♫', bx, by + 1); }
   } else drawFoodIcon(ctx, kind, bx, by + 1, 0.5);
 }
 
@@ -619,8 +624,9 @@ export function drawFx(ctx, fx, layer) {
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       const y = f.y - easeOutCubic(k) * 50;
       ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.lineJoin = 'round';
-      ctx.strokeText(f.text, f.x, y);
-      ctx.fillStyle = f.color; ctx.fillText(f.text, f.x, y);
+      ctx.fillStyle = f.color;
+      if (canvasIcons.text) canvasIcons.text(ctx, f.text, f.x, y, f.size * pop, true);
+      else { ctx.strokeText(f.text, f.x, y); ctx.fillText(f.text, f.x, y); }
     } else {
       ctx.globalAlpha = 1 - k * k;
       if (f.shape === 'heart') drawHeart(ctx, f.x, f.y, 9, f.color);

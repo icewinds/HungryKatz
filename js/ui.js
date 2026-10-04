@@ -3,6 +3,7 @@
 
 import { UPGRADES, MAX_UPGRADE_LEVEL, PETS } from './config.js';
 import { FOOD_LABEL } from './inventory.js';
+import { stickerBadge, outfitCanvas } from './icons.js';
 
 const $ = id => document.getElementById(id);
 
@@ -207,14 +208,14 @@ export class UIManager {
     requestAnimationFrame(() => bestCard?.scrollIntoView({ block: 'center' }));
   }
 
-  /** Sticker book grid (earned stickers in colour, the rest greyed with a ?). DOM APIs only. */
+  /** Sticker book grid: earned stickers as drawn badges, the rest as dashed empty slots. DOM APIs only. */
   renderStickers(all, earned) {
     $('sticker-count').textContent = `${earned.length} / ${all.length}`;
     const grid = $('sticker-grid');
     grid.replaceChildren(...all.map(st => {
       const got = earned.includes(st.id), card = document.createElement('div');
       card.className = 'sticker' + (got ? ' got' : '');
-      const icon = document.createElement('span'); icon.className = 'sticker-icon'; icon.textContent = got ? st.icon : '❔';
+      const icon = stickerBadge(st.icon, all.indexOf(st), got);
       const name = document.createElement('b'); name.textContent = st.name;
       const desc = document.createElement('small'); desc.textContent = st.desc;
       card.append(icon, name, desc);
@@ -222,17 +223,20 @@ export class UIManager {
     }));
   }
 
-  /** Wardrobe chips: hats and aprons with price, ✓ when worn. */
-  renderOutfits(outfits, outfit, owned, coins) {
+  /** Wardrobe tiles: each hat shown on your cat (`wearing(hatId)` gives the look), aprons as drawn
+   *  swatches; always named, with the price or "Wearing" underneath. */
+  renderOutfits(outfits, outfit, owned, coins, wearing) {
     const row = (kind, list, current) => list.map(o => {
       const b = document.createElement('button');
       const has = o.cost === 0 || owned.includes(o.id);
       b.className = 'outfit' + (o.id === current ? ' worn' : '') + (has ? '' : ' locked') + (!has && coins < o.cost ? ' poor' : '');
       b.dataset.action = 'pickOutfit'; b.dataset.kind = kind; b.dataset.id = o.id;
       b.setAttribute('aria-label', `${o.name}${has ? '' : `, costs ${o.cost} coins`}${o.id === current ? ', wearing' : ''}`);
-      const i = document.createElement('span'); i.className = 'outfit-icon'; i.textContent = o.icon;
-      const t = document.createElement('small'); t.textContent = o.id === current ? '✓' : has ? o.name : `🪙${o.cost}`;
-      b.append(i, t);
+      const i = kind === 'hats' ? outfitCanvas(wearing(o.id)) : document.createElement('span');
+      if (kind !== 'hats') { i.className = 'outfit-icon'; i.textContent = o.icon; }
+      const name = document.createElement('b'); name.textContent = o.name;
+      const t = document.createElement('small'); t.textContent = o.id === current ? '✓ Wearing' : has ? 'Owned' : `🪙 ${o.cost}`;
+      b.append(i, name, t);
       return b;
     });
     $('hat-list').replaceChildren(...row('hats', outfits.hats, outfit.hat));
@@ -289,9 +293,10 @@ export class UIManager {
     }
   }
 
-  showGameOver({ score, rank, scores }, lastName = '') {
+  showGameOver({ score, fed, rank, scores }, lastName = '', suggestRelaxed = false) {
     $('go-score').textContent = score;
-    $('go-coins').textContent = score;
+    $('go-fed').textContent = fed;
+    $('go-relaxed').classList.toggle('hidden', !suggestRelaxed);
     $('go-best').classList.toggle('hidden', rank !== 0);
     this.goRank = rank;
     // Name box only when this run made the table
@@ -308,7 +313,7 @@ export class UIManager {
     ol.replaceChildren();
     if (!scores.length) {
       const li = document.createElement('li');
-      li.textContent = 'No scores yet';
+      li.textContent = 'No scores yet. Yours could be first!';
       ol.append(li);
       return;
     }
@@ -330,6 +335,6 @@ export class UIManager {
 
   setInstall({ available, standalone }) {
     $('btn-install').classList.toggle('hidden', !available);
-    $('install-hint').classList.toggle('hidden', standalone);
+    $('install-hint').classList.toggle('hidden', standalone || !this.installTip); // tip only on phones that need it
   }
 }

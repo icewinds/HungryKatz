@@ -81,7 +81,7 @@
     <div class="panel wide">
       <button class="close-x" data-action="closeLevels" aria-label="Back">✕</button>
       <h2>Choose your café</h2>
-      <p class="hint hint-tight">Start at any level you've reached. Lower levels are calmer; level up to unlock more foods, tables and a fancier café.</p>
+      <p class="hint hint-tight">Pick where to start. Higher levels have more foods and tables, and busier crowds.</p>
       <div id="level-list" class="level-grid"></div>
     </div>
   </section>
@@ -107,22 +107,31 @@
         <li><span class="help-ico">🐱</span><div><b>Walk into a hungry cat</b> that wants the food you're carrying. The ring above its head shows how long it will wait.</div></li>
         <li><span class="help-ico">🐾</span><div><b>Don't keep them waiting!</b> A cat that waits too long leaves sad. Miss 10 cats and the game is over.</div></li>
       </ol>
-      <h3>Good to know</h3>
-      <ul class="help-tips">
-        <li><span class="tip-ico" aria-hidden="true">⬆️</span><span>Spend coins on <b>upgrades</b> (up to level 10): carry more, walk faster, make cats wait longer, earn more tips and coins, and reach further.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🏠</span><span>Your café starts <b>shabby</b>. Level up to fix it up, add <b>more tables</b> and welcome more cats.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">⚙️</span><span>Pick a <b>difficulty</b> and a <b>scene</b> in Settings.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🍣</span><span>Level up your café to unlock <b>new foods</b>: cat food, fish, sushi and cupcakes.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🔥</span><span>Serve cats quickly one after another for a <b>combo bonus</b>.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">👑</span><span><b>VIP cats</b> wear crowns: they're impatient but pay triple!</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🐶</span><span>Adopt <b>café pets</b> in Upgrades for handy bonuses.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🍽️</span><span>On weekends some cats order a <b>two-dish special</b>.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🏅</span><span>Collect <b>stickers</b> and buy <b>hats and aprons</b> in Choose cat.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🌸</span><span>Little chefs can pick <b>Relaxed</b> in Settings: nobody leaves sad.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">💰</span><span>Happy cats sometimes leave a <b>tip</b>.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">🎁</span><span>Come back every day for a <b>daily bonus</b>.</span></li>
-        <li><span class="tip-ico" aria-hidden="true">😺</span><span>Buy new <b>chef cats</b>, or unlock the rarest ones with a high score.</span></li>
-      </ul>
+      <details class="more-tips">
+        <summary>More tips</summary>
+        <h3>Earn more</h3>
+        <ul class="help-tips">
+          <li><span class="tip-ico" aria-hidden="true">⬆️</span><span>Spend coins on <b>upgrades</b> (up to level 10): carry more, walk faster, make cats wait longer, earn more tips and coins, and reach further.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🔥</span><span>Serve cats quickly one after another for a <b>combo bonus</b>.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">👑</span><span><b>VIP cats</b> wear crowns: they're impatient but pay triple!</span></li>
+          <li><span class="tip-ico" aria-hidden="true">💰</span><span>Happy cats sometimes leave a <b>tip</b>.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🍽️</span><span>On weekends some cats order a <b>two-dish special</b>.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🎁</span><span>Come back every day for a <b>daily bonus</b>.</span></li>
+        </ul>
+        <h3>Your café</h3>
+        <ul class="help-tips">
+          <li><span class="tip-ico" aria-hidden="true">🏠</span><span>Your café starts <b>shabby</b>. Level up to fix it up, add <b>more tables</b> and welcome more cats.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🍣</span><span>Level up your café to unlock <b>new foods</b>: cat food, fish, sushi and cupcakes.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🐶</span><span>Adopt <b>café pets</b> in Upgrades for handy bonuses.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">⚙️</span><span>Pick a <b>difficulty</b> and a <b>scene</b> in Settings.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🌸</span><span>Little chefs can pick <b>Relaxed</b> in Settings: nobody leaves sad.</span></li>
+        </ul>
+        <h3>Collect</h3>
+        <ul class="help-tips">
+          <li><span class="tip-ico" aria-hidden="true">🏅</span><span>Collect <b>stickers</b> and buy <b>hats and aprons</b> in Choose cat.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">😺</span><span>Buy new <b>chef cats</b>, or unlock the rarest ones with a high score.</span></li>
+        </ul>
+      </details>
       <div class="dedication">
         <span class="dedication-hearts" aria-hidden="true">💖🐾💖</span>
         <p>HungryKatz was made with love<br>for <b>Calleigh</b></p>
@@ -147,12 +156,21 @@
       <button class="close-x" data-action="closeCharacters" aria-label="Back">✕</button>
       <h2>Choose your cat</h2>
       <p class="coins-big">🪙 <b id="char-coins">0</b></p>
-      <div id="char-list" class="char-grid"></div>
-      <p class="hint hint-top0">Buy cats with coins, or reach a high score to unlock the rarest ones.</p>
-      <h3>👒 Wardrobe</h3>
-      <p class="hint hint-top0">Dress up your chef cat. Tap to buy, tap again to wear.</p>
-      <div id="hat-list" class="outfit-row" role="group" aria-label="Hats"></div>
-      <div id="apron-list" class="outfit-row" role="group" aria-label="Aprons"></div>
+      <div class="tabs" role="tablist" aria-label="Cats and wardrobe">
+        <button class="tab" role="tab" id="tab-btn-cats" aria-selected="true" aria-controls="tab-cats" data-action="charTab" data-tab="cats">🐱 Cats</button>
+        <button class="tab" role="tab" id="tab-btn-wardrobe" aria-selected="false" aria-controls="tab-wardrobe" data-action="charTab" data-tab="wardrobe">👒 Wardrobe</button>
+      </div>
+      <div id="tab-cats" role="tabpanel" aria-labelledby="tab-btn-cats">
+        <div id="char-list" class="char-grid"></div>
+        <p class="hint">Buy cats with coins, or reach a high score to unlock the rarest ones.</p>
+      </div>
+      <div id="tab-wardrobe" role="tabpanel" aria-labelledby="tab-btn-wardrobe" hidden>
+        <p class="hint hint-top0">Dress up your chef cat. Tap to buy, tap again to wear.</p>
+        <h3>Hats</h3>
+        <div id="hat-list" class="outfit-row" role="group" aria-label="Hats"></div>
+        <h3>Aprons</h3>
+        <div id="apron-list" class="outfit-row" role="group" aria-label="Aprons"></div>
+      </div>
       <button class="btn" data-action="closeCharacters">Done</button>
     </div>
   </section>
@@ -193,7 +211,14 @@
         <button class="btn big" data-action="resume">▶ Resume</button>
         <button class="btn secondary toggle toggle-music" data-action="toggleMusic">🎵 Music</button>
         <button class="btn secondary toggle toggle-sfx" data-action="toggleSfx">🔊 Sound FX</button>
-        <button class="btn secondary" data-action="quit">🏠 Quit to Menu</button>
+        <button class="btn secondary" data-action="askQuit">🏠 Quit to Menu</button>
+      </div>
+      <div id="quit-confirm" class="quit-confirm hidden" role="group" aria-labelledby="quit-q">
+        <p id="quit-q">Leave this game? Your score is saved.</p>
+        <div class="menu-grid">
+          <button class="btn secondary" data-action="cancelQuit">Keep playing</button>
+          <button class="btn" data-action="quit">Quit</button>
+        </div>
       </div>
     </div>
   </section>
@@ -212,12 +237,18 @@
   <!-- Game over -->
   <section id="screen-gameover" class="screen">
     <div class="panel">
-      <h2 class="gameover">GAME OVER</h2>
-      <p id="go-best" class="newbest hidden">⭐ NEW HIGH SCORE! ⭐</p>
+      <canvas id="go-cat" width="360" height="240" aria-hidden="true"></canvas>
+      <h2 class="gameover">Café closed!</h2>
+      <p class="go-sub">Thanks for running the café today.</p>
+      <p id="go-best" class="newbest hidden">⭐ New high score! ⭐</p>
       <p id="go-unlock" class="unlock hidden"></p>
       <div class="stats">
-        <div><span>Final Score</span><b id="go-score">0</b></div>
-        <div><span>Coins Earned</span><b id="go-coins">0</b></div>
+        <div><span>Score</span><b id="go-score">0</b></div>
+        <div><span>Cats served</span><b id="go-fed">0</b></div>
+      </div>
+      <div id="go-relaxed" class="go-relaxed hidden">
+        <p>Too busy? In <b>🌸 Relaxed</b> mode nobody leaves sad.</p>
+        <button class="btn secondary" data-action="playRelaxed">🌸 Play relaxed</button>
       </div>
       <form id="go-name" class="name-form hidden" novalidate>
         <label for="go-name-input">You made the top 5! Who's the chef?</label>
