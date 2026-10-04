@@ -16,7 +16,7 @@ import { TRACKS, trackForLevel } from '../js/audio.js';
 import { Inventory } from '../js/inventory.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
-  TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus,
+  TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus, levelSpawnPace,
   COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS,
 } from '../js/config.js';
 
@@ -393,6 +393,8 @@ test('café growth: more tables/seats by level, makeover stages, busier at highe
   assert.equal(spotsForLevel(9).length, 4 + TABLES.length * 2);
   assert.deepEqual([1, 2, 3, 5, 8, 20].map(decorStage), [0, 0, 1, 2, 3, 3]);
   assert.ok(levelCrowdBonus(9) > levelCrowdBonus(1));
+  assert.deepEqual([1, 3, 5, 9, 20].map(levelCrowdBonus), [0, 1, 2, 4, 6]);
+  assert.ok(levelSpawnPace(9) < levelSpawnPace(1) && levelSpawnPace(50) === 0.6);
   // spawner only seats customers at open tables
   const { gm } = setup({ level: 1 });
   gm.spawner.timer = 0; gm.runTime = 1000;

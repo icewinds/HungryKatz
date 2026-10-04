@@ -82,8 +82,10 @@ export const DECOR_STAGES = [
 ];
 export const decorStage = level => DECOR_STAGES.reduce((st, d, i) => (level >= d.level ? i : st), 0);
 
-// Busier café at higher levels: extra customers allowed at once (on top of the run stage).
-export const levelCrowdBonus = level => Math.floor((level - 1) / 4);
+// Busier café at higher levels: extra customers allowed at once (on top of the run stage),
+// +1 every 2 levels up to +6 (seats still cap it), and they arrive faster (spawn gap down to 60%).
+export const levelCrowdBonus = level => Math.min(6, Math.floor((level - 1) / 2));
+export const levelSpawnPace = level => Math.max(0.6, 1 - (level - 1) * 0.05);
 
 // Player-chosen difficulty (Settings). patience/interval multiply, maxNpcs adds.
 export const DIFFICULTY = {

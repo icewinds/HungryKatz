@@ -3,7 +3,7 @@
 //   pickup, arrive, feed, wrongFood, missed, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, rewardForLevel, foodsForLevel, foodUnlockLevel,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel,
 } from './config.js';
 import { Player } from './player.js';
 import { NPC } from './npc.js';
@@ -124,7 +124,7 @@ export class GameManager {
     }
 
     const diff = this.difficulty;
-    const tuning = { spots: this.spots, maxBonus: levelCrowdBonus(this.level) + diff.maxNpcs, intervalMult: diff.interval };
+    const tuning = { spots: this.spots, maxBonus: levelCrowdBonus(this.level) + diff.maxNpcs, intervalMult: diff.interval * levelSpawnPace(this.level) };
     for (const spawn of this.spawner.update(dt, this.runTime, this.npcs, foods, tuning)) this.spawnNpc(spawn);
 
     for (const npc of this.npcs) {
