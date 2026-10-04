@@ -390,6 +390,16 @@ function accessory(ctx, look, hx, hy, blink = false) {
       circle(ctx, hx + 12, hy - 18, 2.2); fillStroke(ctx, '#ffd34d', null);
       break;
     case 'ghost': ghostMask(ctx, hx, hy, blink); break;
+    case 'crown': { // VIP customer
+      ctx.beginPath();
+      ctx.moveTo(hx - 10, hy - 18); ctx.lineTo(hx - 11, hy - 30); ctx.lineTo(hx - 5, hy - 24); ctx.lineTo(hx, hy - 33);
+      ctx.lineTo(hx + 5, hy - 24); ctx.lineTo(hx + 11, hy - 30); ctx.lineTo(hx + 10, hy - 18); ctx.closePath();
+      fillStroke(ctx, '#ffcf3a', '#c99a00', 1.4);
+      circle(ctx, hx, hy - 23, 2.2); fillStroke(ctx, '#ff5d73', null);
+      circle(ctx, hx - 6, hy - 21, 1.4); fillStroke(ctx, '#5aa9e6', null);
+      circle(ctx, hx + 6, hy - 21, 1.4); fillStroke(ctx, '#5aa9e6', null);
+      break;
+    }
     case 'chef':
       for (const [x, y, r] of [[hx - 7, hy - 25, 8], [hx + 3, hy - 30, 9.5], [hx + 13, hy - 24, 7.5]]) {
         circle(ctx, x, y, r); fillStroke(ctx, '#fff', '#e3d3da', 1.6);
@@ -498,17 +508,32 @@ export function drawRequest(ctx, npc, t) {
   ctx.save();
   ctx.translate(npc.x, npc.y - 104 * (npc.look.size || 1));
   ctx.scale(sc, sc);
-  if (urgent) { circle(ctx, 0, 0, 27); ctx.fillStyle = 'rgba(255,93,115,0.18)'; ctx.fill(); }
-  tri(ctx, [-5, 15], [5, 15], [0, 23]); ctx.fillStyle = '#fff'; ctx.fill();
-  circle(ctx, 0, 0, 19); fillStroke(ctx, '#fff', null);
+  const two = npc.requests?.length > 1;          // weekend special: two dishes
+  const R = two ? 25 : 19, ring = R + 2;
+  if (urgent) { circle(ctx, 0, 0, ring + 6); ctx.fillStyle = 'rgba(255,93,115,0.18)'; ctx.fill(); }
+  if (npc.vip) { // gold VIP halo with a twinkle
+    circle(ctx, 0, 0, ring + 5); ctx.strokeStyle = '#e3b94f'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.globalAlpha = 0.6 + 0.4 * Math.sin(t * 6);
+    drawSparkle(ctx, ring + 3, -ring + 1, 5, '#ffd34d');
+    ctx.globalAlpha = 1;
+  }
+  tri(ctx, [-5, R - 4], [5, R - 4], [0, R + 4]); ctx.fillStyle = '#fff'; ctx.fill();
+  circle(ctx, 0, 0, R); fillStroke(ctx, '#fff', null);
   ctx.lineWidth = 3.5; ctx.lineCap = 'round';
-  circle(ctx, 0, 0, 21); ctx.strokeStyle = 'rgba(90,61,74,0.12)'; ctx.stroke();
+  circle(ctx, 0, 0, ring); ctx.strokeStyle = 'rgba(90,61,74,0.12)'; ctx.stroke();
   const f = npc.frac;
   ctx.beginPath();
-  ctx.arc(0, 0, 21, -Math.PI / 2, -Math.PI / 2 + f * TAU);
+  ctx.arc(0, 0, ring, -Math.PI / 2, -Math.PI / 2 + f * TAU);
   ctx.strokeStyle = f > 0.6 ? '#5ccf8a' : f > 0.3 ? '#ffc94d' : '#ff5d73';
   ctx.stroke();
-  drawFoodIcon(ctx, npc.request, 0, 1, 0.85);
+  if (two) {
+    drawFoodIcon(ctx, npc.requests[0], -10, 1, 0.62);
+    drawFoodIcon(ctx, npc.requests[1], 10, 1, 0.62);
+    ctx.fillStyle = '#c43d5c'; ctx.font = `700 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('+', 0, 2);
+  } else {
+    drawFoodIcon(ctx, npc.request, 0, 1, 0.85);
+  }
   ctx.restore();
 }
 
@@ -599,6 +624,12 @@ export function greyLook(look) {
   const out = { ...look };
   for (const k of ['fur', 'light', 'dark', 'acc', 'eye', 'patch', 'headPatch', 'ear', 'tail']) out[k] = grey(look[k]);
   return out;
+}
+
+function drawSparkle(ctx, x, y, r, color) {
+  ctx.beginPath();
+  for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * 0.35 : r, a = (i / 8) * TAU; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); }
+  ctx.closePath(); ctx.fillStyle = color; ctx.fill();
 }
 
 /** Red broken-heart badge over a customer who gave up. */

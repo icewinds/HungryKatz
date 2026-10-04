@@ -364,3 +364,53 @@ function fairyLights(ctx, t) {
   }
   ctx.globalAlpha = 1;
 }
+
+// ---------------------------------------------------------------- café pets (bought in Upgrades)
+/** Draw owned pets: goldfish bowl (bar, left end), parrot (bar, right end), puppy (floor, right). */
+export function drawPets(ctx, pets, t) {
+  if (pets.includes('goldfish')) {
+    const bx = 98, by = 176;
+    ellipse(ctx, bx, by + 13, 14, 4); ctx.fillStyle = SHADOW; ctx.fill();
+    circle(ctx, bx, by, 15); fillStroke(ctx, 'rgba(205,236,250,0.7)', '#b5dcf0', 2);
+    ctx.save(); circle(ctx, bx, by, 13.5); ctx.clip();
+    ctx.fillStyle = 'rgba(110,185,240,0.45)'; ctx.fillRect(bx - 15, by - 3, 30, 20);
+    const fx = bx + Math.sin(t * 1.3) * 6, dir = Math.cos(t * 1.3) >= 0 ? 1 : -1;
+    tri(ctx, [fx - dir * 4, by + 4], [fx - dir * 9, by + 1], [fx - dir * 9, by + 7]); ctx.fillStyle = '#ff8a3d'; ctx.fill();
+    ellipse(ctx, fx, by + 4, 5, 3.2); ctx.fillStyle = '#ffa04d'; ctx.fill();
+    circle(ctx, fx + dir * 2.5, by + 3, 0.9); ctx.fillStyle = '#2b2230'; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    for (let i = 0; i < 2; i++) { const k = (t * 0.6 + i * 0.5) % 1; circle(ctx, bx + 5 - i * 3, by + 6 - k * 14, 1.2); ctx.fill(); }
+    ctx.restore();
+    ellipse(ctx, bx, by - 12, 8, 2.5); ctx.strokeStyle = '#b5dcf0'; ctx.lineWidth = 2; ctx.stroke();
+  }
+  if (pets.includes('parrot')) {
+    const x = 452, y = 170 + Math.sin(t * 2) * 1.5;
+    tri(ctx, [x - 2, y - 4], [x + 3, y - 4], [x - 4, y + 10]); ctx.fillStyle = '#4a90e2'; ctx.fill();   // tail
+    ellipse(ctx, x, y - 12, 7, 11); fillStroke(ctx, '#4cc36a', '#2f9e4f', 1.2);                         // body
+    ellipse(ctx, x - 3, y - 11, 4, 8); ctx.fillStyle = '#2f9e4f'; ctx.fill();                           // wing
+    circle(ctx, x + 1, y - 25, 6); fillStroke(ctx, '#ff5d5d', '#d94444', 1.2);                          // head
+    tri(ctx, [x + 6, y - 26], [x + 11, y - 24], [x + 6, y - 22]); ctx.fillStyle = '#ffc94d'; ctx.fill(); // beak
+    circle(ctx, x + 3, y - 26, 1.1); ctx.fillStyle = '#2b2230'; ctx.fill();
+    ctx.strokeStyle = '#8a5a3c'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x - 3, y - 1); ctx.lineTo(x - 3, y + 2); ctx.moveTo(x + 2, y - 1); ctx.lineTo(x + 2, y + 2); ctx.stroke();
+  }
+  if (pets.includes('puppy')) {
+    const x = 488, y = 304, wag = Math.sin(t * 10) * 0.6;
+    ellipse(ctx, x, y + 2, 22, 5); ctx.fillStyle = SHADOW; ctx.fill();
+    ctx.save(); ctx.translate(x + 16, y - 10); ctx.rotate(-0.6 + wag);                                // wagging tail
+    rrect(ctx, -2, -12, 4, 12, 2); fillStroke(ctx, '#c98b55', null); ctx.restore();
+    ellipse(ctx, x + 2, y - 7, 17, 8.5); fillStroke(ctx, '#e0a96d', '#b67f4a', 1.4);                 // body (lying down)
+    rrect(ctx, x - 16, y - 4, 7, 5, 2.5); fillStroke(ctx, '#e0a96d', '#b67f4a', 1.2);                // front paws
+    rrect(ctx, x - 9, y - 4, 7, 5, 2.5); fillStroke(ctx, '#e0a96d', '#b67f4a', 1.2);
+    circle(ctx, x - 15, y - 15, 9); fillStroke(ctx, '#e0a96d', '#b67f4a', 1.4);                      // head
+    const flop = Math.sin(t * 1.7) * 0.15;
+    for (const [ex, dir] of [[-22, -1], [-9, 1]]) {                                                   // floppy ears
+      ctx.save(); ctx.translate(x + ex, y - 20); ctx.rotate(dir * (0.3 + flop));
+      ellipse(ctx, 0, 6, 3.5, 7); fillStroke(ctx, '#a8703f', null); ctx.restore();
+    }
+    ellipse(ctx, x - 18, y - 11, 4.5, 3.2); fillStroke(ctx, '#f4d3ae', null);                      // snout
+    circle(ctx, x - 20, y - 12, 1.5); fillStroke(ctx, '#2b2230', null);                              // nose
+    if (t % 4 < 0.15) { ctx.strokeStyle = '#2b2230'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x - 17, y - 17); ctx.lineTo(x - 14, y - 17); ctx.stroke(); }
+    else { circle(ctx, x - 15.5, y - 17, 1.3); fillStroke(ctx, '#2b2230', null); }
+  }
+}

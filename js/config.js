@@ -116,6 +116,23 @@ export const TIPS = { min: 2, max: 6 };
 // Daily bonus coins for streak days 1..7 (missing a day restarts at day 1; after day 7 it loops).
 export const DAILY_REWARDS = [20, 30, 40, 50, 60, 80, 120];
 
+// Combo: serve again within `window` seconds to grow the streak; each step adds coins (capped). A miss resets it.
+export const COMBO = { window: 12, bonusPerStep: 2, maxBonus: 10 };
+
+// VIP customers (crown + gold ring): appear after `after` seconds of a run, less patient, pay `pay`x and always tip.
+export const VIP = { chance: 0.12, after: 30, patience: 0.6, pay: 3 };
+
+// Weekend specials: on these weekdays (0 = Sunday) some customers order two different dishes; pays both x bonus.
+export const SPECIALS = { days: [0, 6], chance: 0.25, bonus: 1.5 };
+
+// Café pets (bought once in the Upgrades screen; bonuses stack).
+export const PETS = {
+  goldfish: { icon: '🐟', name: 'Goldfish', cost: 300, desc: '+1 coin every time you serve.' },
+  puppy: { icon: '🐶', name: 'Puppy', cost: 500, desc: 'Cosy company: customers wait 2s longer.' },
+  parrot: { icon: '🦜', name: 'Parrot', cost: 800, desc: 'Chats up customers: +10% tip chance.' },
+};
+export const PET_BONUS = { goldfishCoins: 1, puppyPatience: 2, parrotTips: 0.1 };
+
 export const MAX_MISSED = 10;
 export const FEED_RADIUS = 46;   // player<->NPC contact distance
 export const NPC_SPEED = 140;    // px per second

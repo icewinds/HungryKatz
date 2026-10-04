@@ -16,6 +16,7 @@ import { Inventory } from '../js/inventory.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus,
+  COMBO, VIP, SPECIALS, PET_BONUS,
 } from '../js/config.js';
 
 let passed = 0;
@@ -36,6 +37,7 @@ function setup(over = {}, rng = () => 0.5) { // rng 0.5 => no random tips
   });
   gm.startRun();
   gm.spawner.timer = Infinity; // tests spawn NPCs manually
+  gm.specialDay = false;       // weekend specials off unless a test turns them on
   return { gm, save, events };
 }
 const tick = (gm, secs, dt = 1 / 60) => { for (let t = 0; t < secs; t += dt) gm.update(dt); };
@@ -466,6 +468,76 @@ test('easter egg: Ghost is hidden until unlocked, then selectable', () => {
   assert.equal(ch.current(), 'ghost');
   assert.equal(ch.unlockSecret('smokey'), false, 'coin cats cannot be unlocked this way');
   assert.equal(playerLook('ghost').secret, true);
+});
+
+test('combo: quick serves build a streak bonus; a gap or a miss resets it', () => {
+  const { gm, save } = setup({ ...MAX5 });
+  const serve = spot => {
+    gm.inventory.fill('milk');
+    const n = arrive(gm, { spot: LAYOUT.spots[spot], request: 'milk' });
+    const before = save.coins;
+    place(gm, n.x, n.y); tick(gm, 1 / 60);
+    park(gm);
+    return save.coins - before;
+  };
+  assert.equal(serve(0), 10, 'first serve: no bonus');
+  assert.equal(gm.combo, 1);
+  // arrive() takes a few seconds of walking; still inside the 12s window
+  assert.equal(serve(1), 10 + COMBO.bonusPerStep, 'second serve in a row: +2');
+  assert.equal(gm.combo, 2);
+  gm.runTime += COMBO.window + 1; // long pause
+  assert.equal(serve(2), 10, 'streak expired');
+  serve(3);
+  arrive(gm, { spot: LAYOUT.spots[4], request: 'milk', patience: 0.2 });
+  tick(gm, 0.5); // expires -> miss
+  assert.equal(gm.combo, 0, 'a miss breaks the combo');
+});
+
+test('VIP: crown, less patient, triple pay, always tips', () => {
+  const { gm, save, events } = setup();
+  const n = gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk', patience: 10, vip: true });
+  assert.equal(n.vip, true);
+  assert.equal(n.look.accessory, 'crown');
+  assert.equal(n.patience, 10 * VIP.patience);
+  park(gm);
+  for (let i = 0; i < 1200 && n.state === 'entering'; i++) gm.update(1 / 60);
+  gm.inventory.fill('milk');
+  place(gm, n.x, n.y); tick(gm, 1 / 60);
+  const feed = events.find(e => e[0] === 'feed')[1];
+  assert.ok(feed.tip >= TIPS.min, 'VIPs always tip');
+  assert.equal(save.coins, 10 * VIP.pay + feed.tip);
+});
+
+test('weekend special: needs both dishes, uses both, pays both x bonus', () => {
+  const { gm, save } = setup({ ...MAX5, level: 5 });
+  const n = arrive(gm, { spot: LAYOUT.spots[0], requests: ['milk', 'fish'] });
+  gm.inventory.fill('milk');
+  place(gm, n.x, n.y); tick(gm, 0.1);
+  assert.equal(n.state, 'waiting', 'only one of the two dishes: not served');
+  assert.equal(gm.inventory.count('milk'), 5, 'nothing used up');
+  gm.inventory.fill('fish');
+  tick(gm, 1 / 60);
+  assert.equal(n.state, 'eating');
+  assert.deepEqual([gm.inventory.count('milk'), gm.inventory.count('fish')], [4, 4]);
+  const expected = Math.round((gm.rewardFor('milk') + gm.rewardFor('fish')) * SPECIALS.bonus);
+  assert.equal(save.coins, expected);
+  // random specials only on special days and with 2+ foods
+  gm.specialDay = true; gm.rng = () => 0;
+  assert.equal(gm.spawnNpc({ spot: LAYOUT.spots[3] }).requests.length, 2);
+  gm.specialDay = false;
+  assert.equal(gm.spawnNpc({ spot: LAYOUT.spots[4] }).requests.length, 1);
+});
+
+test('pets: goldfish +1 coin per serve, puppy +2s patience, parrot more tips', () => {
+  const { gm, save } = setup({ pets: ['goldfish', 'puppy', 'parrot'] });
+  const n = gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk', patience: 10 });
+  assert.equal(n.patience, 10 + PET_BONUS.puppyPatience);
+  park(gm);
+  for (let i = 0; i < 1200 && n.state === 'entering'; i++) gm.update(1 / 60);
+  gm.inventory.fill('milk');
+  gm.rng = () => 0.3; // 25% Lucky Tips alone would not tip; with the parrot (35%) it does
+  place(gm, n.x, n.y); tick(gm, 1 / 60);
+  assert.ok(save.coins >= 10 + PET_BONUS.goldfishCoins + TIPS.min, `coins ${save.coins}`);
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

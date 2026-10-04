@@ -524,3 +524,4 @@ html, body {
 .lv-foods img { width: 22px; height: 22px; }
 .level-card.locked { opacity: 0.55; border-style: dashed; }
 .level-card.locked .lv-num { background: #d8cbd1; font-size: 16px; }
+.pets-title { margin: 18px 0 10px; }

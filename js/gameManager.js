@@ -3,7 +3,7 @@
 //   pickup, arrive, feed, wrongFood, missed, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, rewardForLevel, foodsForLevel, foodUnlockLevel,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, rewardForLevel, foodsForLevel, foodUnlockLevel,
 } from './config.js';
 import { Player } from './player.js';
 import { NPC } from './npc.js';
@@ -49,7 +49,12 @@ export class GameManager {
     this.player.stop();
     this.spawner.reset();
     this.applyUpgrades();
+    this.combo = 0;                 // serves in a row (see COMBO)
+    this.lastServeAt = -Infinity;
+    this.specialDay = SPECIALS.days.includes(new Date().getDay()); // weekend specials
   }
+
+  hasPet(id) { return this.save.pets?.includes(id); }
 
   applyUpgrades() {
     this.inventory.setMax(this.upgrades.value('carry'));
@@ -112,7 +117,10 @@ export class GameManager {
 
     for (const npc of this.npcs) {
       const ev = npc.update(dt);
-      if (ev === 'arrived') this.onEvent('arrive', { npc });
+      if (ev === 'arrived') {
+        if (npc.vip) this.text(npc.x, npc.y - 150, '👑 VIP!', '#c99a00', 20);
+        this.onEvent('arrive', { npc });
+      }
       else if (ev === 'expired') this.missNpc(npc);
       else if (ev === 'fedDone') npc.leave('happy');
     }
@@ -128,17 +136,27 @@ export class GameManager {
   }
 
   /** Spawn a customer. Every field is optional (debug tools pass only `request`). */
-  spawnNpc({ spot, request, patience, trail = 0 } = {}) {
+  spawnNpc({ spot, request, requests, patience, trail = 0, vip } = {}) {
     spot ??= this.spawner.randomFreeSpot(this.npcs, this.spots);
     if (!spot) return null;
-    if (!request) { const foods = this.foods; request = foods[Math.floor(this.rng() * foods.length)]; }
+    const foods = this.foods, pick = list => list[Math.floor(this.rng() * list.length)];
+    request ??= requests?.[0] ?? pick(foods);
+    if (!requests) { // weekend special: a second, different dish
+      requests = [request];
+      if (this.specialDay && foods.length >= 2 && this.rng() < SPECIALS.chance) requests.push(pick(foods.filter(f => f !== request)));
+    }
+    vip ??= this.runTime >= VIP.after && this.rng() < VIP.chance;
     patience ??= this.spawner.stage(this.runTime).patience;
+    const look = randomLook(this.rng);
+    if (vip) look.accessory = 'crown';
     const npc = new NPC({
-      spot, request,
-      look: randomLook(this.rng),
-      patience: patience * this.difficulty.patience + this.upgrades.value('npcTime'),
+      spot, request: requests[0], look,
+      patience: patience * this.difficulty.patience * (vip ? VIP.patience : 1)
+        + this.upgrades.value('npcTime') + (this.hasPet('puppy') ? PET_BONUS.puppyPatience : 0),
       blockers: this.blockers,
     });
+    npc.requests = requests;
+    npc.vip = vip;
     npc.x -= 50 * trail; // the second friend follows a step behind
     npc.phase += trail * 0.3;
     this.npcs.push(npc);
@@ -148,17 +166,29 @@ export class GameManager {
   /** Feed if the cat is waiting AND the player carries what it asked for. Wrong food changes nothing. */
   tryFeed(npc) {
     if (!npc.canBeFed()) return false;
-    if (!this.inventory.take(npc.request)) {
+    const need = npc.requests ?? [npc.request];
+    if (!need.every(f => this.inventory.has(f))) { // wrong or missing food: nothing is used up
       if (npc.hintCd <= 0) {
         npc.hintCd = 1.8;
-        this.text(npc.x, npc.y - 140, `Wants ${FOOD_LABEL[npc.request]}!`, '#e05570', 17);
+        this.text(npc.x, npc.y - 140, `Wants ${need.map(f => FOOD_LABEL[f]).join(' + ')}!`, '#e05570', 17);
         this.onEvent('wrongFood', { npc });
       }
       return false;
     }
-    // Happy customers sometimes leave a little tip on top.
-    const tip = this.rng() < this.upgrades.value('luckyTips') ? TIPS.min + Math.floor(this.rng() * (TIPS.max - TIPS.min + 1)) : 0;
-    const r = this.rewardFor(npc.request) + tip;
+    for (const f of need) this.inventory.take(f);
+    // Happy customers sometimes leave a little tip on top (VIPs always do).
+    const tipChance = this.upgrades.value('luckyTips') + (this.hasPet('parrot') ? PET_BONUS.parrotTips : 0);
+    const tip = npc.vip || this.rng() < tipChance ? TIPS.min + Math.floor(this.rng() * (TIPS.max - TIPS.min + 1)) : 0;
+    let base = need.reduce((sum, f) => sum + this.rewardFor(f), 0);
+    if (need.length > 1) base = Math.round(base * SPECIALS.bonus); // weekend special
+    if (npc.vip) base *= VIP.pay;
+    if (this.hasPet('goldfish')) base += PET_BONUS.goldfishCoins;
+    // Combo: serving again soon after the last serve grows the streak
+    this.combo = this.runTime - this.lastServeAt <= COMBO.window ? this.combo + 1 : 1;
+    this.lastServeAt = this.runTime;
+    const comboBonus = Math.min((this.combo - 1) * COMBO.bonusPerStep, COMBO.maxBonus);
+    base += comboBonus;
+    const r = base + tip;
     this.save.coins += r;
     this.save.totalEarned += r;
     this.score += r; // score only ever goes up; spending coins never lowers it
@@ -166,6 +196,8 @@ export class GameManager {
     npc.feed();
     this.player.squash = 1;
     this.text(npc.x, npc.y - 140, `+${r - tip}`, '#e0a000', 28);
+    if (this.combo >= 2) this.fx.push({ kind: 'text', x: npc.x, y: npc.y - 178, text: `🔥 Combo ×${this.combo}!`, color: '#ff7a00', size: 21, t: -0.15, life: 1.3 });
+    if (npc.vip) this.fx.push({ kind: 'text', x: npc.x - 34, y: npc.y - 112, text: `👑 ×${VIP.pay}`, color: '#c99a00', size: 18, t: -0.1, life: 1.3 });
     if (tip) this.fx.push({ kind: 'text', x: npc.x + 34, y: npc.y - 112, text: `+${tip} tip!`, color: '#2f9e6e', size: 18, t: -0.25, life: 1.3 });
     this.burst(npc.x, npc.y - 60, 'heart', 6, '#ff6b8a');
     this.burst(npc.x, npc.y - 60, 'coin', tip ? 10 : 5);
@@ -180,13 +212,14 @@ export class GameManager {
       this.onEvent('levelUp', { level: lvl, reward: this.reward, newFoods, cafeGrew: playingTop });
     }
     this.persist();
-    this.onEvent('feed', { npc, reward: r, tip });
+    this.onEvent('feed', { npc, reward: r, tip, combo: this.combo, vip: npc.vip });
     return true;
   }
 
   missNpc(npc) {
     npc.leave('sad');
     this.missed++;
+    this.combo = 0; // a miss breaks the streak
     this.text(npc.x, npc.y - 150, 'Missed!', '#ff5d73', 26);
     this.burst(npc.x, npc.y - 70, 'heart', 4, '#b9aab1');
     this.onEvent('missed', { npc, missed: this.missed });

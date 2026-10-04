@@ -1,7 +1,7 @@
 // UI Manager: HTML overlays (HUD, menus, upgrade screen, game over).
 // Buttons declare data-action="name"; clicks route to handlers[name](button).
 
-import { UPGRADES, MAX_UPGRADE_LEVEL } from './config.js';
+import { UPGRADES, MAX_UPGRADE_LEVEL, PETS } from './config.js';
 import { FOOD_LABEL } from './inventory.js';
 
 const $ = id => document.getElementById(id);
@@ -209,7 +209,7 @@ export class UIManager {
 
   setMenuBest(best) { $('menu-best').textContent = best; }
 
-  renderUpgrades(upg, coins) {
+  renderUpgrades(upg, coins, petsOwned = []) {
     $('upg-coins').textContent = coins;
     $('upg-list').innerHTML = Object.entries(UPGRADES).map(([id, u]) => {
       const lvl = upg.level(id), max = upg.isMax(id), cost = upg.cost(id);
@@ -225,6 +225,15 @@ export class UIManager {
         </div>
         <button class="btn buy ${max ? 'max' : coins < cost ? 'poor' : ''}" data-action="buy" data-id="${id}" ${max ? 'disabled' : ''}>
           ${max ? 'MAX' : `🪙 ${cost}`}
+        </button>
+      </div>`;
+    }).join('') + '<h3 class="pets-title">🐾 Café pets</h3>' + Object.entries(PETS).map(([id, p]) => {
+      const owned = petsOwned.includes(id);
+      return `<div class="upg pet" data-id="${id}">
+        <div class="upg-ico">${p.icon}</div>
+        <div class="upg-body"><div class="upg-name">${p.name}</div><div class="upg-desc">${p.desc}</div></div>
+        <button class="btn buy ${owned ? 'max' : coins < p.cost ? 'poor' : ''}" data-action="buyPet" data-id="${id}" ${owned ? 'disabled' : ''}>
+          ${owned ? 'Home ✓' : `🪙 ${p.cost}`}
         </button>
       </div>`;
     }).join('');

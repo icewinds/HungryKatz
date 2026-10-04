@@ -3,7 +3,7 @@
 
 import {
   WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
-  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES,
+  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, PETS,
 } from './config.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
@@ -19,7 +19,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // ---------------------------------------------------------------- managers
 const save = Storage.load();
@@ -50,6 +50,7 @@ function onEvent(type, d) {
     case 'wrongFood': audio.play('wrong'); break;
     case 'feed':
       ghostQuip();
+      if (d.combo >= 3) setTimeout(() => audio.play('pickup'), 220); // extra jingle on a hot streak
       audio.play('feed');
       setTimeout(() => audio.play('coin'), 120);
       ui.bump('hud-coins'); ui.bump('hud-score');
@@ -144,7 +145,7 @@ const ui = new UIManager({
   openUpgrades: () => {
     if (gm.state !== 'playing') return;
     gm.paused = true; // stops timers, movement and spawning
-    ui.renderUpgrades(upgrades, save.coins);
+    ui.renderUpgrades(upgrades, save.coins, save.pets);
     ui.show('upgrades');
   },
   closeUpgrades: () => { gm.applyUpgrades(); gm.paused = false; ui.show(null); },
@@ -153,12 +154,28 @@ const ui = new UIManager({
     if (upgrades.buy(id)) {
       audio.play('buy');
       gm.applyUpgrades();
-      ui.renderUpgrades(upgrades, save.coins);
+      ui.renderUpgrades(upgrades, save.coins, save.pets);
       ui.cardEffect(id, 'bought');
     } else {
       audio.play('wrong');
       ui.cardEffect(id, 'poor');
     }
+  },
+  buyPet: btn => {
+    const id = btn.dataset.id, pet = PETS[id];
+    if (!pet || save.pets.includes(id)) return;
+    if (save.coins < pet.cost) {
+      audio.play('wrong'); ui.cardEffect(id, 'poor');
+      ui.banner(`Need 🪙 ${pet.cost - save.coins} more coins`);
+      return;
+    }
+    save.coins -= pet.cost;
+    save.pets.push(id);
+    persist();
+    audio.play('buy');
+    ui.renderUpgrades(upgrades, save.coins, save.pets);
+    ui.cardEffect(id, 'bought');
+    ui.banner(`${pet.icon} ${pet.name} moved into your café!`);
   },
   toggleMusic: () => {
     save.settings.music = !save.settings.music; persist();
@@ -224,7 +241,10 @@ function startGame(level = save.level) {
   audio.startMusic();
   ui.show(null);
   ui.showHud(true);
-  ui.banner(chars.current() === 'ghost' ? `🎖️ ${ghostLine()}` : 'Feed the hungry katz! 🐾');
+  const startMsg = chars.current() === 'ghost' ? `🎖️ ${ghostLine()}` : 'Feed the hungry katz! 🐾';
+  ui.banners(gm.specialDay && gm.foods.length >= 2
+    ? [startMsg, '🍽️ Weekend specials! Some cats order two dishes for extra coins']
+    : [startMsg]);
 }
 
 function goToMenu() {
@@ -370,6 +390,7 @@ function render(time) {
 
   const { player: p, npcs, inventory: inv } = gm;
   drawWallLive(ctx, time, scene);
+  drawPets(ctx, save.pets, time);
 
   const menu = gm.foods;
   for (const s of gm.stations) {

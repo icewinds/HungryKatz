@@ -97,6 +97,7 @@ tests/run.js
 - **Café growth:** `TABLES` (unlock level per table), `DECOR_STAGES` (shabby/tidy/cosy/fancy levels) and `levelCrowdBonus` in `js/config.js`.
 - **Difficulty:** `DIFFICULTY` in `js/config.js` (patience and spawn-gap multipliers, extra customers at once).
 - **Scenes:** `THEMES` in `js/scene.js`. Each scene is a colour palette, and the makeover stages apply to every scene.
+- **Combos, VIPs, specials, pets:** `COMBO`, `VIP`, `SPECIALS` (which weekdays), `PETS` and `PET_BONUS` in `js/config.js`.
 - **Daily bonus:** `DAILY_REWARDS` in `js/config.js` sets the coins for each day of the 7-day streak.
 - **Secret:** during play, tap the plant on the top-left window sill 5 times quickly to unlock the Ghost cat (5 more taps switches back).
 - **Gnome:** in the Seaside Diner scene, tap the gnome on the right window sill to hear him scream (synthesised; set `SOUND_FILES.gnome` in `js/audio.js` to use your own clip).
