@@ -237,6 +237,15 @@ export const GHOST_LINES = [
   'Eyes on the bowls, chef.',
   'Mission complete. Next table.',
   'Quiet as a ghost. Hungry as a cat.',
+  'Eat it and shut up.',
+  "It's on the house, Johnny.",
+];
+// When Ghost serves a cupcake: [who, line] played out in turn ('cat' = the customer).
+export const GHOST_CUPCAKE_SCENE = [
+  ['cat', 'One black coffee, please.'],
+  ['ghost', 'Eat it and shut up.'],
+  ['cat', 'Is this... a threat?'],
+  ['ghost', "It's on the house, Johnny."],
 ];
 
 // Restaurant level comes from lifetime coins earned: L2 at 150, L3 at 450, L4 at 900...

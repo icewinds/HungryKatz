@@ -3,7 +3,7 @@
 
 import {
   WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
-  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, PETS, OUTFITS,
+  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -71,7 +71,7 @@ function onEvent(type, d) {
     case 'feed':
       recordServe(save.stats, d);
       checkStickers();
-      ghostQuip();
+      ghostQuip(d.npc);
       if (d.combo >= 3) setTimeout(() => audio.play('pickup'), 220); // extra jingle on a hot streak
       audio.play('feed');
       setTimeout(() => audio.play('coin'), 120);
@@ -466,13 +466,23 @@ function ghostLine() {
   return GHOST_LINES[i];
 }
 /** Now and then, when Ghost serves a customer, he says a line above his head. */
-function ghostQuip() {
+function ghostQuip(npc) {
   if (chars.current() !== 'ghost') return;
   const now = performance.now();
-  if (now - lastQuipAt < 10000 || Math.random() > 0.4) return;
+  const cupcake = npc && (npc.requests ?? [npc.request]).includes('cupcake');
+  if (now - lastQuipAt < 10000 || (!cupcake && Math.random() > 0.4)) return;
   lastQuipAt = now;
-  const p = gm.player, x = Math.min(Math.max(p.x, 150), WORLD.W - 150); // keep long lines on screen
-  gm.fx.push({ kind: 'text', x, y: p.y - 150, text: ghostLine(), color: '#3a3936', size: 17, t: -0.4, life: 2.6 });
+  const p = gm.player, onScreen = x => Math.min(Math.max(x, 150), WORLD.W - 150); // keep long lines on screen
+  if (cupcake) { // the cupcake scene: customer and Ghost take turns
+    GHOST_CUPCAKE_SCENE.forEach(([who, text], i) => {
+      const cat = who === 'cat';
+      gm.fx.push({ kind: 'text', x: onScreen(cat ? npc.x : p.x), y: (cat ? npc.y - 185 : p.y - 140), text,
+        color: cat ? '#8a5cc7' : '#3a3936', size: 17, t: -0.2 - i * 1.5, life: 2.1 });
+    });
+    lastQuipAt = now + 6000; // the scene runs ~6s; no other quip on top of it
+    return;
+  }
+  gm.fx.push({ kind: 'text', x: onScreen(p.x), y: p.y - 150, text: ghostLine(), color: '#3a3936', size: 17, t: -0.4, life: 2.6 });
 }
 
 const inRect = (p, r) => p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h;
