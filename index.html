@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <!-- Only load code/styles/fonts from this site and Google Fonts; no inline scripts, no plugins. -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; media-src 'self'; manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta name="referrer" content="no-referrer">
   <title>HungryKatz</title>
   <meta name="description" content="Feed the hungry cats in your cosy cat café!">
   <meta name="theme-color" content="#ff8fab">
@@ -91,7 +94,7 @@
   <section id="screen-daily" class="screen">
     <div class="panel">
       <h2>Daily bonus</h2>
-      <p class="hint" style="margin:-6px 0 14px">Come back every day to grow your streak!</p>
+      <p class="hint hint-tight">Come back every day to grow your streak!</p>
       <div id="daily-days" class="daily-grid"></div>
       <button class="btn big" data-action="claimDaily">Claim 🪙 <span id="daily-reward">0</span></button>
     </div>
@@ -104,7 +107,7 @@
       <h2>Choose your cat</h2>
       <p class="coins-big">🪙 <b id="char-coins">0</b></p>
       <div id="char-list" class="char-grid"></div>
-      <p class="hint" style="margin-top:0">Buy cats with coins, or reach a high score to unlock the rarest ones.</p>
+      <p class="hint hint-top0">Buy cats with coins, or reach a high score to unlock the rarest ones.</p>
       <button class="btn" data-action="closeCharacters">Done</button>
     </div>
   </section>
@@ -117,7 +120,7 @@
       <div class="stack">
         <button class="btn secondary toggle toggle-music" data-action="toggleMusic">🎵 Music</button>
         <button class="btn secondary toggle toggle-sfx" data-action="toggleSfx">🔊 Sound FX</button>
-        <button class="btn secondary toggle toggle-debug" data-action="toggleDebug">🐞 Debug</button>
+        <button class="btn secondary toggle toggle-debug hidden" data-action="toggleDebug">🐞 Debug</button>
       </div>
     </div>
   </section>

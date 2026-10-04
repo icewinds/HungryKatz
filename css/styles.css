@@ -1,13 +1,13 @@
 :root {
-  --pink: #ff8fab;
-  --pink-d: #e8708f;
+  --pink: #ec5f89;        /* 3.2:1 with white button text */
+  --pink-d: #c43d5c;      /* 5:1 for headings and small text */
   --ink: #5a3d4a;
-  --ink-soft: #9a8590;
+  --ink-soft: #76626c;    /* 5.3:1 secondary text */
   --cream: #fff7f9;
   --line: #f6dde5;
-  --mint: #6fcf9f;
+  --mint: #33a272;        /* 3.2:1 with white button text */
   --mint-soft: #d6f4e8;
-  --gold: #e3a400;
+  --gold: #8f6300;        /* 5:1 coin/score numbers */
   --red: #ff6b8a;
   --shadow: 0 6px 18px rgba(90, 61, 74, 0.12);
   --font: "Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif;
@@ -26,6 +26,7 @@ html, body {
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior: none;
+  touch-action: manipulation; /* no double-tap zoom delay; pinch-zoom still works on menus */
 }
 
 #game {
@@ -122,7 +123,7 @@ html, body {
 }
 .tray-item { display: flex; align-items: center; gap: 6px; font-size: 18px; }
 .tray-item img { width: 30px; height: 30px; }
-.tray-item.full b { color: #2f9e6e; }
+.tray-item.full b { color: #24865b; }
 .tray-items.compact { padding: 6px 4px; }
 .tray-items.compact .tray-item { gap: 1px; font-size: 16px; }
 .tray-items.compact .tray-item img { width: 26px; height: 26px; }
@@ -210,7 +211,7 @@ html, body {
 /* Menu */
 .logo { margin: 0; font-size: 50px; line-height: 1; font-weight: 700; }
 .logo span { color: var(--pink); }
-.logo .katz { color: #ffa94d; }
+.logo .katz { color: #e07a10; }
 #menu-cat { display: block; margin: 6px auto 0; width: 200px; height: 190px; }
 .tagline { margin: 2px 0 16px; color: var(--ink-soft); }
 .best { font-size: 17px; margin: 16px 0; }
@@ -288,7 +289,7 @@ html, body {
   margin-top: 4px;
   padding: 2px 9px;
   border-radius: 999px;
-  background: var(--mint);
+  background: #24865b; /* 4.5:1 for small white text */
   color: #fff;
   font-size: 13px;
 }
@@ -296,7 +297,7 @@ html, body {
 .char-tag.score { background: #fff1c2; color: #8a6200; }
 .char.bought { animation: bought 0.5s cubic-bezier(.34, 1.56, .64, 1); }
 .char.poor { animation: shake 0.35s; }
-.unlock { margin: 4px 0 8px; font-weight: 600; color: #2f9e6e; }
+.unlock { margin: 4px 0 8px; font-weight: 600; color: #24865b; }
 .char.selected .char-name::after { content: " ✓"; color: var(--pink-d); }
 
 /* Upgrades */
@@ -367,8 +368,8 @@ html, body {
 }
 .name-row input:focus { outline: none; border-color: var(--pink); }
 .btn.save-name { min-width: 84px; padding: 8px 14px; font-size: 17px; background: var(--mint); }
-.name-msg { margin: 6px 2px 0; min-height: 18px; font-size: 13px; color: #2f9e6e; }
-.name-msg.error { color: #d9536f; }
+.name-msg { margin: 6px 2px 0; min-height: 18px; font-size: 13px; color: #24865b; }
+.name-msg.error { color: #c43d5c; }
 
 /* Banner */
 #banner {
@@ -444,3 +445,7 @@ html, body {
   .logo { font-size: 42px; }
   .btn-upgrade { padding: 10px 16px; }
 }
+
+/* replaces inline style attributes (blocked by the Content Security Policy) */
+.hint.hint-tight { margin: -6px 0 14px; }
+.hint.hint-top0 { margin-top: 0; }

@@ -610,6 +610,21 @@ function skyColor(hour) {
   return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * k)).join()})`;
 }
 
+/**
+ * Desaturated copy of a cat look (for customers who gave up). Cheaper than ctx.filter,
+ * which forces a slow path on phones: cache the result per cat.
+ */
+export function greyLook(look) {
+  const grey = hex => {
+    if (typeof hex !== 'string' || hex[0] !== '#') return hex;
+    const [r, g, b] = hexRgb(hex), v = 0.3 * r + 0.59 * g + 0.11 * b;
+    return '#' + [r, g, b].map(c => Math.round(v * 0.85 + c * 0.15).toString(16).padStart(2, '0')).join('');
+  };
+  const out = { ...look };
+  for (const k of ['fur', 'light', 'dark', 'acc', 'eye', 'patch']) out[k] = grey(look[k]);
+  return out;
+}
+
 /** Animated windows (drifting clouds, sun/moon, stars, birds) and a real-time wall clock. */
 export function drawWallLive(ctx, t, now = new Date()) {
   const hour = now.getHours() + now.getMinutes() / 60;

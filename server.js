@@ -23,9 +23,15 @@ createServer(async (req, res) => {
     let path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (path.endsWith('/')) path += 'index.html';
     const file = join(ROOT, normalize(path));
-    if (!file.startsWith(ROOT)) { res.writeHead(403).end(); return; }
+    // Stay inside the project, and never serve hidden files/folders (.git, .claude, ...)
+    // — the server is reachable from the whole Wi-Fi network.
+    if (!file.startsWith(ROOT) || /(^|[\\/])\./.test(file.slice(ROOT.length))) { res.writeHead(403).end(); return; }
     const data = await readFile(file);
-    res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-cache' });
+    res.writeHead(200, {
+      'Content-Type': TYPES[extname(file)] || 'application/octet-stream',
+      'Cache-Control': 'no-cache',
+      'X-Content-Type-Options': 'nosniff',
+    });
     res.end(data);
   } catch {
     res.writeHead(404, { 'Content-Type': 'text/plain' }).end('Not found');

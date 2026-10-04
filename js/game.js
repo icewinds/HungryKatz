@@ -14,7 +14,7 @@ import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
-  drawHeart, drawFx, drawChatBubble, drawWallLive, drawMissBadge, drawDish, PLAYER_LOOKS, playerLook, FONT,
+  drawHeart, drawFx, drawChatBubble, drawWallLive, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
 
 // ---------------------------------------------------------------- managers
@@ -33,7 +33,10 @@ function maybeShowDaily() {
 let unlockedAtStart = [];
 const audio = new AudioManager(save.settings);
 audio.setTrack(trackForLevel(save.level)); // music matches the restaurant level
-const debug = { on: new URLSearchParams(location.search).has('debug') || save.settings.debug };
+// Debug tools (cheats like +500 coins) only exist when the page is opened with ?debug.
+const debugAllowed = new URLSearchParams(location.search).has('debug');
+const debug = { on: debugAllowed };
+if (debugAllowed) document.querySelector('.toggle-debug').classList.remove('hidden');
 const gm = new GameManager({ save, persist, upgrades, highScores, onEvent });
 
 function onEvent(type, d) {
@@ -133,7 +136,7 @@ const ui = new UIManager({
     syncToggles();
   },
   toggleSfx: () => { save.settings.sfx = !save.settings.sfx; persist(); syncToggles(); },
-  toggleDebug: () => { debug.on = !debug.on; save.settings.debug = debug.on; persist(); syncToggles(); },
+  toggleDebug: () => { if (!debugAllowed) return; debug.on = !debug.on; syncToggles(); },
   install: async () => {
     if (!installPrompt) return;
     installPrompt.prompt();
@@ -285,9 +288,9 @@ function render(time) {
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
       const anim = speaking.has(a) ? 'talk' : a.anim;
-      if (a.mood === 'sad') ctx.filter = 'grayscale(0.85) brightness(0.92)'; // missed customers fade to grey
-      drawCat(ctx, a.x + shake, a.y, a.look, { state: anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood, back: a.fromBehind });
-      ctx.filter = 'none';
+      // missed customers fade to grey (cached palette; ctx.filter is very slow on phones)
+      const look = a.mood === 'sad' ? (a.greyLook ??= greyLook(a.look)) : a.look;
+      drawCat(ctx, a.x + shake, a.y, look, { state: anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood, back: a.fromBehind });
     }
   }
 
@@ -424,4 +427,4 @@ ui.show('menu');
 maybeShowDaily();
 requestAnimationFrame(frame);
 
-window.hungryKatz = { gm, save, upgrades, highScores }; // console access for testing
+if (debugAllowed) window.hungryKatz = { gm, save, upgrades, highScores }; // console access for testing (?debug only)
