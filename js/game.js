@@ -101,6 +101,8 @@ const ui = new UIManager({
     }
     ui.show('menu');
   },
+  openHelp: () => ui.show('help'),
+  closeHelp: () => ui.show('menu'),
   openSettings: () => ui.show('settings'),
   closeSettings: () => ui.show('menu'),
   pause: () => { if (gm.state !== 'playing') return; gm.paused = true; ui.show('pause'); },
