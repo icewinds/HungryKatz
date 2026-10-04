@@ -8,12 +8,13 @@ import { HighScoreManager } from './highScores.js';
 import { AudioManager, trackForLevel } from './audio.js';
 import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
+import { EAT_TIME } from './npc.js';
 import { CharacterManager } from './characters.js';
 import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
-  drawHeart, drawFx, drawChatBubble, drawWallLive, drawMissBadge, PLAYER_LOOKS, playerLook, FONT,
+  drawHeart, drawFx, drawChatBubble, drawWallLive, drawMissBadge, drawDish, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
 
 // ---------------------------------------------------------------- managers
@@ -250,9 +251,17 @@ function render(time) {
   }
 
   const tables = LAYOUT.tables.map(t => ({ table: t, y: t.y + 8 }));
-  const actors = [...npcs, p, ...tables].sort((a, b) => a.y - b.y);
+  // Served dishes sit on the table/bar while the cat eats, then an empty plate fades out.
+  const DISH_FADE = 1.5;
+  const dishes = npcs
+    .filter(n => n.state === 'eating' || (n.mood === 'happy' && n.leaveT < DISH_FADE))
+    .map(n => ({ dish: n, y: n.spot.plate.z }));
+  const actors = [...npcs, p, ...tables, ...dishes].sort((a, b) => a.y - b.y);
   for (const a of actors) {
-    if (a.table) {
+    if (a.dish) {
+      const n = a.dish, pl = n.spot.plate, eating = n.state === 'eating';
+      drawDish(ctx, pl.x, pl.y, n.request, eating ? Math.min(1, n.eatT / EAT_TIME) : 0, eating ? 1 : 1 - n.leaveT / DISH_FADE);
+    } else if (a.table) {
       drawTable(ctx, a.table);
     } else if (a === p) {
       drawCat(ctx, p.x, p.y, playerLook(chars.current()), { state: p.state, t: time, facing: p.facing, squash: p.squash });
@@ -260,9 +269,8 @@ function render(time) {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
       const anim = speaking.has(a) ? 'talk' : a.anim;
       if (a.mood === 'sad') ctx.filter = 'grayscale(0.85) brightness(0.92)'; // missed customers fade to grey
-      drawCat(ctx, a.x + shake, a.y, a.look, { state: anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood });
+      drawCat(ctx, a.x + shake, a.y, a.look, { state: anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood, back: a.fromBehind });
       ctx.filter = 'none';
-      if (a.state === 'eating') drawFoodIcon(ctx, a.request, a.x + a.facing * 26, a.y - 18, 0.8);
     }
   }
 

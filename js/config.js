@@ -51,6 +51,16 @@ for (let i = 0; i < LAYOUT.spots.length; i += 2) {
   a.partner = b;
   b.partner = a;
 }
+// Where a served dish sits for each spot. `z` = depth-sort key (bar dishes sit on the
+// back counter, table dishes on top of their table).
+for (const s of LAYOUT.spots) {
+  if (s.row === 'bar') {
+    s.plate = { x: s.x + s.face * 26, y: LAYOUT.windowBar.y + 14, z: 0 };
+  } else {
+    const t = TABLES.find(t => Math.abs(t.x - s.x) === SEAT_DX && t.y === s.y);
+    s.plate = { x: t.x - s.face * 20, y: t.y - 28, z: t.y + 9 };
+  }
+}
 
 // Social seating: chance two friends arrive together (when the stage allows 2+),
 // and chance a lone cat picks a seat next to someone already waiting.

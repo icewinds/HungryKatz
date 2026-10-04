@@ -89,6 +89,12 @@ export function drawCat(ctx, x, y, look, o = {}) {
   ctx.translate(0, bob);
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
 
+  if (o.back) { // seated facing away from us (window bar)
+    drawCatBack(ctx, look, { t, state, sad });
+    ctx.restore();
+    return;
+  }
+
   // tail
   const sway = Math.sin(t * (walk ? 9 : 2.6)) * 6;
   ctx.beginPath(); ctx.moveTo(-14, -16);
@@ -169,6 +175,99 @@ export function drawCat(ctx, x, y, look, o = {}) {
   ctx.stroke();
 
   accessory(ctx, look, hx, hy);
+  ctx.restore();
+}
+
+/** Seated cat seen from behind. Runs inside drawCat's transform (facing = side its head turns to). */
+function drawCatBack(ctx, look, { t, state, sad }) {
+  const ol = look.dark, eat = state === 'eat', talk = state === 'talk';
+  const white = look.pattern === 'socks' || look.pattern === 'tuxedo';
+
+  // tail curling up beside the body
+  const sway = Math.sin(t * 2.6) * 5;
+  ctx.beginPath(); ctx.moveTo(10, -8); ctx.quadraticCurveTo(32, -10, 26 + sway, -34);
+  ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
+  ctx.strokeStyle = look.fur; ctx.lineWidth = 5; ctx.stroke();
+
+  // sitting body with the pattern across its back, hind paws peeking out
+  ellipse(ctx, 0, -18, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
+  ctx.save(); ctx.clip(); backPattern(ctx, look); ctx.restore();
+  ellipse(ctx, 0, -18, 18, 17); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  for (const px of [-10, 10]) { ellipse(ctx, px, -2, 6.5, 3.5); fillStroke(ctx, white ? '#fff' : look.fur, ol, 1.6); }
+
+  // head: dips while eating, turns toward its friend while chatting
+  const hx = talk ? 3 + Math.sin(t * 7) : 0;
+  const hy = -44 + (eat ? 2 + Math.abs(Math.sin(t * 10)) * 3 : 0);
+  const droop = sad ? 6 : 0;
+  for (const [a, b, c] of [
+    [[hx - 16, hy - 5], [hx - 12 - droop, hy - 25 + droop * 1.5], [hx - 2, hy - 14]],
+    [[hx + 2, hy - 14], [hx + 12 + droop, hy - 25 + droop * 1.5], [hx + 16, hy - 5]],
+  ]) { tri(ctx, a, b, c); fillStroke(ctx, look.fur, ol, 2.2); }
+  ellipse(ctx, hx, hy, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
+  ctx.save(); ctx.clip(); backHeadPattern(ctx, look, hx, hy); ctx.restore();
+  ellipse(ctx, hx, hy, 18, 17); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  // whisker tips poking out either side of the head
+  ctx.strokeStyle = 'rgba(90,61,74,0.45)'; ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(hx - 17, hy + 6); ctx.lineTo(hx - 23, hy + 4);
+  ctx.moveTo(hx + 17, hy + 6); ctx.lineTo(hx + 23, hy + 4);
+  ctx.stroke();
+  accessoryBack(ctx, look, hx, hy);
+}
+
+function backPattern(ctx, look) {
+  ctx.fillStyle = look.dark; ctx.strokeStyle = look.dark; ctx.lineWidth = 3;
+  switch (look.pattern) {
+    case 'stripes':
+      for (const y of [-29, -21, -13]) { ctx.beginPath(); ctx.moveTo(-14, y + 3); ctx.quadraticCurveTo(0, y - 3, 14, y + 3); ctx.stroke(); }
+      break;
+    case 'spots':
+      for (const [x, y, r] of [[-7, -24, 4], [6, -16, 3.5], [-3, -10, 3]]) { circle(ctx, x, y, r); ctx.fill(); }
+      break;
+    case 'patch': circle(ctx, 8, -22, 11); ctx.fillStyle = look.patch; ctx.fill(); break;
+  }
+}
+
+function backHeadPattern(ctx, look, hx, hy) {
+  ctx.fillStyle = look.dark; ctx.strokeStyle = look.dark; ctx.lineWidth = 2.6;
+  switch (look.pattern) {
+    case 'stripes':
+      for (const i of [-1, 0, 1]) { ctx.beginPath(); ctx.moveTo(hx + i * 5, hy - 16); ctx.lineTo(hx + i * 5, hy - 6); ctx.stroke(); }
+      break;
+    case 'spots': circle(ctx, hx + 6, hy - 6, 4); ctx.fill(); break;
+    case 'patch': circle(ctx, hx + 8, hy - 4, 9); ctx.fillStyle = look.patch; ctx.fill(); break;
+  }
+}
+
+/** Accessories seen from behind: collars wrap round, glasses show only their arms. */
+function accessoryBack(ctx, look, hx, hy) {
+  const c = look.acc, ol = 'rgba(90,61,74,0.75)';
+  switch (look.accessory) {
+    case 'bell': rrect(ctx, -13, -31, 26, 5, 2.5); fillStroke(ctx, c, ol, 1.4); break;
+    case 'scarf':
+      rrect(ctx, -14, -33, 28, 7, 3.5); fillStroke(ctx, c, ol, 1.4);
+      rrect(ctx, 3, -29, 7, 16, 3); fillStroke(ctx, c, ol, 1.4);
+      break;
+    case 'glasses':
+      ctx.strokeStyle = '#3d3540'; ctx.lineWidth = 1.8; ctx.beginPath();
+      ctx.moveTo(hx - 19, hy); ctx.lineTo(hx - 13, hy - 3);
+      ctx.moveTo(hx + 19, hy); ctx.lineTo(hx + 13, hy - 3);
+      ctx.stroke();
+      break;
+    default: accessory(ctx, look, hx, hy); // hats, bows and flowers look the same from behind
+  }
+}
+
+/** A served dish on its plate; `left` 0..1 = food remaining (0 = empty plate with crumbs). */
+export function drawDish(ctx, x, y, type, left, alpha = 1) {
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ellipse(ctx, x, y + 6, 15, 6); fillStroke(ctx, '#fff', '#f0d0dc', 1.5);
+  if (left > 0) drawFoodIcon(ctx, type, x, y - 3, 0.55 + 0.35 * left);
+  else {
+    ctx.fillStyle = '#d9b49a';
+    for (const [dx, dy] of [[-5, 5], [3, 7], [7, 4], [-1, 3]]) { circle(ctx, x + dx, y + dy, 1.4); ctx.fill(); }
+  }
   ctx.restore();
 }
 

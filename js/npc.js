@@ -4,6 +4,7 @@ import { LAYOUT, NPC_SPEED } from './config.js';
 import { route } from './pathing.js';
 
 let nextId = 1;
+export const EAT_TIME = 1.6; // seconds a fed cat spends eating its dish
 
 export class NPC {
   constructor({ spot, request, look, patience }) {
@@ -23,6 +24,7 @@ export class NPC {
     this.phase = Math.random() * 10; // animation offset so cats don't move in sync
     this.arriveT = 0;
     this.eatT = 0;
+    this.leaveT = 0;   // seconds since starting to leave (empty plate fades out)
     this.hintCd = 0;
     this.squash = 0;
   }
@@ -35,7 +37,9 @@ export class NPC {
   /** Only a cat that has arrived and is idling at its spot can be fed. */
   canBeFed() { return this.state === 'waiting'; }
 
-  feed() { this.state = 'eating'; this.eatT = 0.8; this.squash = 1; }
+  feed() { this.state = 'eating'; this.eatT = EAT_TIME; this.squash = 1; }
+  /** Seated at the window bar facing the window: drawn from behind. */
+  get fromBehind() { return this.spot.row === 'bar' && (this.state === 'waiting' || this.state === 'eating'); }
 
   leave(mood) {
     this.state = 'leaving';
@@ -67,6 +71,7 @@ export class NPC {
         if (this.eatT <= 0) return 'fedDone';
         break;
       case 'leaving':
+        this.leaveT += dt;
         if (this.walk(dt)) { this.state = 'gone'; return 'gone'; }
         break;
     }

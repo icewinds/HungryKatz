@@ -8,6 +8,7 @@ import { DEFAULT_SAVE, Storage } from '../js/storage.js';
 import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { CharacterManager } from '../js/characters.js';
 import { NpcSpawner } from '../js/npcSpawner.js';
+import { EAT_TIME } from '../js/npc.js';
 import { DailyBonus, dayKey } from '../js/daily.js';
 import { TRACKS, trackForLevel } from '../js/audio.js';
 import { Inventory } from '../js/inventory.js';
@@ -302,6 +303,22 @@ test('music: each level gets a track, cycling; every track is a valid 16-step lo
     assert.ok(['sine', 'square', 'triangle', 'sawtooth'].includes(t.lead), t.name);
   }
   assert.equal(new Set(TRACKS.map(t => t.melody.join())).size, TRACKS.length, 'tracks are all different');
+});
+
+test('dishes and back view: every seat has a plate; bar cats face away only while seated', () => {
+  for (const s of LAYOUT.spots) assert.ok(s.plate && Number.isFinite(s.plate.x + s.plate.y + s.plate.z), s.id);
+  const { gm } = setup();
+  gm.inventory.fill('milk');
+  const bar = arrive(gm, { spot: LAYOUT.spots.find(s => s.row === 'bar'), request: 'milk' });
+  const table = arrive(gm, { spot: LAYOUT.spots.find(s => s.row === 'table'), request: 'milk' });
+  assert.equal(bar.fromBehind, true);
+  assert.equal(table.fromBehind, false);
+  place(gm, bar.x, bar.y); tick(gm, 1 / 60);
+  assert.equal(bar.state, 'eating');
+  assert.equal(bar.fromBehind, true, 'still at the bar while eating');
+  park(gm); tick(gm, EAT_TIME + 0.1);
+  assert.equal(bar.state, 'leaving');
+  assert.equal(bar.fromBehind, false, 'turns around to walk out');
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {
