@@ -57,7 +57,8 @@ export const PLAYER_LOOKS = [
   { id: 'mango', name: 'Mango', fur: '#f4a259', light: '#fff1dc', dark: '#c0702c', pattern: 'stripes', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', ...CHEF },
   { id: 'smokey', name: 'Smokey', fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes', acc: '#7fb3ff', eye: '#d4a017', patch: '#fff', ...CHEF },
   { id: 'oreo', name: 'Oreo', fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', ...CHEF },
-  { id: 'mochi', name: 'Mochi', fur: '#fbf3ea', light: '#ffffff', dark: '#c9b6a2', pattern: 'patch', acc: '#6fcf9f', eye: '#3b82c4', patch: '#f4a259', ...CHEF },
+  { id: 'mochi', name: 'Snowy', fur: '#fdfbf7', light: '#ffffff', dark: '#b9a594', pattern: 'patch', acc: '#6fcf9f', eye: '#9bbf3a',
+    patch: '#d6a273', headPatch: '#4a3328', ear: '#d9a273', tail: '#4a3328', ...CHEF }, // id kept so owned/selected saves still work
   { id: 'lilac', name: 'Lilac', fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks', acc: '#ffc94d', eye: '#8a5cc7', patch: '#fff', ...CHEF },
   { id: 'cocoa', name: 'Cocoa', fur: '#b07a52', light: '#f3dcc6', dark: '#7a4d2e', pattern: 'spots', acc: '#a07be0', eye: '#5cb85c', patch: '#fff', ...CHEF },
 ];
@@ -100,7 +101,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   ctx.beginPath(); ctx.moveTo(-14, -16);
   ctx.quadraticCurveTo(-34, -18, -30 + sway, -44);
   ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
-  ctx.strokeStyle = look.fur; ctx.lineWidth = 5; ctx.stroke();
+  ctx.strokeStyle = look.tail ?? look.fur; ctx.lineWidth = 5; ctx.stroke();
 
   // far legs, body, near legs
   leg(ctx, -10 - swing, look.dark, ol, look);
@@ -122,8 +123,8 @@ export function drawCat(ctx, x, y, look, o = {}) {
     [[hx - 15, hy - 6], [hx - 13 - droop, hy - 26 + droop * 1.5], [hx - 2, hy - 15]],
     [[hx + 5, hy - 15], [hx + 16 + droop, hy - 26 + droop * 1.5], [hx + 18, hy - 5]],
   ];
-  for (const [a, b, c] of ears) {
-    tri(ctx, a, b, c); fillStroke(ctx, look.fur, ol, 2.2);
+  for (const [i, [a, b, c]] of ears.entries()) {
+    tri(ctx, a, b, c); fillStroke(ctx, i === 1 && look.ear ? look.ear : look.fur, ol, 2.2);
     const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3;
     const k = p => [cx + (p[0] - cx) * 0.5, cy + (p[1] - cy) * 0.5];
     tri(ctx, k(a), k(b), k(c)); fillStroke(ctx, '#ffb3c6', null);
@@ -187,7 +188,7 @@ function drawCatBack(ctx, look, { t, state, sad }) {
   const sway = Math.sin(t * 2.6) * 5;
   ctx.beginPath(); ctx.moveTo(10, -8); ctx.quadraticCurveTo(32, -10, 26 + sway, -34);
   ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
-  ctx.strokeStyle = look.fur; ctx.lineWidth = 5; ctx.stroke();
+  ctx.strokeStyle = look.tail ?? look.fur; ctx.lineWidth = 5; ctx.stroke();
 
   // sitting body with the pattern across its back, hind paws peeking out
   ellipse(ctx, 0, -18, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
@@ -199,10 +200,10 @@ function drawCatBack(ctx, look, { t, state, sad }) {
   const hx = talk ? 3 + Math.sin(t * 7) : 0;
   const hy = -44 + (eat ? 2 + Math.abs(Math.sin(t * 10)) * 3 : 0);
   const droop = sad ? 6 : 0;
-  for (const [a, b, c] of [
+  for (const [i, [a, b, c]] of [
     [[hx - 16, hy - 5], [hx - 12 - droop, hy - 25 + droop * 1.5], [hx - 2, hy - 14]],
     [[hx + 2, hy - 14], [hx + 12 + droop, hy - 25 + droop * 1.5], [hx + 16, hy - 5]],
-  ]) { tri(ctx, a, b, c); fillStroke(ctx, look.fur, ol, 2.2); }
+  ].entries()) { tri(ctx, a, b, c); fillStroke(ctx, i === 1 && look.ear ? look.ear : look.fur, ol, 2.2); }
   ellipse(ctx, hx, hy, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); backHeadPattern(ctx, look, hx, hy); ctx.restore();
   ellipse(ctx, hx, hy, 18, 17); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
@@ -235,7 +236,7 @@ function backHeadPattern(ctx, look, hx, hy) {
       for (const i of [-1, 0, 1]) { ctx.beginPath(); ctx.moveTo(hx + i * 5, hy - 16); ctx.lineTo(hx + i * 5, hy - 6); ctx.stroke(); }
       break;
     case 'spots': circle(ctx, hx + 6, hy - 6, 4); ctx.fill(); break;
-    case 'patch': circle(ctx, hx + 8, hy - 4, 9); ctx.fillStyle = look.patch; ctx.fill(); break;
+    case 'patch': circle(ctx, hx + 8, hy - 4, 9); ctx.fillStyle = look.headPatch ?? look.patch; ctx.fill(); break;
   }
 }
 
@@ -300,7 +301,7 @@ function headPattern(ctx, look, hx, hy) {
       for (const i of [-1, 0, 1]) { ctx.beginPath(); ctx.moveTo(hx + 3 + i * 5, hy - 18); ctx.lineTo(hx + 3 + i * 4, hy - 11); ctx.stroke(); }
       break;
     case 'spots': circle(ctx, hx - 8, hy - 7, 4); ctx.fill(); break;
-    case 'patch': circle(ctx, hx - 8, hy - 6, 9); ctx.fillStyle = look.patch; ctx.fill(); break;
+    case 'patch': circle(ctx, hx - 8, hy - 6, 9); ctx.fillStyle = look.headPatch ?? look.patch; ctx.fill(); break;
     case 'tuxedo': ellipse(ctx, hx + 4, hy + 10, 12, 9); ctx.fillStyle = '#fff'; ctx.fill(); break;
   }
 }
@@ -553,7 +554,7 @@ export function greyLook(look) {
     return '#' + [r, g, b].map(c => Math.round(v * 0.85 + c * 0.15).toString(16).padStart(2, '0')).join('');
   };
   const out = { ...look };
-  for (const k of ['fur', 'light', 'dark', 'acc', 'eye', 'patch']) out[k] = grey(look[k]);
+  for (const k of ['fur', 'light', 'dark', 'acc', 'eye', 'patch', 'headPatch', 'ear', 'tail']) out[k] = grey(look[k]);
   return out;
 }
 
