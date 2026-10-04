@@ -588,6 +588,19 @@ export function drawHeart(ctx, x, y, s, color = '#ff6b8a') {
   ctx.restore();
 }
 
+/** Numbered rings on the stops the cat will walk to, in order. */
+export function drawTapQueue(ctx, stops) {
+  if (stops.length < 2) return; // a single stop needs no numbers
+  ctx.save();
+  ctx.font = `700 13px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  stops.forEach((s, i) => {
+    ellipse(ctx, s.x, s.y, 14, 6.5); ctx.strokeStyle = 'rgba(255,143,171,0.8)'; ctx.lineWidth = 2.5; ctx.stroke();
+    circle(ctx, s.x, s.y - 14, 9); fillStroke(ctx, '#ff8fab', '#fff', 2);
+    ctx.fillStyle = '#fff'; ctx.fillText(i + 1, s.x, s.y - 13.5);
+  });
+  ctx.restore();
+}
+
 /** Effects: layer 'under' = tap markers, 'over' = text and particles. */
 export function drawFx(ctx, fx, layer) {
   for (const f of fx) {

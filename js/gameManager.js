@@ -13,6 +13,8 @@ import { FoodStation } from './foodStation.js';
 import { randomLook } from './art.js';
 import { constrain, route } from './pathing.js';
 
+const MAX_QUEUED_TAPS = 8;
+
 export class GameManager {
   constructor({ save, persist = () => {}, upgrades, highScores, rng = Math.random, onEvent = () => {} }) {
     Object.assign(this, { save, persist, upgrades, highScores, rng, onEvent });
@@ -47,6 +49,8 @@ export class GameManager {
     this.inventory.clear();
     Object.assign(this.player, { x: LAYOUT.playerStart.x, y: LAYOUT.playerStart.y, facing: 1 });
     this.player.stop();
+    this.target = null;   // stop the cat is walking to
+    this.queue = [];      // further tapped stops, in order
     this.spawner.reset();
     this.applyUpgrades();
     this.combo = 0;                 // serves in a row (see COMBO)
@@ -76,12 +80,16 @@ export class GameManager {
     return this.reward + (FOODS.find(f => f.id === food)?.bonus ?? 0) + this.upgrades.value('plates');
   }
 
+  /** Tap = add a stop to the walk queue (visited in order). Drag (marker=false) steers directly and clears it. */
   tap(x, y, marker = true) {
     if (this.state !== 'playing' || this.paused) return;
     const p = constrain({ x, y }, this.blockers);
-    this.player.moveTo(route(this.player, p, this.blockers));
-    if (marker) this.fx.push({ kind: 'tap', x: p.x, y: p.y, t: 0, life: 0.45 });
+    if (!marker) { this.queue.length = 0; this.walkTo(p); return; }
+    if (this.target && this.queue.length >= MAX_QUEUED_TAPS) return;
+    if (this.target) this.queue.push(p); else this.walkTo(p);
+    this.fx.push({ kind: 'tap', x: p.x, y: p.y, t: 0, life: 0.45 });
   }
+  walkTo(p) { this.target = p; this.player.moveTo(route(this.player, p, this.blockers)); }
 
   update(dt) {
     if (this.state !== 'playing' || this.paused) return;
@@ -89,6 +97,10 @@ export class GameManager {
     const p = this.player;
     const blockers = this.blockers;
     p.update(dt, q => constrain(q, blockers));
+    if (this.target && !p.path.length) { // reached (or got stuck on the way to) a stop: on to the next
+      this.target = null;
+      if (this.queue.length) this.walkTo(this.queue.shift());
+    }
 
     // food stations: each only fills its own food type, and only once it's on the menu
     const foods = this.foods;

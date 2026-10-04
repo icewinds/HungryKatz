@@ -602,4 +602,22 @@ test('seasons: decorations by date', () => {
   assert.equal(makeScene('strawberry', 1, 'winter').season, 'winter');
 });
 
+test('taps queue up: the cat visits every tapped spot in order', () => {
+  const { gm } = setup();
+  park(gm);
+  const stops = [[150, 600], [400, 600], [270, 700]], seen = [];
+  for (const [x, y] of stops) gm.tap(x, y);
+  assert.equal(gm.queue.length, 2);
+  for (let i = 0; i < 60 * 10; i++) {
+    gm.update(1 / 60);
+    const hit = stops.findIndex(([x, y]) => Math.hypot(gm.player.x - x, gm.player.y - y) < 1);
+    if (hit >= 0 && seen.at(-1) !== hit) seen.push(hit);
+  }
+  assert.deepEqual(seen, [0, 1, 2]);
+  assert.equal(gm.target, null);
+  gm.tap(150, 600); gm.tap(400, 600);
+  gm.tap(200, 650, false); // dragging steers directly and drops the queue
+  assert.equal(gm.queue.length, 0);
+});
+
 console.log(`${passed} passed`);

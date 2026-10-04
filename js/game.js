@@ -18,7 +18,7 @@ import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
-  drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, dressUp, FONT,
+  drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
@@ -356,10 +356,11 @@ function buildBackground() {
 const toWorld = (cx, cy) => ({ x: (cx - view.ox) / view.scale, y: (cy - view.oy) / view.scale });
 
 // ---------------------------------------------------------------- input (touch + mouse via pointer events)
-let dragging = false;
+let dragging = false, downAt = null;
 canvas.addEventListener('pointerdown', e => {
   audio.unlock();
   dragging = true;
+  downAt = { x: e.clientX, y: e.clientY };
   const p = toWorld(e.clientX, e.clientY);
   if (gm.state === 'playing' && !gm.paused && inEggPot(p)) return eggTap();
   if (gm.state === 'playing' && !gm.paused && scene.theme === 'seaside' && inRect(p, GNOME_SPOT)) return gnomeScream();
@@ -419,6 +420,8 @@ function eggTap() {
 }
 canvas.addEventListener('pointermove', e => {
   if (!dragging || e.buttons === 0) return;
+  if (downAt && Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y) < 20) return; // finger wobble is still a tap
+  downAt = null;
   const p = toWorld(e.clientX, e.clientY);
   gm.tap(p.x, p.y, false); // hold-and-drag steers the cat
 });
@@ -444,6 +447,7 @@ function render(time) {
     drawPad(ctx, s.zone, s.type, !inv.isFull(s.type), time, s.flash, locked);
   }
   drawFx(ctx, gm.fx, 'under');
+  if (gm.target) drawTapQueue(ctx, [gm.target, ...gm.queue]);
 
   // depth-sorted cats + tables (a table sorts by its front edge)
   // Seated neighbours chat: whoever's turn it is talks, the other listens.
