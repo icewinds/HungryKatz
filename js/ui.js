@@ -193,10 +193,10 @@ export class UIManager {
       b.dataset.level = lvl;
       const what = `${d.style}, ${d.tables} tables, ${d.foods.map(f => f.label).join(', ')}`;
       b.setAttribute('aria-label', locked ? `Level ${lvl} (locked): ${what}` : `Start at level ${lvl}: ${what}`);
-      const num = document.createElement('span'); num.className = 'lv-num'; num.textContent = locked ? '🔒' : lvl;
+      const num = document.createElement('span'); num.className = 'lv-num'; num.textContent = lvl;
       const info = document.createElement('span'); info.className = 'lv-info';
       const style = document.createElement('b');
-      style.textContent = locked ? `Level ${lvl} · ${d.style}` : `${d.style} · ${d.tables} table${d.tables > 1 ? 's' : ''}`;
+      style.textContent = `${locked ? '🔒 ' : ''}${d.style} · ${d.tables} table${d.tables > 1 ? 's' : ''}`;
       const foods = document.createElement('span'); foods.className = 'lv-foods';
       for (const f of d.foods) { const i = document.createElement('img'); i.src = f.icon; i.alt = ''; foods.append(i); }
       info.append(style, foods);

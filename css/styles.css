@@ -34,6 +34,11 @@
 
 * { box-sizing: border-box; }
 
+/* Browser surfaces in the café palette */
+::selection { background: #ffd3df; color: var(--ink); }
+:focus-visible { outline: 3px solid var(--pink-d); outline-offset: 2px; }
+.panel, .level-grid, .sticker-grid { scrollbar-width: thin; scrollbar-color: #f2b8c8 transparent; }
+
 html, body {
   margin: 0;
   height: 100%;
@@ -224,10 +229,13 @@ html, body {
 .close-x:active { transform: scale(0.9); }
 
 .stack { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
-.row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
 .hint { font-size: 13px; color: var(--ink-soft); line-height: 1.45; margin: 16px 4px 0; }
 
-/* Menu */
+/* Menu: secondary actions in an even two-column grid; a lone last button spans both */
+.menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.menu-grid .btn { padding-inline: 8px; font-size: 17px; white-space: nowrap; }
+.menu-grid .btn.mint { background: #24865b; } /* 17px is small text: needs 4.5:1 */
+.menu-grid > .btn:has(+ .hidden), .menu-grid > .btn:last-child:nth-child(odd) { grid-column: 1 / -1; justify-self: center; min-width: 50%; }
 .logo { margin: 0; font-size: 50px; line-height: 1; font-weight: 700; }
 .logo span { color: var(--pink); }
 .logo .katz { color: #e07a10; }
@@ -439,7 +447,7 @@ html, body {
 #debug-panel summary { cursor: pointer; font: 600 12px var(--font); padding: 2px 4px; }
 #debug-panel pre { margin: 0 0 6px; font: 11px/1.35 monospace; white-space: pre-wrap; }
 .debug-btns { display: flex; flex-wrap: wrap; gap: 4px; }
-.debug-btns button { padding: 6px 8px; border: none; border-radius: 6px; background: #ffd166; font: 600 12px var(--font); cursor: pointer; }
+.debug-btns button { padding: 6px 8px; border: none; border-radius: 6px; background: #ffd166; color: #2b2230; font: 600 12px var(--font); cursor: pointer; }
 
 /* ---------- Animations ---------- */
 @property --p { syntax: "<number>"; inherits: false; initial-value: 0; }
@@ -523,7 +531,7 @@ html, body {
 .lv-foods { display: flex; gap: 2px; }
 .lv-foods img { width: 22px; height: 22px; }
 .level-card.locked { opacity: 0.55; border-style: dashed; }
-.level-card.locked .lv-num { background: #d8cbd1; font-size: 16px; }
+.level-card.locked .lv-num { background: #d8cbd1; }
 .pets-title { margin: 18px 0 10px; }
 
 /* Sticker book */
@@ -535,7 +543,13 @@ html, body {
 .sticker.got { background: #fff1c2; box-shadow: inset 0 0 0 2px #f2d78a; }
 .sticker.got .sticker-icon { filter: none; opacity: 1; }
 /* Wardrobe */
-.outfit-row { display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 8px; }
+.outfit-row {
+  display: flex; gap: 6px; overflow-x: auto; padding: 4px 2px 8px;
+  scroll-snap-type: x proximity; scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 85%, transparent); /* fade hints there is more to scroll */
+}
+.outfit-row::-webkit-scrollbar { display: none; }
+.outfit { scroll-snap-align: start; }
 .outfit { flex: none; width: 64px; min-height: 64px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 2px solid var(--line); border-radius: 16px; background: var(--cream); color: var(--ink); font: 600 11px var(--font); cursor: pointer; }
 .outfit-icon { font-size: 24px; }
 .outfit.worn { border-color: var(--pink); background: #fff0f4; }
