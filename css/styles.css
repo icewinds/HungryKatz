@@ -522,3 +522,5 @@ html, body {
 .lv-info { display: flex; flex-direction: column; gap: 3px; }
 .lv-foods { display: flex; gap: 2px; }
 .lv-foods img { width: 22px; height: 22px; }
+.level-card.locked { opacity: 0.55; border-style: dashed; }
+.level-card.locked .lv-num { background: #d8cbd1; font-size: 16px; }

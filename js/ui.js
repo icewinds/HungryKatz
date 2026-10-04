@@ -177,26 +177,34 @@ export class UIManager {
     }
   }
 
-  /** Level picker: one card per reached level (best level first). Built with DOM APIs. */
-  renderLevels(maxLevel, describe) {
+  /**
+   * Level picker: levels 1..shownMax, lowest first. Reached levels can be played; higher ones are
+   * locked previews. The best reached level is highlighted and scrolled into view. Built with DOM APIs.
+   */
+  renderLevels(best, describe, shownMax = best) {
     const list = $('level-list');
     list.replaceChildren();
-    for (let lvl = maxLevel; lvl >= 1; lvl--) {
-      const d = describe(lvl);
+    let bestCard = null;
+    for (let lvl = 1; lvl <= shownMax; lvl++) {
+      const d = describe(lvl), locked = lvl > best;
       const b = document.createElement('button');
-      b.className = 'level-card' + (lvl === maxLevel ? ' top-level' : '');
+      b.className = 'level-card' + (lvl === best ? ' top-level' : '') + (locked ? ' locked' : '');
       b.dataset.action = 'startLevel';
       b.dataset.level = lvl;
-      b.setAttribute('aria-label', `Level ${lvl}: ${d.style}, ${d.tables} tables, ${d.foods.map(f => f.label).join(', ')}`);
-      const num = document.createElement('span'); num.className = 'lv-num'; num.textContent = lvl;
+      const what = `${d.style}, ${d.tables} tables, ${d.foods.map(f => f.label).join(', ')}`;
+      b.setAttribute('aria-label', locked ? `Level ${lvl} (locked): ${what}` : `Start at level ${lvl}: ${what}`);
+      const num = document.createElement('span'); num.className = 'lv-num'; num.textContent = locked ? '🔒' : lvl;
       const info = document.createElement('span'); info.className = 'lv-info';
-      const style = document.createElement('b'); style.textContent = `${d.style} · ${d.tables} table${d.tables > 1 ? 's' : ''}`;
+      const style = document.createElement('b');
+      style.textContent = locked ? `Level ${lvl} · ${d.style}` : `${d.style} · ${d.tables} table${d.tables > 1 ? 's' : ''}`;
       const foods = document.createElement('span'); foods.className = 'lv-foods';
       for (const f of d.foods) { const i = document.createElement('img'); i.src = f.icon; i.alt = ''; foods.append(i); }
       info.append(style, foods);
       b.append(num, info);
       list.append(b);
+      if (lvl === best) bestCard = b;
     }
+    requestAnimationFrame(() => bestCard?.scrollIntoView({ block: 'center' }));
   }
 
   setMenuBest(best) { $('menu-best').textContent = best; }

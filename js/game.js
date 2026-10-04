@@ -88,11 +88,14 @@ function onEvent(type, d) {
 const ui = new UIManager({
   click: () => audio.play('click'),
   play: () => {
-    if (save.level <= 1) return startGame(1);
-    ui.renderLevels(save.level, describeLevel);
+    ui.renderLevels(save.level, describeLevel, Math.max(PREVIEW_LEVELS, save.level));
     ui.show('levels');
   },
-  startLevel: btn => startGame(+btn.dataset.level),
+  startLevel: btn => {
+    const lvl = +btn.dataset.level;
+    if (lvl > save.level) { audio.play('wrong'); ui.banner(`🔒 Reach level ${lvl} to start here`); return; }
+    startGame(lvl);
+  },
   closeLevels: () => ui.show('menu'),
   restart: () => startGame(lastRunLevel),
   menu: goToMenu,
@@ -183,6 +186,7 @@ function syncToggles() {
 }
 
 let lastRunLevel = save.level;
+const PREVIEW_LEVELS = 9; // picker previews locked levels up to here (all tables/foods unlocked by 9)
 /** What a level's café looks like, for the level picker. */
 function describeLevel(level) {
   return {

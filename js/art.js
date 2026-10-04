@@ -184,7 +184,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   ctx.moveTo(hx - 4, hy + 7); ctx.lineTo(hx - 15, hy + 8);
   ctx.stroke();
 
-  accessory(ctx, look, hx, hy);
+  accessory(ctx, look, hx, hy, blink);
   ctx.restore();
 }
 
@@ -284,7 +284,7 @@ export function drawDish(ctx, x, y, type, left, alpha = 1) {
 }
 
 /** Skull-print balaclava + headset (Ghost easter-egg cat). Drawn over the face. */
-function ghostMask(ctx, hx, hy) {
+function ghostMask(ctx, hx, hy, blink = false) {
   // balaclava: dark hood around the face, pale skull print on the front
   ellipse(ctx, hx, hy, 18, 17); ctx.strokeStyle = '#262624'; ctx.lineWidth = 5; ctx.stroke();
   ellipse(ctx, hx + 4, hy + 2, 12.5, 13); fillStroke(ctx, '#d8d4ca', '#9d998f', 1.2);
@@ -293,6 +293,11 @@ function ghostMask(ctx, hx, hy) {
   // eye sockets with eyes peering out
   for (const ex of [hx - 3, hx + 10]) {
     ellipse(ctx, ex, hy - 1, 5.2, 4.6); fillStroke(ctx, '#1b1b1a', null);
+    if (blink) { // eyelids closed: a soft line inside the dark socket
+      ctx.strokeStyle = '#8f8a80'; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(ex - 2.4, hy - 0.2); ctx.quadraticCurveTo(ex + 0.5, hy + 1.3, ex + 3.2, hy - 0.2); ctx.stroke();
+      continue;
+    }
     ellipse(ctx, ex + 0.5, hy - 0.5, 2.2, 1.8); fillStroke(ctx, '#e8e2d2', null);
     circle(ctx, ex + 0.8, hy - 0.4, 1.1); fillStroke(ctx, '#1b1b1a', null);
   }
@@ -343,7 +348,7 @@ function headPattern(ctx, look, hx, hy) {
   }
 }
 
-function accessory(ctx, look, hx, hy) {
+function accessory(ctx, look, hx, hy, blink = false) {
   const c = look.acc, ol = 'rgba(90,61,74,0.75)';
   switch (look.accessory) {
     case 'bow': {
@@ -384,7 +389,7 @@ function accessory(ctx, look, hx, hy) {
       }
       circle(ctx, hx + 12, hy - 18, 2.2); fillStroke(ctx, '#ffd34d', null);
       break;
-    case 'ghost': ghostMask(ctx, hx, hy); break;
+    case 'ghost': ghostMask(ctx, hx, hy, blink); break;
     case 'chef':
       for (const [x, y, r] of [[hx - 7, hy - 25, 8], [hx + 3, hy - 30, 9.5], [hx + 13, hy - 24, 7.5]]) {
         circle(ctx, x, y, r); fillStroke(ctx, '#fff', '#e3d3da', 1.6);
