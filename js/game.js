@@ -647,7 +647,14 @@ const menuCanvas = document.getElementById('menu-cat');
 const mctx = menuCanvas.getContext('2d');
 // After a minute with no taps, keys or mouse movement the menu cat stretches and yawns (then every minute).
 const IDLE_MS = 60000, YAWN_S = 4.2;
-const menuIdle = { since: performance.now() };
+const menuIdle = { since: performance.now(), tapAt: -Infinity };
+/** Tap (or Enter/Space on) the menu cat: it yawns right away, unless it is already mid-yawn. */
+function yawnNow() {
+  const now = performance.now();
+  if ((now - menuIdle.tapAt) / 1000 >= YAWN_S) menuIdle.tapAt = now;
+}
+menuCanvas.addEventListener('click', yawnNow);
+menuCanvas.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); yawnNow(); } });
 for (const ev of ['pointerdown', 'pointermove', 'keydown', 'wheel']) addEventListener(ev, () => { menuIdle.since = performance.now(); }, { passive: true });
 const ease = k => 1 - (1 - Math.min(1, Math.max(0, k))) ** 3;
 /** Stretch-and-yawn pose at T seconds into the routine: squash < 0 stretches tall, yawn opens the mouth. */
@@ -664,7 +671,8 @@ function drawMenuCat(time) {
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
   mctx.setTransform(2.2, 0, 0, 2.2, 126, menuCanvas.height - 17); // room for the tail swing (122px left) and a tall hat mid-stretch (246px up)
   const idle = performance.now() - menuIdle.since;
-  const T = idle >= IDLE_MS ? ((idle - IDLE_MS) % IDLE_MS) / 1000 : Infinity;
+  const tapT = (performance.now() - menuIdle.tapAt) / 1000;
+  const T = tapT < YAWN_S ? tapT : idle >= IDLE_MS ? ((idle - IDLE_MS) % IDLE_MS) / 1000 : Infinity;
   const pose = T < YAWN_S ? yawnPose(T) : null;
   drawCat(mctx, 0, 0, playerOutfit(), {
     t: time, facing: 1,
