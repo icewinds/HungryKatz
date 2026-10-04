@@ -165,7 +165,8 @@ export class GameManager {
   missNpc(npc) {
     npc.leave('sad');
     this.missed++;
-    this.text(npc.x, npc.y - 140, 'Missed!', '#8a7f99', 18);
+    this.text(npc.x, npc.y - 150, 'Missed!', '#ff5d73', 26);
+    this.burst(npc.x, npc.y - 70, 'heart', 4, '#b9aab1');
     this.onEvent('missed', { npc, missed: this.missed });
   }
 

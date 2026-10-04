@@ -96,6 +96,14 @@ export class UIManager {
     el.classList.add('bump');
   }
 
+  /** Brief red glow around the screen edges when a customer is missed. */
+  flashMiss() {
+    const el = $('miss-flash');
+    el.classList.remove('on');
+    void el.offsetWidth;
+    el.classList.add('on');
+  }
+
   banner(text) {
     const b = $('banner');
     b.textContent = text;

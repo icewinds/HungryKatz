@@ -13,7 +13,7 @@ import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawBackground, drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad, drawTable,
-  drawSadCloud, drawHeart, drawFx, drawChatBubble, PLAYER_LOOKS, playerLook, FONT,
+  drawHeart, drawFx, drawChatBubble, drawWallLive, drawMissBadge, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
 
 // ---------------------------------------------------------------- managers
@@ -45,7 +45,7 @@ function onEvent(type, d) {
       ui.bump('hud-coins'); ui.bump('hud-score');
       if (d.tip) setTimeout(() => audio.play('coin'), 320); // extra jingle for a tip
       break;
-    case 'missed': audio.play('sad'); ui.bump('hud-paws'); break;
+    case 'missed': audio.play('sad'); ui.bump('hud-paws'); ui.flashMiss(); break;
     case 'levelUp':
       audio.play('levelUp');
       ui.banner(d.newFoods.length
@@ -225,6 +225,7 @@ function render(time) {
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
 
   const { player: p, npcs, inventory: inv } = gm;
+  drawWallLive(ctx, time);
 
   const menu = gm.foods;
   for (const s of gm.stations) {
@@ -254,7 +255,9 @@ function render(time) {
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 ? Math.sin(time * 40) * 1.2 : 0;
       const anim = speaking.has(a) ? 'talk' : a.anim;
+      if (a.mood === 'sad') ctx.filter = 'grayscale(0.85) brightness(0.92)'; // missed customers fade to grey
       drawCat(ctx, a.x + shake, a.y, a.look, { state: anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood });
+      ctx.filter = 'none';
       if (a.state === 'eating') drawFoodIcon(ctx, a.request, a.x + a.facing * 26, a.y - 18, 0.8);
     }
   }
@@ -264,7 +267,7 @@ function render(time) {
     const top = n.y - 96 * n.look.size;
     if (speaking.has(n)) drawChatBubble(ctx, n.x, n.y, n.facing, Math.floor(time / 1.8) + n.id, time);
     if (n.state === 'waiting') drawRequest(ctx, n, time);
-    else if (n.mood === 'sad') drawSadCloud(ctx, n.x, top, time);
+    else if (n.mood === 'sad') drawMissBadge(ctx, n.x, top - 6, time);
     else if (n.mood === 'happy' || n.state === 'eating') drawHeart(ctx, n.x, top + Math.sin(time * 6) * 3, 16);
   }
   if (gm.state === 'playing') drawCarryBadge(ctx, p.x, p.y, inv);

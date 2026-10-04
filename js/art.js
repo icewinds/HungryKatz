@@ -402,16 +402,6 @@ export function drawChatBubble(ctx, x, y, dir, n, t) {
   } else drawFoodIcon(ctx, kind, bx, by + 1, 0.5);
 }
 
-export function drawSadCloud(ctx, x, y, t) {
-  ctx.fillStyle = '#9aa3b5';
-  for (const [cx, cy, r] of [[-9, 0, 7], [0, -4, 9], [9, 0, 7]]) { circle(ctx, x + cx, y + cy, r); ctx.fill(); }
-  ctx.strokeStyle = '#7cc4ff'; ctx.lineWidth = 2; ctx.lineCap = 'round';
-  for (const dx of [-7, 0, 7]) {
-    const dy = ((t * 30 + dx * 3) % 12 + 12) % 12;
-    ctx.beginPath(); ctx.moveTo(x + dx, y + 8 + dy); ctx.lineTo(x + dx - 1, y + 12 + dy); ctx.stroke();
-  }
-}
-
 export function drawHeart(ctx, x, y, s, color = '#ff6b8a') {
   ctx.save(); ctx.translate(x, y); ctx.scale(s / 10, s / 10);
   ctx.beginPath();
@@ -479,10 +469,7 @@ export function drawBackground(ctx) {
   ctx.fillStyle = '#fde7ed'; ctx.fillRect(0, 0, W, 172);
   ctx.fillStyle = '#fff5f8'; ctx.fillRect(0, 128, W, 44);
   ctx.fillStyle = '#f6cfd9'; ctx.fillRect(0, 126, W, 3); ctx.fillRect(0, 169, W, 3);
-  for (const wx of [26, 320]) drawWindow(ctx, wx, 22, 194, 96);
-  circle(ctx, 270, 70, 25); fillStroke(ctx, '#fff', '#f2b8c8', 4);
-  ctx.strokeStyle = INK; ctx.lineWidth = 3; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(270, 70); ctx.lineTo(270, 55); ctx.moveTo(270, 70); ctx.lineTo(281, 76); ctx.stroke();
+  // (windows and clock are animated: see drawWallLive)
 
   // window bar with saucers, cushions for every seat
   const b = LAYOUT.windowBar;
@@ -502,16 +489,96 @@ export function drawBackground(ctx) {
   kitchen(ctx);
 }
 
-function drawWindow(ctx, x, y, w, h) {
-  rrect(ctx, x, y, w, h, 16); fillStroke(ctx, '#ddf1fb', '#fff', 6);
-  ctx.fillStyle = '#fff';
-  for (const [cx, cy, r] of [[x + 50, y + 44, 11], [x + 64, y + 38, 14], [x + 80, y + 44, 11], [x + 140, y + 62, 8], [x + 151, y + 58, 10]]) { circle(ctx, cx, cy, r); ctx.fill(); }
-  ctx.fillRect(x + w / 2 - 2, y, 4, h);
-  rrect(ctx, x - 6, y + h - 2, w + 12, 8, 4); fillStroke(ctx, '#fff', null);
-  // little potted plant on the sill
-  ctx.fillStyle = '#7fd1a1';
-  for (const [dx, dy, r] of [[-6, -12, 6], [6, -12, 6], [0, -18, 6]]) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
-  rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, '#f6a07c', null);
+// ---------------------------------------------------------------- live wall: sky + clock
+const WINDOWS = [{ x: 26, y: 22, w: 194, h: 96 }, { x: 320, y: 22, w: 194, h: 96 }];
+// Clouds live in one strip spanning both windows, so they drift from pane to pane.
+const CLOUDS = [
+  { x: 0, y: 52, s: 1, v: 9 }, { x: 150, y: 78, s: 0.75, v: 6 }, { x: 290, y: 44, s: 1.15, v: 8 },
+  { x: 420, y: 84, s: 0.7, v: 5 }, { x: 520, y: 60, s: 0.9, v: 7 },
+];
+// Sky colour through a day (local hour -> colour), interpolated.
+// Purple/pink steps at dawn and dusk keep the blend from going muddy grey.
+const SKY = [
+  [0, '#1e2a5a'], [5, '#2b3a74'], [5.8, '#8a74b8'], [6.5, '#ffc8a8'], [8, '#d6effa'], [17, '#d6effa'],
+  [18.3, '#ffcfa0'], [19.2, '#ffa9a0'], [19.8, '#e58fb4'], [20.3, '#8a74b8'], [21, '#2f3570'], [24, '#1e2a5a'],
+];
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+function skyColor(hour) {
+  let i = 0;
+  while (i < SKY.length - 2 && hour >= SKY[i + 1][0]) i++;
+  const [h0, c0] = SKY[i], [h1, c1] = SKY[i + 1], k = (hour - h0) / (h1 - h0);
+  const [a, b] = [hexRgb(c0), hexRgb(c1)];
+  return `rgb(${a.map((v, j) => Math.round(v + (b[j] - v) * k)).join()})`;
+}
+
+/** Animated windows (drifting clouds, sun/moon, stars, birds) and a real-time wall clock. */
+export function drawWallLive(ctx, t, now = new Date()) {
+  const hour = now.getHours() + now.getMinutes() / 60;
+  const night = hour < 6 || hour >= 20.5;
+  const sky = skyColor(hour);
+  for (const [i, { x, y, w, h }] of WINDOWS.entries()) {
+    ctx.save();
+    rrect(ctx, x, y, w, h, 16); ctx.fillStyle = sky; ctx.fill(); ctx.clip();
+    if (night) {
+      for (let k = 0; k < 14; k++) { // twinkling stars
+        const sx = x + ((k * 73 + i * 31) % w), sy = y + ((k * 41) % (h - 20)) + 6;
+        ctx.globalAlpha = 0.5 + 0.5 * Math.sin(t * 2 + k);
+        circle(ctx, sx, sy, 1.4); ctx.fillStyle = '#fff'; ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+    if (i === 0) { // sun or moon
+      const by = y + 34 + Math.sin(t * 0.5) * 3;
+      ctx.globalAlpha = 0.3; circle(ctx, x + 40, by, 20); ctx.fillStyle = night ? '#fff6d0' : '#ffe08a'; ctx.fill();
+      ctx.globalAlpha = 1; circle(ctx, x + 40, by, 13); ctx.fillStyle = night ? '#fff6d0' : '#ffd166'; ctx.fill();
+      if (night) { circle(ctx, x + 46, by - 4, 11); ctx.fillStyle = sky; ctx.fill(); } // crescent
+    }
+    ctx.fillStyle = night ? 'rgba(160,170,220,0.55)' : '#fff';
+    for (const c of CLOUDS) {
+      const cx = ((c.x + t * c.v) % 600) - 40;
+      for (const [dx, dy, r] of [[-14, 4, 10], [0, -2, 14], [15, 4, 10]]) { circle(ctx, cx + dx * c.s, c.y + dy * c.s, r * c.s); ctx.fill(); }
+    }
+    if (!night) { // a pair of birds every ~22s
+      const bx = ((t * 45) % 1000) - 60, by = 46 + Math.sin(t * 1.5) * 6, flap = Math.sin(t * 12) * 3;
+      ctx.strokeStyle = '#6b5a66'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
+      for (const [ox, oy] of [[0, 0], [16, 8]]) {
+        ctx.beginPath();
+        ctx.moveTo(bx + ox - 5, by + oy - flap); ctx.quadraticCurveTo(bx + ox - 2, by + oy - 2, bx + ox, by + oy);
+        ctx.quadraticCurveTo(bx + ox + 2, by + oy - 2, bx + ox + 5, by + oy - flap); ctx.stroke();
+      }
+    }
+    ctx.restore();
+    // frame, mullion, sill and potted plant on top
+    rrect(ctx, x, y, w, h, 16); ctx.strokeStyle = '#fff'; ctx.lineWidth = 6; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.fillRect(x + w / 2 - 2, y, 4, h);
+    rrect(ctx, x - 6, y + h - 2, w + 12, 8, 4); fillStroke(ctx, '#fff', null);
+    ctx.fillStyle = '#7fd1a1';
+    for (const [dx, dy, r] of [[-6, -12, 6], [6, -12, 6], [0, -18, 6]]) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
+    rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, '#f6a07c', null);
+  }
+  // wall clock showing the real time
+  const cx = 270, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
+  circle(ctx, cx, cy, 25); fillStroke(ctx, '#fff', '#f2b8c8', 4);
+  ctx.strokeStyle = INK; ctx.lineCap = 'round';
+  const hand = (a, len, lw) => {
+    ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.sin(a) * len, cy - Math.cos(a) * len); ctx.stroke();
+  };
+  hand((hr / 12) * TAU, 10, 3.5);
+  hand((m / 60) * TAU, 16, 2.5);
+  circle(ctx, cx, cy, 2.5); ctx.fillStyle = '#ff8fab'; ctx.fill();
+}
+
+/** Red broken-heart badge over a customer who gave up. */
+export function drawMissBadge(ctx, x, y, t) {
+  const by = y + Math.sin(t * 5) * 2.5, s = 1 + Math.sin(t * 9) * 0.06;
+  ctx.save(); ctx.translate(x, by); ctx.scale(s, s);
+  circle(ctx, 0, 0, 19); ctx.fillStyle = 'rgba(255,93,115,0.22)'; ctx.fill();
+  circle(ctx, 0, 0, 15); fillStroke(ctx, '#ff5d73', '#fff', 2.5);
+  drawHeart(ctx, 0, 1, 15, '#fff');
+  ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(-2.5, -1); ctx.lineTo(1.5, 2); ctx.lineTo(-1, 6);
+  ctx.strokeStyle = '#ff5d73'; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+  ctx.restore();
 }
 
 function kitchen(ctx) {

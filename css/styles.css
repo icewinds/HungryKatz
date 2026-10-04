@@ -338,6 +338,18 @@ html, body {
 }
 #banner.show { animation: banner 2.4s ease-out forwards; }
 
+/* Missed-customer edge flash */
+#miss-flash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  opacity: 0;
+  box-shadow: inset 0 0 70px 18px rgba(255, 70, 100, 0.55);
+}
+#miss-flash.on { animation: missflash 0.7s ease-out; }
+@keyframes missflash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+
 /* Debug */
 #debug-panel {
   position: fixed;
