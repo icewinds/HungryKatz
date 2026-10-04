@@ -177,7 +177,7 @@ export class GameManager {
   /** Game over: submit score, then reset everything that belongs to the run. */
   endRun() {
     const score = this.score, fed = this.fed;
-    const rank = this.highScores.submit(score);
+    const rank = this.highScores.submit(score, this.save.playerName); // named on Game Over
     this.state = 'over';
     this.score = 0;
     this.missed = 0;
@@ -190,7 +190,7 @@ export class GameManager {
 
   /** Leave mid-run from the pause menu: still records the score. */
   quitRun() {
-    if (this.state === 'playing') this.highScores.submit(this.score);
+    if (this.state === 'playing') this.highScores.submit(this.score, this.save.playerName);
     this.state = 'menu';
     this.score = 0;
     this.missed = 0;

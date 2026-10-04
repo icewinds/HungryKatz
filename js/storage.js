@@ -8,7 +8,8 @@ export const DEFAULT_SAVE = () => ({
   level: 1,
   totalEarned: 0,
   upgrades: { carry: 1, speed: 1, npcTime: 1, luckyTips: 1, plates: 1, reach: 1 },
-  highScores: [],
+  highScores: [],     // [{ score, name }] top 5
+  playerName: '',     // last name typed on Game Over (prefills the next one)
   character: 'mango', // chosen player cat (art.js PLAYER_LOOKS id)
   ownedCats: [],      // cats bought with coins
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
@@ -35,7 +36,14 @@ export const Storage = {
       level: num(data.level, 1),
       totalEarned: num(data.totalEarned, 0),
       upgrades: { ...d.upgrades, ...data.upgrades },
-      highScores: Array.isArray(data.highScores) ? data.highScores.filter(Number.isFinite).slice(0, 5) : [],
+      // old saves stored bare numbers; now { score, name }
+      highScores: (Array.isArray(data.highScores) ? data.highScores : [])
+        .map(e => (Number.isFinite(e) ? { score: e, name: '' } : e))
+        .filter(e => e && Number.isFinite(e.score))
+        .map(e => ({ score: e.score, name: typeof e.name === 'string' ? e.name.slice(0, 12) : '' }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 5),
+      playerName: typeof data.playerName === 'string' ? data.playerName.slice(0, 12) : '',
       character: typeof data.character === 'string' ? data.character : d.character,
       ownedCats: Array.isArray(data.ownedCats) ? data.ownedCats.filter(s => typeof s === 'string') : [],
       daily: {

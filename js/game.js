@@ -4,7 +4,7 @@
 import { WORLD, LAYOUT, MAX_MISSED, FOODS, levelProgress, foodUnlockLevel } from './config.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
-import { HighScoreManager } from './highScores.js';
+import { HighScoreManager, cleanName } from './highScores.js';
 import { AudioManager, trackForLevel } from './audio.js';
 import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
@@ -59,7 +59,7 @@ function onEvent(type, d) {
     case 'gameOver':
       audio.play('gameOver');
       ui.showHud(false);
-      ui.showGameOver(d);
+      ui.showGameOver(d, save.playerName);
       ui.setUnlockNote(chars.unlocked().filter(id => !unlockedAtStart.includes(id)).map(id => playerLook(id).name));
       ui.show('gameover');
       break;
@@ -173,6 +173,23 @@ function goToMenu() {
   ui.show('menu');
   maybeShowDaily();
 }
+
+// ---------------------------------------------------------------- high-score name entry
+document.getElementById('go-name').addEventListener('submit', e => {
+  e.preventDefault();
+  const input = document.getElementById('go-name-input');
+  const name = cleanName(input.value);
+  if (!name) { ui.nameMessage('Type a name first', true); input.focus(); return; }
+  highScores.setName(ui.goRank, name);
+  save.playerName = name; // remembered for next time
+  persist();
+  input.value = name;
+  input.blur(); // close the phone keyboard
+  ui.renderScores(highScores.list(), ui.goRank);
+  ui.nameMessage(`Saved! Well done, ${name} 🎉`);
+  audio.play('pickup');
+});
+document.getElementById('go-name-input').addEventListener('input', () => ui.nameMessage(''));
 
 // ---------------------------------------------------------------- canvas + scaling
 const canvas = document.getElementById('game');

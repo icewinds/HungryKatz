@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { GameManager } from '../js/gameManager.js';
 import { UpgradeManager } from '../js/upgrades.js';
-import { HighScoreManager } from '../js/highScores.js';
+import { HighScoreManager, cleanName } from '../js/highScores.js';
 import { DEFAULT_SAVE, Storage } from '../js/storage.js';
 import { PLAYER_LOOKS, playerLook } from '../js/art.js';
 import { CharacterManager } from '../js/characters.js';
@@ -126,12 +126,12 @@ test(`game over after ${MAX_MISSED} misses; score saved; run reset; upgrades kep
   assert.equal(gm.state, 'over');
   const over = events.find(e => e[0] === 'gameOver')[1];
   assert.equal(over.score, 120);
-  assert.deepEqual(save.highScores, [120]);
+  assert.deepEqual(save.highScores.map(e => e.score), [120]);
   assert.equal(gm.missed, 0);
   assert.equal(save.upgrades.carry, 5);
   gm.startRun();
   assert.equal(gm.score, 0);
-  assert.deepEqual(save.highScores, [120]);
+  assert.deepEqual(save.highScores.map(e => e.score), [120]);
 });
 
 test('upgrades: spending coins does not lower run score; max level is MAX_UPGRADE_LEVEL', () => {
@@ -155,7 +155,7 @@ test('high scores: top 5, sorted high to low', () => {
   const save = DEFAULT_SAVE();
   const hs = new HighScoreManager(save);
   for (const s of [300, 1200, 0, 500, 950, 700, 100]) hs.submit(s);
-  assert.deepEqual(hs.list(), [1200, 950, 700, 500, 300]);
+  assert.deepEqual(hs.list().map(e => e.score), [1200, 950, 700, 500, 300]);
   assert.equal(hs.best(), 1200);
 });
 
@@ -355,6 +355,29 @@ test('new upgrades: Bigger Plates pays more, Quick Paws reaches further, Lucky T
   };
   assert.equal(tipAt(1), 0);
   assert.ok(tipAt(7) > 0, 'Lv7 = 55% chance beats rng 0.5');
+});
+
+test('high score names: named entries, rename after game over, clean input, old saves migrate', () => {
+  const save = DEFAULT_SAVE();
+  const hs = new HighScoreManager(save);
+  const rank = hs.submit(350, 'Calleigh');
+  assert.equal(rank, 0);
+  hs.submit(120);
+  assert.deepEqual(hs.list(), [{ score: 350, name: 'Calleigh' }, { score: 120, name: '' }]);
+  assert.equal(hs.setName(1, '  Super   Chef Mango Paws  '), true);
+  assert.equal(hs.list()[1].name, 'Super Chef M', 'trimmed, spaces collapsed, max 12 chars');
+  assert.equal(hs.setName(9, 'nobody'), false);
+  assert.equal(cleanName('<b>\u0007hi</b>'), '<b>hi</b>', 'control chars removed; markup kept as plain text (UI uses textContent)');
+  // old saves stored bare numbers
+  Storage.save({ ...DEFAULT_SAVE(), highScores: [300, 900, 'x', null, 100] });
+  const loaded = Storage.load();
+  assert.deepEqual(loaded.highScores, [{ score: 900, name: '' }, { score: 300, name: '' }, { score: 100, name: '' }]);
+  Storage.reset();
+  // game over submits with the last-used name
+  const { gm, save: s2 } = setup({ playerName: 'Calleigh' });
+  gm.score = 50;
+  gm.endRun();
+  assert.deepEqual(s2.highScores, [{ score: 50, name: 'Calleigh' }]);
 });
 
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {

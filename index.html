@@ -156,6 +156,15 @@
         <div><span>Final Score</span><b id="go-score">0</b></div>
         <div><span>Coins Earned</span><b id="go-coins">0</b></div>
       </div>
+      <form id="go-name" class="name-form hidden" novalidate>
+        <label for="go-name-input">You made the top 5! Who's the chef?</label>
+        <div class="name-row">
+          <input id="go-name-input" type="text" maxlength="12" autocomplete="off" autocapitalize="words"
+                 enterkeyhint="done" placeholder="Your name">
+          <button class="btn save-name" type="submit">Save</button>
+        </div>
+        <p id="go-name-msg" class="name-msg" role="status"></p>
+      </form>
       <h3>Top 5</h3>
       <ol id="go-scores" class="scores"></ol>
       <div class="stack">

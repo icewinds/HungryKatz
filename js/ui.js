@@ -208,13 +208,43 @@ export class UIManager {
     }
   }
 
-  showGameOver({ score, rank, scores }) {
+  showGameOver({ score, rank, scores }, lastName = '') {
     $('go-score').textContent = score;
     $('go-coins').textContent = score;
     $('go-best').classList.toggle('hidden', rank !== 0);
-    $('go-scores').innerHTML = scores.length
-      ? scores.map((s, i) => `<li class="${i === rank ? 'me' : ''}"><span>${i + 1}.</span><b>${s}</b></li>`).join('')
-      : '<li><span>No scores yet</span></li>';
+    this.goRank = rank;
+    // Name box only when this run made the table
+    $('go-name').classList.toggle('hidden', rank < 0);
+    $('go-name-input').value = lastName;
+    $('go-name-msg').textContent = '';
+    $('go-name-msg').classList.remove('error');
+    this.renderScores(scores, rank);
+  }
+
+  /** Top-5 list built with textContent so player-typed names can't inject markup. */
+  renderScores(scores, rank) {
+    const ol = $('go-scores');
+    ol.replaceChildren();
+    if (!scores.length) {
+      const li = document.createElement('li');
+      li.textContent = 'No scores yet';
+      ol.append(li);
+      return;
+    }
+    scores.forEach((s, i) => {
+      const li = document.createElement('li');
+      if (i === rank) li.className = 'me';
+      const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = `${i + 1}.`;
+      const name = document.createElement('span'); name.className = 'who'; name.textContent = s.name || 'Chef';
+      const pts = document.createElement('b'); pts.textContent = s.score;
+      li.append(pos, name, pts);
+      ol.append(li);
+    });
+  }
+
+  nameMessage(text, isError = false) {
+    $('go-name-msg').textContent = text;
+    $('go-name-msg').classList.toggle('error', isError);
   }
 
   setInstall({ available, standalone }) {
