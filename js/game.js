@@ -309,7 +309,7 @@ const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 let lastScore = 0;
 
 // ---------------------------------------------------------------- sharing
-const GAME_URL = 'https://icewinds.github.io/HungryKatz/';
+const GAME_URL = 'https://hungrykatz.solutioncloud.tech/';
 /** Phone share sheet when available; otherwise copy the link. */
 async function shareGame(text) {
   try {

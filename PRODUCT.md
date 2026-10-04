@@ -22,7 +22,7 @@ A hand-made, family game: built for one child, grown feature by feature from her
 
 - Played mostly in portrait on phones, installed to the home screen or in a mobile browser. Desktop works too.
 - Sessions are short: one run, a game over (or none in Relaxed mode), then upgrades, outfits and stickers.
-- Shared by link (Share buttons, OG preview) from https://icewinds.github.io/HungryKatz/.
+- Shared by link (Share buttons, OG preview) from https://hungrykatz.solutioncloud.tech/.
 
 ## Capabilities and Constraints
 
