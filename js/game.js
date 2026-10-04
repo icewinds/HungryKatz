@@ -3,7 +3,7 @@
 
 import {
   WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
-  foodsForLevel, tablesForLevel, decorStage,
+  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES,
 } from './config.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
@@ -49,6 +49,7 @@ function onEvent(type, d) {
     case 'arrive': audio.play('arrive'); break;
     case 'wrongFood': audio.play('wrong'); break;
     case 'feed':
+      ghostQuip();
       audio.play('feed');
       setTimeout(() => audio.play('coin'), 120);
       ui.bump('hud-coins'); ui.bump('hud-score');
@@ -206,7 +207,7 @@ function startGame(level = save.level) {
   audio.startMusic();
   ui.show(null);
   ui.showHud(true);
-  ui.banner('Feed the hungry katz! 🐾');
+  ui.banner(chars.current() === 'ghost' ? `🎖️ ${ghostLine()}` : 'Feed the hungry katz! 🐾');
 }
 
 function goToMenu() {
@@ -283,6 +284,24 @@ canvas.addEventListener('pointerdown', e => {
   gm.tap(p.x, p.y);
 });
 
+// Ghost's catchphrases: a random line (never the same twice in a row)
+let lastGhostLine = -1, lastQuipAt = -1e9;
+function ghostLine() {
+  let i;
+  do i = Math.floor(Math.random() * GHOST_LINES.length); while (i === lastGhostLine && GHOST_LINES.length > 1);
+  lastGhostLine = i;
+  return GHOST_LINES[i];
+}
+/** Now and then, when Ghost serves a customer, he says a line above his head. */
+function ghostQuip() {
+  if (chars.current() !== 'ghost') return;
+  const now = performance.now();
+  if (now - lastQuipAt < 10000 || Math.random() > 0.4) return;
+  lastQuipAt = now;
+  const p = gm.player, x = Math.min(Math.max(p.x, 150), WORLD.W - 150); // keep long lines on screen
+  gm.fx.push({ kind: 'text', x, y: p.y - 150, text: ghostLine(), color: '#3a3936', size: 17, t: -0.4, life: 2.6 });
+}
+
 const inEggPot = p => p.x >= EGG_POT.x && p.x <= EGG_POT.x + EGG_POT.w && p.y >= EGG_POT.y && p.y <= EGG_POT.y + EGG_POT.h;
 let eggTaps = 0, eggLast = 0, preGhostCat = null;
 function eggTap() {
@@ -302,7 +321,7 @@ function eggTap() {
   chars.select('ghost');
   audio.play('levelUp');
   gm.burst(gm.player.x, gm.player.y - 60, 'sparkle', 14, '#c9b48a');
-  ui.banner(first ? '🎖️ Secret cat unlocked: Ghost!' : '🎖️ Ghost reporting for duty');
+  ui.banners(first ? ['🎖️ Secret cat unlocked: Ghost!', `🎖️ ${ghostLine()}`] : [`🎖️ ${ghostLine()}`]);
 }
 canvas.addEventListener('pointermove', e => {
   if (!dragging || e.buttons === 0) return;

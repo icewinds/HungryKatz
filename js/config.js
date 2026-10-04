@@ -179,6 +179,18 @@ export const CHARACTER_UNLOCKS = {
   ghost: { secret: true }, // easter egg: tap the top-left window plant 5 times
 };
 
+// Ghost (secret cat) says these, cat-café riffs on his catchphrases (kept kid-friendly).
+export const GHOST_LINES = [
+  'Stay frosty, kitten.',
+  'Be careful who you feed, Sergeant.',
+  'You wanna be better than me? Serve faster.',
+  "Afraid of the dark? Milk's in the fridge.",
+  "Friendship's not in the café manual.",
+  'Eyes on the bowls, chef.',
+  'Mission complete. Next table.',
+  'Quiet as a ghost. Hungry as a cat.',
+];
+
 // Restaurant level comes from lifetime coins earned: L2 at 150, L3 at 450, L4 at 900...
 const LEVEL_STEP = 150;
 export function levelForEarned(earned) {
