@@ -22,7 +22,9 @@ export class GameManager {
     this.spawner = new NpcSpawner(undefined, LAYOUT.spots, rng);
     this.npcs = [];
     this.fx = [];
-    this.state = 'menu'; // 'menu' | 'playing' | 'over'
+    this.state = 'menu';
+    this.runLevel = null; // 'menu' | 'playing' | 'over'
+    this.runLevel = null;  // restaurant level chosen for this run (<= best reached)
     this.paused = false;
     this.score = 0;
     this.missed = 0;
@@ -31,7 +33,9 @@ export class GameManager {
     this.applyUpgrades();
   }
 
-  startRun() {
+  /** Start a run at `level` (1..best reached; defaults to the best). */
+  startRun(level = this.save.level) {
+    this.runLevel = Math.min(Math.max(1, Math.floor(level) || 1), this.save.level);
     this.state = 'playing';
     this.paused = false;
     this.score = 0;        // run score always starts at zero; high-score table is untouched
@@ -52,14 +56,16 @@ export class GameManager {
     this.player.speed = this.upgrades.value('speed');
   }
 
-  get reward() { return rewardForLevel(this.save.level); }
+  /** The café level being played (chosen at the start; the best level when not in a run). */
+  get level() { return this.runLevel ?? this.save.level; }
+  get reward() { return rewardForLevel(this.level); }
   /** Tables (as walk blockers) and seats open at the current restaurant level. */
-  get blockers() { return blockersForLevel(this.save.level); }
-  get spots() { return spotsForLevel(this.save.level); }
+  get blockers() { return blockersForLevel(this.level); }
+  get spots() { return spotsForLevel(this.level); }
   /** Player-chosen difficulty from Settings. */
   get difficulty() { return DIFFICULTY[this.save.settings?.difficulty] ?? DIFFICULTY.normal; }
   /** Foods on the menu right now (unlocked by restaurant level). */
-  get foods() { return foodsForLevel(this.save.level); }
+  get foods() { return foodsForLevel(this.level); }
   /** Coins for serving `food`: level reward + food bonus + Bigger Plates upgrade. */
   rewardFor(food) {
     return this.reward + (FOODS.find(f => f.id === food)?.bonus ?? 0) + this.upgrades.value('plates');
@@ -101,7 +107,7 @@ export class GameManager {
     }
 
     const diff = this.difficulty;
-    const tuning = { spots: this.spots, maxBonus: levelCrowdBonus(this.save.level) + diff.maxNpcs, intervalMult: diff.interval };
+    const tuning = { spots: this.spots, maxBonus: levelCrowdBonus(this.level) + diff.maxNpcs, intervalMult: diff.interval };
     for (const spawn of this.spawner.update(dt, this.runTime, this.npcs, foods, tuning)) this.spawnNpc(spawn);
 
     for (const npc of this.npcs) {
@@ -165,10 +171,13 @@ export class GameManager {
     this.burst(npc.x, npc.y - 60, 'coin', tip ? 10 : 5);
     const lvl = levelForEarned(this.save.totalEarned);
     if (lvl > this.save.level) {
-      const before = this.foods;
+      // A new best level. The café itself grows only if we're playing at our top level;
+      // otherwise the new level is simply unlocked for next time.
+      const before = this.foods, playingTop = this.runLevel === this.save.level;
       this.save.level = lvl;
+      if (playingTop) this.runLevel = lvl;
       const newFoods = this.foods.filter(f => !before.includes(f));
-      this.onEvent('levelUp', { level: lvl, reward: this.reward, newFoods });
+      this.onEvent('levelUp', { level: lvl, reward: this.reward, newFoods, cafeGrew: playingTop });
     }
     this.persist();
     this.onEvent('feed', { npc, reward: r, tip });
@@ -188,6 +197,7 @@ export class GameManager {
     const score = this.score, fed = this.fed;
     const rank = this.highScores.submit(score, this.save.playerName); // named on Game Over
     this.state = 'over';
+    this.runLevel = null;
     this.score = 0;
     this.missed = 0;
     this.npcs = [];

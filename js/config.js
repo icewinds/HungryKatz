@@ -176,6 +176,7 @@ export const CHARACTER_UNLOCKS = {
   mochi: { coins: 250 },
   lilac: { score: 300 },
   cocoa: { score: 600 },
+  ghost: { secret: true }, // easter egg: tap the top-left window plant 5 times
 };
 
 // Restaurant level comes from lifetime coins earned: L2 at 150, L3 at 450, L4 at 900...

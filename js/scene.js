@@ -228,6 +228,8 @@ export function drawTable(ctx, t, sc, time = 0) {
 export const sceneTables = sc => tablesForLevel(sc.level);
 
 // ---------------------------------------------------------------- live wall: sky, clock, lights
+/** Tap area (world coords) of the top-left window-sill plant: 5 taps = secret Ghost cat. */
+export const EGG_POT = { x: 28, y: 76, w: 56, h: 48 };
 const WINDOWS = [{ x: 26, y: 22, w: 194, h: 96 }, { x: 320, y: 22, w: 194, h: 96 }];
 // Clouds live in one strip spanning both windows, so they drift from pane to pane.
 const CLOUDS = [
@@ -298,10 +300,12 @@ export function drawWallLive(ctx, t, sc, now = new Date()) {
       ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.moveTo(x + 150, y + 6); ctx.lineTo(x + 140, y + 30); ctx.lineTo(x + 156, y + 44); ctx.lineTo(x + 146, y + 70); ctx.stroke();
     }
-    if (st >= 2) {
-      ctx.fillStyle = '#7fd1a1';
-      for (const [dx, dy, r] of [[-6, -12, 6], [6, -12, 6], [0, -18, 6]]) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
-      rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, '#f6a07c', null);
+    if (st >= 2 || i === 0) { // the left pot is always there (easter-egg target); wilted until the café is cosy
+      const wilted = st < 2;
+      ctx.fillStyle = wilted ? '#a8a172' : '#7fd1a1';
+      const leaves = wilted ? [[-8, -8, 5], [7, -9, 5], [0, -12, 4.5]] : [[-6, -12, 6], [6, -12, 6], [0, -18, 6]];
+      for (const [dx, dy, r] of leaves) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
+      rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, wilted ? '#c99a7a' : '#f6a07c', null);
     }
   }
   // wall clock showing the real time

@@ -1,7 +1,10 @@
 // Entry point: wires managers together, owns the canvas, input, render loop,
 // PWA install/offline hooks and the debug panel.
 
-import { WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel } from './config.js';
+import {
+  WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
+  foodsForLevel, tablesForLevel, decorStage,
+} from './config.js';
 import { Storage } from './storage.js';
 import { UpgradeManager } from './upgrades.js';
 import { HighScoreManager, cleanName } from './highScores.js';
@@ -16,7 +19,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, PLAYER_LOOKS, playerLook, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, EGG_POT } from './scene.js';
 
 // ---------------------------------------------------------------- managers
 const save = Storage.load();
@@ -54,6 +57,10 @@ function onEvent(type, d) {
     case 'missed': audio.play('sad'); ui.bump('hud-paws'); ui.flashMiss(); break;
     case 'levelUp':
       audio.play('levelUp');
+      if (!d.cafeGrew) { // playing a lower level: the new level is just unlocked for later
+        ui.banner(`🏆 Level ${d.level} unlocked! Pick it next time you play`);
+        break;
+      }
       audio.setTrack(trackForLevel(d.level)); // new level, new tune
       {
         const before = scene, msgs = [];
@@ -80,8 +87,14 @@ function onEvent(type, d) {
 // ---------------------------------------------------------------- UI handlers
 const ui = new UIManager({
   click: () => audio.play('click'),
-  play: startGame,
-  restart: startGame,
+  play: () => {
+    if (save.level <= 1) return startGame(1);
+    ui.renderLevels(save.level, describeLevel);
+    ui.show('levels');
+  },
+  startLevel: btn => startGame(+btn.dataset.level),
+  closeLevels: () => ui.show('menu'),
+  restart: () => startGame(lastRunLevel),
   menu: goToMenu,
   quit: goToMenu,
   openCharacters: () => { ui.renderCharacters(PLAYER_LOOKS, chars, save.coins, drawCatPortrait); ui.show('characters'); },
@@ -169,11 +182,24 @@ function syncToggles() {
   document.getElementById('debug-panel').hidden = !debug.on;
 }
 
-function startGame() {
+let lastRunLevel = save.level;
+/** What a level's café looks like, for the level picker. */
+function describeLevel(level) {
+  return {
+    foods: foodsForLevel(level).map(id => ({ id, icon: foodIcons[id], label: FOOD_LABEL[id] })),
+    tables: tablesForLevel(level).length,
+    style: DECOR_STAGES[decorStage(level)].name,
+  };
+}
+
+function startGame(level = save.level) {
   audio.unlock();
-  audio.startMusic();
   unlockedAtStart = chars.unlocked(); // to announce score unlocks at game over
-  gm.startRun();
+  gm.startRun(level);
+  lastRunLevel = gm.level;
+  refreshScene();                      // café matches the chosen level
+  audio.setTrack(trackForLevel(gm.level));
+  audio.startMusic();
   ui.show(null);
   ui.showHud(true);
   ui.banner('Feed the hungry katz! 🐾');
@@ -181,6 +207,7 @@ function startGame() {
 
 function goToMenu() {
   gm.quitRun();
+  refreshScene(); // back to the best-level café behind the menu
   ui.showHud(false);
   ui.setMenuBest(highScores.best());
   ui.show('menu');
@@ -205,10 +232,10 @@ document.getElementById('go-name').addEventListener('submit', e => {
 document.getElementById('go-name-input').addEventListener('input', () => ui.nameMessage(''));
 
 // ---------------------------------------------------------------- scenery (theme + makeover stage)
-let scene = makeScene(save.settings.scene, save.level);
+let scene = makeScene(save.settings.scene, gm.level);
 /** Re-read theme/level and redraw the static café (after level up or a scene change). */
 function refreshScene() {
-  scene = makeScene(save.settings.scene, save.level);
+  scene = makeScene(save.settings.scene, gm.level);
   if (bg.width > 1) buildBackground();
 }
 
@@ -248,8 +275,31 @@ canvas.addEventListener('pointerdown', e => {
   audio.unlock();
   dragging = true;
   const p = toWorld(e.clientX, e.clientY);
+  if (gm.state === 'playing' && !gm.paused && inEggPot(p)) return eggTap();
   gm.tap(p.x, p.y);
 });
+
+const inEggPot = p => p.x >= EGG_POT.x && p.x <= EGG_POT.x + EGG_POT.w && p.y >= EGG_POT.y && p.y <= EGG_POT.y + EGG_POT.h;
+let eggTaps = 0, eggLast = 0, preGhostCat = null;
+function eggTap() {
+  const now = performance.now();
+  eggTaps = now - eggLast < 1500 ? eggTaps + 1 : 1; // taps must be quick
+  eggLast = now;
+  audio.play('click');
+  if (eggTaps < 5) return;
+  eggTaps = 0;
+  if (chars.current() === 'ghost') { // tap again to change back
+    chars.select(preGhostCat && preGhostCat !== 'ghost' ? preGhostCat : 'mango');
+    ui.banner('😺 Back to the café, chef!');
+    return;
+  }
+  preGhostCat = chars.current();
+  const first = chars.unlockSecret('ghost');
+  chars.select('ghost');
+  audio.play('levelUp');
+  gm.burst(gm.player.x, gm.player.y - 60, 'sparkle', 14, '#c9b48a');
+  ui.banner(first ? '🎖️ Secret cat unlocked: Ghost!' : '🎖️ Ghost reporting for duty');
+}
 canvas.addEventListener('pointermove', e => {
   if (!dragging || e.buttons === 0) return;
   const p = toWorld(e.clientX, e.clientY);
@@ -390,7 +440,7 @@ function frame(now) {
   const inv = gm.inventory;
   ui.updateHud({
     coins: save.coins,
-    level: save.level,
+    level: gm.level,
     score: gm.score,
     best: Math.max(highScores.best(), gm.score),
   });

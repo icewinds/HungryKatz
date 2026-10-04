@@ -430,6 +430,44 @@ test('scenes: every theme has a full palette at every makeover stage', () => {
   assert.equal(makeScene('nope', 1).pal.name, THEMES.strawberry.name, 'unknown scene falls back');
 });
 
+test('level select: start at any reached level; café only grows when playing the top level', () => {
+  const { gm, save, events } = setup({ level: 5, totalEarned: 1600 });
+  gm.startRun(3);
+  assert.equal(gm.level, 3);
+  assert.deepEqual(gm.foods, foodsForLevel(3));
+  assert.equal(gm.blockers.length, tablesForLevel(3).length);
+  gm.startRun(99);
+  assert.equal(gm.level, 5, 'cannot start above the best level reached');
+  gm.startRun(0);
+  assert.equal(gm.level, 1);
+  // a new best level while playing a lower level: unlocked, but this run's café stays the same
+  gm.startRun(2);
+  save.totalEarned = 2249; // next serve crosses Lv6 (2250)
+  gm.spawner.timer = Infinity;
+  gm.inventory.fill('milk');
+  const n = arrive(gm, { spot: gm.spots[0], request: 'milk' });
+  place(gm, n.x, n.y); tick(gm, 1 / 60);
+  assert.equal(save.level, 6);
+  assert.equal(gm.level, 2);
+  assert.equal(events.find(e => e[0] === 'levelUp')[1].cafeGrew, false);
+  gm.endRun();
+  assert.equal(gm.level, 6, 'outside a run the café shows the best level');
+});
+
+test('easter egg: Ghost is hidden until unlocked, then selectable', () => {
+  const save = DEFAULT_SAVE();
+  const ch = new CharacterManager(save, new HighScoreManager(save));
+  assert.equal(ch.isUnlocked('ghost'), false);
+  assert.equal(ch.select('ghost'), false);
+  assert.equal(ch.buy('ghost'), false, 'not for sale');
+  assert.equal(ch.unlockSecret('ghost'), true);
+  assert.equal(ch.unlockSecret('ghost'), false, 'only once');
+  assert.equal(ch.select('ghost'), true);
+  assert.equal(ch.current(), 'ghost');
+  assert.equal(ch.unlockSecret('smokey'), false, 'coin cats cannot be unlocked this way');
+  assert.equal(playerLook('ghost').secret, true);
+});
+
 test('spawner: never two NPCs on the same spot; respects stage cap', () => {
   const { gm } = setup();
   gm.spawner.timer = 0;

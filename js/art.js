@@ -61,6 +61,9 @@ export const PLAYER_LOOKS = [
     patch: '#d6a273', headPatch: '#4a3328', ear: '#d9a273', tail: '#4a3328', ...CHEF }, // id kept so owned/selected saves still work
   { id: 'lilac', name: 'Lilac', fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks', acc: '#ffc94d', eye: '#8a5cc7', patch: '#fff', ...CHEF },
   { id: 'cocoa', name: 'Cocoa', fur: '#b07a52', light: '#f3dcc6', dark: '#7a4d2e', pattern: 'spots', acc: '#a07be0', eye: '#5cb85c', patch: '#fff', ...CHEF },
+  // secret: tap the top-left window plant 5 times
+  { id: 'ghost', name: 'Ghost', fur: '#6d6c68', light: '#a9a7a0', dark: '#2e2d2b', pattern: 'none', acc: '#3b3f35', eye: '#c9b48a',
+    patch: '#fff', tail: '#4a4945', accessory: 'ghost', size: 1.08, seed: 0, secret: true },
 ];
 /** Look for a saved character id (falls back to the first cat). */
 export const playerLook = id => PLAYER_LOOKS.find(l => l.id === id) || PLAYER_LOOKS[0];
@@ -113,6 +116,11 @@ export function drawCat(ctx, x, y, look, o = {}) {
   if (look.accessory === 'chef') { // apron
     rrect(ctx, -1, -31, 17, 22, 5); fillStroke(ctx, look.acc, '#e56b8c', 1.6);
     rrect(ctx, 3, -20, 9, 6, 2); fillStroke(ctx, '#ffd0de', null);
+  }
+  if (look.accessory === 'ghost') { // tactical vest with pouches
+    rrect(ctx, -3, -32, 20, 24, 5); fillStroke(ctx, look.acc, '#1f211c', 1.6);
+    for (const px of [0, 8]) { rrect(ctx, px, -22, 7, 7, 1.5); fillStroke(ctx, '#2c2f27', '#1f211c', 1); }
+    rrect(ctx, -3, -31, 20, 3, 1); fillStroke(ctx, '#2c2f27', null);
   }
   leg(ctx, -5 + swing, look.fur, ol, look, true);
   leg(ctx, 11 - swing, look.fur, ol, look, true);
@@ -275,6 +283,32 @@ export function drawDish(ctx, x, y, type, left, alpha = 1) {
   ctx.restore();
 }
 
+/** Skull-print balaclava + headset (Ghost easter-egg cat). Drawn over the face. */
+function ghostMask(ctx, hx, hy) {
+  // balaclava: dark hood around the face, pale skull print on the front
+  ellipse(ctx, hx, hy, 18, 17); ctx.strokeStyle = '#262624'; ctx.lineWidth = 5; ctx.stroke();
+  ellipse(ctx, hx + 4, hy + 2, 12.5, 13); fillStroke(ctx, '#d8d4ca', '#9d998f', 1.2);
+  ctx.strokeStyle = 'rgba(60,58,54,0.35)'; ctx.lineWidth = 1; // worn fabric streaks
+  for (const dx of [-4, 2, 9]) { ctx.beginPath(); ctx.moveTo(hx + dx, hy - 10); ctx.lineTo(hx + dx + 1, hy - 3); ctx.stroke(); }
+  // eye sockets with eyes peering out
+  for (const ex of [hx - 3, hx + 10]) {
+    ellipse(ctx, ex, hy - 1, 5.2, 4.6); fillStroke(ctx, '#1b1b1a', null);
+    ellipse(ctx, ex + 0.5, hy - 0.5, 2.2, 1.8); fillStroke(ctx, '#e8e2d2', null);
+    circle(ctx, ex + 0.8, hy - 0.4, 1.1); fillStroke(ctx, '#1b1b1a', null);
+  }
+  // nose cavity and teeth
+  tri(ctx, [hx + 2, hy + 4], [hx + 6, hy + 4], [hx + 4, hy + 7.5]); fillStroke(ctx, '#1b1b1a', null);
+  rrect(ctx, hx - 2, hy + 9, 13, 5, 1.5); fillStroke(ctx, '#f1eee6', '#3a3936', 1);
+  ctx.strokeStyle = '#3a3936'; ctx.lineWidth = 0.9;
+  for (let i = 1; i < 5; i++) { ctx.beginPath(); ctx.moveTo(hx - 2 + i * 2.6, hy + 9); ctx.lineTo(hx - 2 + i * 2.6, hy + 14); ctx.stroke(); }
+  // headset: band over the head, ear cup, mic boom to the mouth
+  ctx.strokeStyle = '#1c1c1b'; ctx.lineWidth = 3.2; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.arc(hx, hy - 2, 18.5, Math.PI * 1.05, Math.PI * 1.95); ctx.stroke();
+  rrect(ctx, hx - 20, hy - 6, 7, 12, 3); fillStroke(ctx, '#2a2a28', '#121211', 1.2);
+  ctx.lineWidth = 1.8; ctx.beginPath(); ctx.moveTo(hx - 15, hy + 4); ctx.quadraticCurveTo(hx - 4, hy + 16, hx + 8, hy + 13); ctx.stroke();
+  circle(ctx, hx + 9, hy + 13, 2.2); fillStroke(ctx, '#1c1c1b', null);
+}
+
 function leg(ctx, lx, fill, ol, look, near = false) {
   rrect(ctx, lx - 3.5, -14, 7, 14, 3.5); fillStroke(ctx, fill, ol, 1.8);
   if (near && (look.pattern === 'socks' || look.pattern === 'tuxedo')) {
@@ -350,6 +384,7 @@ function accessory(ctx, look, hx, hy) {
       }
       circle(ctx, hx + 12, hy - 18, 2.2); fillStroke(ctx, '#ffd34d', null);
       break;
+    case 'ghost': ghostMask(ctx, hx, hy); break;
     case 'chef':
       for (const [x, y, r] of [[hx - 7, hy - 25, 8], [hx + 3, hy - 30, 9.5], [hx + 13, hy - 24, 7.5]]) {
         circle(ctx, x, y, r); fillStroke(ctx, '#fff', '#e3d3da', 1.6);

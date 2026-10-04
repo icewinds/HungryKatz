@@ -98,6 +98,7 @@ tests/run.js
 - **Difficulty:** `DIFFICULTY` in `js/config.js` (patience and spawn-gap multipliers, extra customers at once).
 - **Scenes:** `THEMES` in `js/scene.js`. Each scene is a colour palette, and the makeover stages apply to every scene.
 - **Daily bonus:** `DAILY_REWARDS` in `js/config.js` sets the coins for each day of the 7-day streak.
+- **Secret:** during play, tap the plant on the top-left window sill 5 times quickly to unlock the Ghost cat (5 more taps switches back).
 - **Characters:** `CHARACTER_UNLOCKS` in `js/config.js` holds coin prices and high-score targets.
 - **Real sprites:** each function in `js/art.js` (`drawCat`, `drawFoodIcon`, `drawBackground`) only takes a position and animation state (`idle`/`walk`/`eat`, mood `happy`/`sad`, `facing`). Replace its body with `ctx.drawImage(spriteSheet, …)`. The rest of the game won't need changes.
 - **Music:** `TRACKS` in `js/audio.js` holds one 16-step loop per restaurant level (cycling). Set `SOUND_FILES.music` to use a single recorded track instead.

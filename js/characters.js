@@ -15,7 +15,7 @@ export class CharacterManager {
   isUnlocked(id) {
     const r = this.rule(id);
     if (!r) return id in CHARACTER_UNLOCKS;
-    if (r.coins) return this.save.ownedCats.includes(id);
+    if (r.coins || r.secret) return this.save.ownedCats.includes(id);
     return this.highScores.best() >= r.score;
   }
 
@@ -27,6 +27,14 @@ export class CharacterManager {
     const r = this.rule(id);
     if (!r?.coins || this.isUnlocked(id) || this.save.coins < r.coins) return false;
     this.save.coins -= r.coins;
+    this.save.ownedCats.push(id);
+    this.persist();
+    return true;
+  }
+
+  /** Easter egg: unlock a secret cat (no cost). */
+  unlockSecret(id) {
+    if (!this.rule(id)?.secret || this.save.ownedCats.includes(id)) return false;
     this.save.ownedCats.push(id);
     this.persist();
     return true;

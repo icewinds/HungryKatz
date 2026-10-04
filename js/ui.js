@@ -137,6 +137,7 @@ export class UIManager {
   renderCharacters(looks, chars, coins, draw) {
     $('char-coins').textContent = coins;
     const list = $('char-list');
+    looks = looks.filter(l => !l.secret || chars.isUnlocked(l.id)); // secret cats appear once found
     list.innerHTML = looks.map(l => {
       const r = chars.rule(l.id), open = chars.isUnlocked(l.id);
       const tag = open ? '' : r.coins
@@ -173,6 +174,28 @@ export class UIManager {
       const on = b.dataset.id === id;
       b.classList.toggle('selected', on);
       b.setAttribute('aria-pressed', on);
+    }
+  }
+
+  /** Level picker: one card per reached level (best level first). Built with DOM APIs. */
+  renderLevels(maxLevel, describe) {
+    const list = $('level-list');
+    list.replaceChildren();
+    for (let lvl = maxLevel; lvl >= 1; lvl--) {
+      const d = describe(lvl);
+      const b = document.createElement('button');
+      b.className = 'level-card' + (lvl === maxLevel ? ' top-level' : '');
+      b.dataset.action = 'startLevel';
+      b.dataset.level = lvl;
+      b.setAttribute('aria-label', `Level ${lvl}: ${d.style}, ${d.tables} tables, ${d.foods.map(f => f.label).join(', ')}`);
+      const num = document.createElement('span'); num.className = 'lv-num'; num.textContent = lvl;
+      const info = document.createElement('span'); info.className = 'lv-info';
+      const style = document.createElement('b'); style.textContent = `${d.style} · ${d.tables} table${d.tables > 1 ? 's' : ''}`;
+      const foods = document.createElement('span'); foods.className = 'lv-foods';
+      for (const f of d.foods) { const i = document.createElement('img'); i.src = f.icon; i.alt = ''; foods.append(i); }
+      info.append(style, foods);
+      b.append(num, info);
+      list.append(b);
     }
   }
 
