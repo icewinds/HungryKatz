@@ -371,6 +371,7 @@ function startGame(level = save.level) {
   audio.startMusic();
   ui.show(null);
   ui.showHud(true);
+  resize(); // fit the café between the bars now that they are measurable
   const startMsg = chars.current() === 'ghost' ? `🎖️ ${ghostLine()}` : 'Feed the hungry katz! 🐾';
   const msgs = [startMsg];
   if (gm.difficulty.relaxed) msgs.push('🌸 Relaxed mode: take your time, nobody leaves sad');
@@ -421,16 +422,29 @@ const ctx = canvas.getContext('2d');
 const bg = document.createElement('canvas');
 const view = { w: 0, h: 0, dpr: 1, scale: 1, ox: 0, oy: 0 };
 
+// World rows that must never sit under the HUD bar or the carry tray: from the top of the windows to
+// just below the food pads. The kitchen cupboard fronts underneath may tuck behind the tray.
+const VIEW_ROWS = { top: 8, bottom: 822 };
+const hudInsets = { top: 66, bottom: 74 }; // last measured HUD bar / tray heights (defaults until first shown)
+function measureHud() {
+  const bar = document.querySelector('#hud .hud-bar'), tray = document.getElementById('tray');
+  if (bar?.offsetHeight) hudInsets.top = bar.getBoundingClientRect().bottom + 4;
+  if (tray?.offsetHeight) hudInsets.bottom = innerHeight - tray.getBoundingClientRect().top + 4;
+}
+
 function resize() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = window.innerWidth, h = window.innerHeight;
   Object.assign(view, { w, h, dpr });
   canvas.width = Math.round(w * dpr);
   canvas.height = Math.round(h * dpr);
-  // "contain": whole world visible, proportions preserved
-  view.scale = Math.min(w / WORLD.W, h / WORLD.H);
+  // Fit the important rows between the HUD bar and the tray (so the windows are never hidden on phones),
+  // proportions preserved; anything outside that band can run under the bars or into the letterbox.
+  measureHud();
+  const top = hudInsets.top, band = Math.max(1, h - hudInsets.bottom - top), rows = VIEW_ROWS.bottom - VIEW_ROWS.top;
+  view.scale = Math.min(w / WORLD.W, band / rows);
   view.ox = (w - WORLD.W * view.scale) / 2;
-  view.oy = (h - WORLD.H * view.scale) / 2;
+  view.oy = top - VIEW_ROWS.top * view.scale + (band - rows * view.scale) / 2;
   buildBackground();
 }
 
@@ -544,7 +558,7 @@ function render(time) {
   const { dpr, scale, ox, oy, w, h } = view;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = scene.pal.counterFront; ctx.fillRect(0, 0, w, h);          // letterbox: kitchen counter
-  ctx.fillStyle = scene.pal.wall; ctx.fillRect(0, 0, w, oy + 172 * scale); // letterbox: wall
+  ctx.fillStyle = scene.pal.wall; ctx.fillRect(0, 0, w, oy + LAYOUT.kitchenY * scale); // letterbox: walls above and beside the café
   ctx.drawImage(bg, ox, oy, WORLD.W * scale, WORLD.H * scale);
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
 
