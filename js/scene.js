@@ -112,17 +112,27 @@ export function drawBackground(ctx, sc) {
 
   // window bar
   const b = LAYOUT.windowBar;
-  rrect(ctx, b.x + 4, b.y + 10, b.w, b.h, 12); ctx.fillStyle = SHADOW; ctx.fill();
-  rrect(ctx, b.x, b.y + 22, b.w, b.h - 22, 10); fillStroke(ctx, p.barFront, null);
-  if (sc.theme !== 'seaside') clipped(ctx, () => rrect(ctx, b.x, b.y + 22, b.w, b.h - 22, 10), () => woodGrain(ctx, b.x, b.y + 24, b.w, b.h - 24, 7));
-  rrect(ctx, b.x - 6, b.y, b.w + 12, 30, 12); fillStroke(ctx, p.bar, null);
-  if (sc.theme !== 'seaside') clipped(ctx, () => rrect(ctx, b.x - 6, b.y, b.w + 12, 30, 12), () => woodGrain(ctx, b.x - 6, b.y + 6, b.w + 12, 24, 3));
-  rrect(ctx, b.x + 6, b.y + 4, b.w - 12, 4, 2); fillStroke(ctx, p.barHi, null);
+  // a proper bar table: thick top, skirt board, four legs on the floor and a footrest rail
+  const wood = sc.theme !== 'seaside', floorY = b.y + 66, edge = 'rgba(70,40,25,0.35)';
+  ellipse(ctx, b.x + b.w / 2, floorY, b.w / 2 + 10, 7); ctx.fillStyle = SHADOW; ctx.fill();          // floor shadow
+  for (const lx of [b.x + 14, b.x + b.w * 0.36, b.x + b.w * 0.64, b.x + b.w - 24]) {                 // legs
+    ctx.beginPath(); ctx.moveTo(lx, b.y + 30); ctx.lineTo(lx + 10, b.y + 30); ctx.lineTo(lx + 9, floorY); ctx.lineTo(lx + 1, floorY); ctx.closePath();
+    fillStroke(ctx, p.barFront, edge, 1.2);
+    if (wood) clipped(ctx, () => rrect(ctx, lx, b.y + 30, 10, floorY - b.y - 30, 2), () => woodGrain(ctx, lx, b.y + 30, 10, floorY - b.y - 30, lx, true));
+    ellipse(ctx, lx + 5, floorY, 6, 2); fillStroke(ctx, edge, null);                                   // foot
+  }
+  rrect(ctx, b.x + 16, b.y + 52, b.w - 34, 5, 2.5); fillStroke(ctx, st >= 3 ? '#e3b94f' : p.barFront, edge, 1); // footrest rail
+  rrect(ctx, b.x + 2, b.y + 26, b.w - 4, 10, 3); fillStroke(ctx, p.barFront, edge, 1.2);                // skirt board
+  rrect(ctx, b.x - 8, b.y + 14, b.w + 16, 16, 7); fillStroke(ctx, p.barFront, edge, 1.4);               // front edge (thickness)
+  if (wood) clipped(ctx, () => rrect(ctx, b.x - 8, b.y + 14, b.w + 16, 16, 7), () => woodGrain(ctx, b.x - 8, b.y + 18, b.w + 16, 12, 7));
+  rrect(ctx, b.x - 8, b.y, b.w + 16, 22, 9); fillStroke(ctx, p.bar, edge, 1.4);                         // top surface
+  if (wood) clipped(ctx, () => rrect(ctx, b.x - 8, b.y, b.w + 16, 22, 9), () => woodGrain(ctx, b.x - 8, b.y + 3, b.w + 16, 18, 3));
+  rrect(ctx, b.x + 4, b.y + 3, b.w - 8, 3, 1.5); fillStroke(ctx, p.barHi, null);                       // sheen
   if (st === 0) { // scratches
     ctx.strokeStyle = 'rgba(80,50,30,0.25)'; ctx.lineWidth = 1.5;
     for (const [x, y, l] of [[130, 182, 30], [250, 190, 22], [360, 178, 34]]) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + l, y + 3); ctx.stroke(); }
   }
-  if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(b.x, b.y + 27, b.w, 2); }
+  if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(b.x - 4, b.y + 21, b.w + 8, 2); } // gold edge trim
 
   // seats for every open spot: wooden crates when shabby, cushions after
   for (const s of spotsForLevel(sc.level)) {
