@@ -597,14 +597,14 @@ function render(time) {
   const dishes = npcs
     .filter(n => n.state === 'eating' || (n.mood === 'happy' && n.leaveT < DISH_FADE))
     .map(n => ({ dish: n, y: n.spot.plate.z }));
-  const actors = [...npcs, p, ...tables, ...dishes].sort((a, b) => a.y - b.y);
+  const actors = [...npcs, { chef: true, y: chefDepth(p, npcs, tables) }, ...tables, ...dishes].sort((a, b) => a.y - b.y);
   for (const a of actors) {
     if (a.dish) {
       const n = a.dish, pl = n.spot.plate, eating = n.state === 'eating';
       drawDish(ctx, pl.x, pl.y, n.request, eating ? Math.min(1, n.eatT / EAT_TIME) : 0, eating ? 1 : 1 - n.leaveT / DISH_FADE);
     } else if (a.table) {
       drawTable(ctx, a.table, scene, time);
-    } else if (a === p) {
+    } else if (a.chef) {
       drawCat(ctx, p.x, p.y, playerOutfit(), { state: p.state, t: time, facing: p.facing, squash: p.squash });
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 && !reduceMotion.matches ? Math.sin(time * 40) * 1.2 : 0;
@@ -633,6 +633,18 @@ function render(time) {
 
 let lastDoor = 0;
 /** How far the front door is open: wide while a cat is walking through it, eased shut as they pass. */
+/** Depth for drawing the chef: right in front of a seated customer the chef tucks behind them (so customers
+ *  are never hidden), but never behind a table the chef is standing in front of. */
+function chefDepth(p, npcs, tables) {
+  let depth = p.y;
+  for (const n of npcs) {
+    const seated = n.state === 'waiting' || n.state === 'eating';
+    if (seated && Math.abs(n.x - p.x) < 46 && p.y > n.y && p.y - n.y < 110) depth = Math.min(depth, n.y - 0.5);
+  }
+  for (const t of tables) if (t.y < p.y && Math.abs(t.table.x - p.x) < 70) depth = Math.max(depth, t.y + 0.5);
+  return depth;
+}
+
 function doorOpenness(npcs) {
   let open = 0;
   for (const n of npcs) {
