@@ -114,3 +114,12 @@ tests/run.js
 - **Real sprites:** each function in `js/art.js` (`drawCat`, `drawFoodIcon`, `drawBackground`) only takes a position and animation state (`idle`/`walk`/`eat`, mood `happy`/`sad`, `facing`). Replace its body with `ctx.drawImage(spriteSheet, …)`. The rest of the game won't need changes.
 - **Music:** `TRACKS` in `js/audio.js` holds one 16-step loop per restaurant level (cycling). Set `SOUND_FILES.music` to use a single recorded track instead.
 - **Real audio:** set paths in `SOUND_FILES` in `js/audio.js` (e.g. `click: 'assets/audio/click.mp3'`) and add the files to `ASSETS` in `service-worker.js`.
+
+## Google Play (Trusted Web Activity)
+
+The Play Store app is a thin Android wrapper (TWA) around the live site, so pushing to GitHub updates the app too.
+
+- **Store listing:** text in `store/listing.md`; graphics in `store/` (icon, 1024x500 feature graphic, 1080x1920 screenshots). Regenerate the graphics with `npm start` then `node tools/store-shots.mjs`.
+- **Privacy policy:** `privacy.html` (https://hungrykatz.solutioncloud.tech/privacy.html).
+- **Package:** build the `.aab` (and a test `.apk`) at https://www.pwabuilder.com from the site URL; keep the signing key it gives you safe.
+- **Digital Asset Links:** paste the SHA-256 fingerprints (your upload key **and** Google Play App Signing's key, from Play Console > Setup > App signing) into `.well-known/assetlinks.json`. `.nojekyll` makes GitHub Pages publish that dot-folder.

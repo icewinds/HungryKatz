@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>loading</title>
+  <link rel="stylesheet" href="../css/privacy.css">
+</head>
+<body class="fg">
+  <!-- Google Play feature graphic (1024x500), drawn with the game's own art. Captured by tools/store-shots.mjs. -->
+  <canvas id="fg" width="1024" height="500"></canvas>
+  <script type="module">
+    import { makeScene, drawBackground, drawWallLive } from '../js/scene.js';
+    import { drawCat, drawWaiterTray, playerLook, dressUp, KITCHEN_CHEF } from '../js/art.js';
+    import { OUTFITS } from '../js/config.js';
+
+    await document.fonts.load('96px "Lilita One"');
+    const c = document.getElementById('fg'), ctx = c.getContext('2d');
+    const sc = makeScene('strawberry', 9), k = 1024 / 540;
+
+    // the café wall, windows (midday sky) and window bar
+    ctx.save(); ctx.scale(k, k); ctx.translate(0, -8);
+    drawBackground(ctx, sc);
+    drawWallLive(ctx, 2, sc, new Date(2026, 5, 1, 12, 0));
+    ctx.restore();
+
+    // logo card on the left
+    ctx.fillStyle = 'rgba(255,255,255,0.93)';
+    ctx.beginPath(); ctx.roundRect(40, 118, 470, 250, 22); ctx.fill();
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+    ctx.font = '400 92px "Lilita One"';
+    ctx.fillStyle = '#ec5f89'; ctx.fillText('Hungry', 70, 240);
+    ctx.fillStyle = '#e07a10'; ctx.fillText('Katz', 70 + ctx.measureText('Hungry').width, 240);
+    ctx.font = '400 30px "Lilita One"'; ctx.fillStyle = '#5a3d4a';
+    ctx.fillText('Run the cutest café in town!', 72, 300);
+    ctx.font = '400 21px "Lilita One"'; ctx.fillStyle = '#76626c';
+    ctx.fillText('No ads · No tracking · Plays offline', 72, 340);
+
+    // the cast: your waiter with a tray, Chef Biscuit, and a happy customer
+    const waiter = dressUp(playerLook('mango'), { hat: 'none', apron: 'classic' }, OUTFITS);
+    const inv = { items: { milk: 1, fish: 1, cupcake: 1 } };
+    const cat = (x, look, o) => { ctx.save(); ctx.translate(x, 492); ctx.scale(2.5, 2.5); o(look); ctx.restore(); };
+    cat(640, waiter, l => { drawCat(ctx, 0, 0, l, { t: 1.3, facing: 1, mood: 'happy' }); drawWaiterTray(ctx, 0, 0, 1, l, inv, 1.3, false, true); });
+    cat(805, KITCHEN_CHEF, l => drawCat(ctx, 0, 0, l, { t: 2.1, facing: -1, mood: 'happy' }));
+    const customer = { ...playerLook('mochi'), accessory: 'flower', acc: '#ff8fab' }; // a guest, not in uniform
+    cat(950, customer, l => drawCat(ctx, 0, 0, l, { t: 0.4, facing: -1, mood: 'happy' }));
+    document.title = 'ready';
+  </script>
+</body>
+</html>

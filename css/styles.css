@@ -623,3 +623,5 @@ html, body {
 .restore-box { margin-top: 12px; padding: 12px; border-radius: 9px; background: #fff0f4; text-align: left; }
 .restore-box label { font-weight: 700; }
 .restore-box .btn { width: 100%; margin-top: 4px; }
+
+.hint a { color: var(--pink-d); text-underline-offset: 3px; }

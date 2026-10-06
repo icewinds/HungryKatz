@@ -1,0 +1,42 @@
+/* Privacy policy page: the café's colours and Lilita One, in a plain readable column. */
+@font-face {
+  font-family: 'Lilita One';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(../assets/fonts/lilita-one-latin.woff2) format('woff2');
+}
+
+:root {
+  --pink-d: #c43d5c;
+  --ink: #5a3d4a;
+  --ink-soft: #76626c;
+  --bg: #fde7ed;
+  --font: "Lilita One", ui-rounded, system-ui, sans-serif;
+}
+
+html { font-synthesis: none; }
+body {
+  margin: 0;
+  padding: 24px 16px 48px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 17px/1.6 var(--font);
+}
+main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 28px 24px 32px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(90, 61, 74, 0.12);
+}
+h1 { margin: 4px 0 2px; font-size: 34px; line-height: 1.15; color: var(--pink-d); }
+h2 { margin: 28px 0 6px; font-size: 21px; color: var(--pink-d); }
+p { margin: 0 0 12px; max-width: 65ch; }
+b { color: var(--pink-d); }
+.lead { font-size: 19px; }
+.updated, .back { color: var(--ink-soft); font-size: 15px; }
+a { color: var(--pink-d); text-underline-offset: 3px; }
+a:focus-visible { outline: 3px solid var(--pink-d); outline-offset: 2px; border-radius: 3px; }
+::selection { background: #ffd3df; }
