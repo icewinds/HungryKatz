@@ -285,15 +285,14 @@ function kitchen(ctx, sc) {
   ctx.fillStyle = p.counterFront; ctx.fillRect(0, y + 20, W, H - y - 20);
   ctx.fillStyle = p.tile;
   for (let r = 0, ty = y + 26; ty < cab; ty += 20, r++) for (let tx = (r % 2) * 20; tx < W; tx += 40) ctx.fillRect(tx, ty, 20, 20);
-  // fridge on the right
-  rrect(ctx, 488, y + 36, 50, cab - y - 30, 7); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
-  ctx.strokeStyle = '#b9dff0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(488, y + 70); ctx.lineTo(538, y + 70); ctx.stroke();
-  for (const hy of [y + 50, y + 84]) { rrect(ctx, 494, hy, 4, 12, 2); fillStroke(ctx, '#9cc3ea', null); }
-  if (st >= 1) { // a plant on top of the fridge
-    ctx.fillStyle = '#7fd1a1';
-    for (const [dx, dy, r] of [[-8, -20, 9], [8, -20, 9], [0, -29, 10]]) { circle(ctx, 513 + dx, y + 36 + dy, r); ctx.fill(); }
-    rrect(ctx, 502, y + 22, 22, 16, 5); fillStroke(ctx, '#f6a07c', null);
-  }
+  // fridge (milk) on the left, oven (cupcakes) on the right: their doors and glow are drawn live
+  const fx = KITCHEN.fridge.x, ox = KITCHEN.oven.x, uh = cab - y - 30;
+  rrect(ctx, fx - 26, y + 36, 52, uh, 7); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
+  ctx.strokeStyle = '#b9dff0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fx - 26, y + 66); ctx.lineTo(fx + 26, y + 66); ctx.stroke();
+  for (const hy of [y + 46, y + 78]) { rrect(ctx, fx + 18, hy, 4, 12, 2); fillStroke(ctx, '#9cc3ea', null); }
+  rrect(ctx, ox - 26, y + 36, 52, uh, 7); fillStroke(ctx, '#ece6e8', '#c9bfc4', 3);
+  for (const dx of [-12, 0, 12]) { circle(ctx, ox + dx, y + 46, 3.5); fillStroke(ctx, '#d8cfd3', '#a89aa1', 1); } // dials
+  rrect(ctx, ox - 20, y + 58, 40, 4, 2); fillStroke(ctx, st >= 3 ? '#e3b94f' : '#a89aa1', null);                  // handle
   // oven cabinets along the bottom (the stove top above them is drawn live, in front of the chef)
   rrect(ctx, -6, cab, W + 12, H - cab + 6, 4); fillStroke(ctx, p.counter, p.counterEdge, 2);
   for (const sx of KITCHEN.stovesFor(sc.level)) {
@@ -647,15 +646,35 @@ function drawKnob(ctx, x, y, nx, ny) {
 /** Chef Biscuit (cooking at the stoves facing us, or carrying plates to the counter), then the stove top in
  *  front of him: burners, sizzling pans with the dish, steam, and a ring showing how long each order has left. */
 export function drawKitchen(ctx, sc, kitchen, t) {
-  const p = sc.pal, c = kitchen.chef, top = KITCHEN.stoveTop;
+  const p = sc.pal, c = kitchen.chef, top = KITCHEN.stoveTop, y = LAYOUT.kitchenY;
+  const ring = (rx, ry, frac, n) => { // how long a batch has left (+ ×n plates)
+    circle(ctx, rx, ry, 10); fillStroke(ctx, '#fff', 'rgba(90,61,74,0.25)', 1.5);
+    ctx.beginPath(); ctx.arc(rx, ry, 7, -Math.PI / 2, -Math.PI / 2 + Math.min(1, frac) * Math.PI * 2); ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 3.5; ctx.stroke();
+    if (n > 1) { rrect(ctx, rx - 10, ry - 24, 20, 13, 6.5); fillStroke(ctx, '#ec5f89', '#fff', 1.2); ctx.fillStyle = '#fff'; ctx.fillText(`×${n}`, rx, ry - 17); }
+  };
+  ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const fr = kitchen.fridge, fx = KITCHEN.fridge.x;
+  if (fr.food) { // fridge open: lit shelves with milk, door swung toward the chef
+    rrect(ctx, fx - 22, y + 40, 44, 66, 4); fillStroke(ctx, '#fffbe6', '#e8dcb0', 1.5);
+    for (const [bx, by] of [[-10, 58], [4, 58], [-4, 90], [10, 90]]) drawFoodIcon(ctx, 'milk', fx + bx, y + by, 0.55);
+    ctx.beginPath(); ctx.moveTo(fx + 26, y + 36); ctx.lineTo(fx + 44, y + 44); ctx.lineTo(fx + 44, y + 112); ctx.lineTo(fx + 26, y + 120); ctx.closePath();
+    fillStroke(ctx, '#e4f4fb', '#b9dff0', 2);
+    ring(fx, y + 116, fr.t / fr.need, fr.n);
+  }
+  const ov = kitchen.oven, ox = KITCHEN.oven.x;
+  rrect(ctx, ox - 20, y + 68, 40, 34, 4); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                   // oven window
+  if (ov.food) { // baking: warm glow and the cupcakes rising
+    ctx.globalAlpha = 0.75 + Math.sin(t * 4) * 0.15; rrect(ctx, ox - 18, y + 70, 36, 30, 3); ctx.fillStyle = '#ffb347'; ctx.fill(); ctx.globalAlpha = 1;
+    drawFoodIcon(ctx, ov.food, ox, y + 88 - Math.min(1, ov.t / ov.need) * 3, 0.62);
+    ring(ox, y + 116, ov.t / ov.need, ov.n);
+  }
   const toCounter = c.mode === 'plate' || (c.carrying && c.mode === 'walk');
   drawCat(ctx, c.x, c.y, KITCHEN_CHEF, {
-    state: c.mode === 'walk' ? 'walk' : c.mode === 'cook' ? 'eat' : 'idle',
+    state: c.mode === 'walk' ? 'walk' : c.mode === 'cook' || c.mode === 'pour' ? 'eat' : 'idle',
     t, facing: c.facing, back: toCounter, mood: c.mode === 'plate' ? 'happy' : null,
   });
   if (c.carrying) for (let i = 0; i < Math.min(c.count, 3); i++) drawDish(ctx, c.x + c.facing * 18, c.y - 58 - i * 6, c.carrying, 1);
   rrect(ctx, -6, top, WORLD.W + 12, 22, 6); fillStroke(ctx, p.counter, p.counterEdge, 2);           // stove top
-  ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const s of kitchen.stoves) {
     ellipse(ctx, s.x, top + 10, 24, 7); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                    // burner
     if (!s.food) continue;
@@ -668,9 +687,6 @@ export function drawKitchen(ctx, sc, kitchen, t) {
     drawFoodIcon(ctx, s.food, s.x, top - 3 - Math.abs(Math.sin(t * 6 + s.x)) * 3, 0.62);
     ctx.fillStyle = 'rgba(255,255,255,0.55)';                                                             // steam
     for (let i = 0; i < 2; i++) { const k = (t * 0.8 + i * 0.5 + s.x * 0.01) % 1; circle(ctx, s.x - 6 + i * 12 + Math.sin(t * 3 + i) * 3, top - 16 - k * 22, 3 + k * 3); ctx.globalAlpha = 1 - k; ctx.fill(); ctx.globalAlpha = 1; }
-    const rx = s.x - 34, ry = top - 2, frac = Math.min(1, s.t / s.need);                                  // progress ring, beside the pan
-    circle(ctx, rx, ry, 10); fillStroke(ctx, '#fff', 'rgba(90,61,74,0.25)', 1.5);
-    ctx.beginPath(); ctx.arc(rx, ry, 7, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 3.5; ctx.stroke();
-    if (s.n > 1) { rrect(ctx, rx - 10, ry - 24, 20, 13, 6.5); fillStroke(ctx, '#ec5f89', '#fff', 1.2); ctx.fillStyle = '#fff'; ctx.fillText(`×${s.n}`, rx, ry - 17); }
+    ring(s.x - 34, top - 2, s.t / s.need, s.n); // beside the pan
   }
 }

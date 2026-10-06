@@ -167,13 +167,16 @@ export const OUTFITS = {
 
 export const MAX_MISSED = 10;
 
-// The kitchen behind the counter (kitchen.js): seconds on a stove per batch, chef positions and pace.
-export const COOK_TIME = { milk: 1.2, catfood: 1.8, fish: 2.4, sushi: 2.8, cupcake: 3.2 };
+// The kitchen behind the counter (kitchen.js): where each food is made, seconds per batch, chef positions and pace.
+export const FOOD_SOURCE = { milk: 'fridge', cupcake: 'oven' }; // everything else cooks on a stove
+export const COOK_TIME = { milk: 1.0, catfood: 1.8, fish: 2.4, sushi: 2.8, cupcake: 3.4 };
 export const KITCHEN = {
   passY: 836,      // chef's feet while putting plates on the counter (back to us)
   stoveY: 902,     // chef's feet while cooking (facing us, behind the stove top)
   stoveTop: 890,   // top edge of the stove counter
   home: { x: 270, y: 902 },
+  fridge: { x: 30, stand: { x: 80, y: 866 } },  // left end, next to the milk spot on the counter
+  oven: { x: 510, stand: { x: 460, y: 866 } },   // right end, next to the cupcakes
   chefSpeed: 260,  // world px per second
   plateTime: 0.3,  // seconds to set plates down
   /** Stove x positions: 2 stoves, 3 once the café is cosy (L5), 4 when it is fancy (L9). */

@@ -1,22 +1,26 @@
-// Kitchen: Chef Biscuit cooks each customer's order on a stove, then carries the plates to the
-// counter, where the waiter (the player) collects them. Each batch tops the plates for that food up
-// to what the waiter can carry (the Carry upgrade), so one trip to the counter fills the tray.
-// Pure logic, no DOM, so it runs in the tests; scene.drawKitchen renders the chef, stoves and pans from this state.
+// Kitchen: Chef Biscuit makes each customer's order, then carries the plates to the counter, where
+// the waiter (the player) collects them. Milk is poured at the fridge (only while the chef stands
+// there), cupcakes bake in the oven, everything else cooks on the stoves. Each batch tops the plates
+// for that food up to what the waiter can carry (the Carry upgrade), so one trip fills the tray.
+// Pure logic, no DOM, so it runs in the tests; scene.drawKitchen renders it all from this state.
 
-import { LAYOUT, KITCHEN, COOK_TIME } from './config.js';
+import { LAYOUT, KITCHEN, COOK_TIME, FOOD_SOURCE } from './config.js';
 
-const freeStove = x => ({ x, food: null, npc: null, n: 0, t: 0, need: 0 });
+const empty = (x, kind) => ({ x, kind, food: null, npc: null, n: 0, t: 0, need: 0 });
+const sourceOf = food => FOOD_SOURCE[food] ?? 'stove';
 
 export class Kitchen {
   constructor(stoves = KITCHEN.stovesFor(1)) { this.reset(stoves); }
 
   reset(stoves) {
     this.batch ??= 1;   // plates per batch = waiter's carry capacity (setBatch)
-    this.orders = [];   // [{ food, npc }] waiting for a free stove, oldest first
+    this.orders = [];   // [{ food, npc }] waiting for a free stove / oven / fridge, oldest first
     this.open = [];     // [{ food, npc }] every dish still wanted by a seated customer
-    this.toPlate = [];  // cooked batches [{ food, n }] waiting for the chef to carry them out
+    this.toPlate = [];  // finished batches [{ food, n }] waiting for the chef to carry them out
     this.ready = {};    // food -> plates on the counter
-    this.stoves = stoves.map(freeStove);
+    this.stoves = stoves.map(x => empty(x, 'stove'));
+    this.oven = empty(KITCHEN.oven.x, 'oven');
+    this.fridge = empty(KITCHEN.fridge.x, 'fridge');
     const { x, y } = KITCHEN.home;
     this.chef = { x, y, facing: 1, carrying: null, count: 0, target: null, pause: 0, mode: 'idle' };
   }
@@ -24,23 +28,26 @@ export class Kitchen {
   /** Plates the waiter can carry of one food; batches fill up to this. */
   setBatch(n) { this.batch = Math.max(1, n); }
 
-  /** Plates of `food` ready, cooking or on the way to the counter. */
-  supply(food) {
-    const sum = list => list.reduce((t, d) => t + (d.food === food ? d.n : 0), 0);
-    return this.readyCount(food) + sum(this.stoves) + sum(this.toPlate) + (this.chef.carrying === food ? this.chef.count : 0);
-  }
-
   /** The café grew: more stoves (dishes already cooking keep cooking). */
-  setStoves(xs) { this.stoves = xs.map((x, i) => ({ ...(this.stoves[i] ?? freeStove(x)), x })); }
+  setStoves(xs) { this.stoves = xs.map((x, i) => ({ ...(this.stoves[i] ?? empty(x, 'stove')), x })); }
+
+  /** Every place food is made. */
+  get slots() { return [...this.stoves, this.oven, this.fridge]; }
 
   readyCount(food) { return this.ready[food] ?? 0; }
+
+  /** Plates of `food` ready, being made or on the way to the counter. */
+  supply(food) {
+    const sum = list => list.reduce((t, d) => t + (d.food === food ? d.n : 0), 0);
+    return this.readyCount(food) + sum(this.slots) + sum(this.toPlate) + (this.chef.carrying === food ? this.chef.count : 0);
+  }
 
   /** A customer sat down: one order per dish they want. */
   order(npc) {
     for (const food of npc.requests ?? [npc.request]) { this.orders.push({ food, npc }); this.open.push({ food, npc }); }
   }
 
-  /** A customer left or was served: drop their orders not yet on a stove. Cooked plates stay on the counter. */
+  /** A customer left or was served: drop their orders not yet started. Finished plates stay on the counter. */
   cancel(npc) {
     this.orders = this.orders.filter(o => o.npc !== npc);
     this.open = this.open.filter(o => o.npc !== npc);
@@ -53,38 +60,49 @@ export class Kitchen {
     return k;
   }
 
-  /** Is `food` queued, cooking or on its way to the counter? */
+  /** Is `food` queued, being made or on its way to the counter? */
   busyWith(food) {
-    return this.orders.some(o => o.food === food) || this.stoves.some(s => s.food === food)
+    return this.orders.some(o => o.food === food) || this.slots.some(s => s.food === food)
       || this.toPlate.some(d => d.food === food) || this.chef.carrying === food;
   }
 
-  /** Advance cooking and the chef. `speed` = Faster Chef multiplier. Returns [{ food, n }] plated this frame. */
+  /** Start queued orders wherever their kind of slot is free (a busy oven does not hold up the stoves). */
+  startOrders() {
+    for (const o of [...this.orders]) {
+      const kind = sourceOf(o.food);
+      const slot = kind === 'stove' ? this.stoves.find(s => !s.food) : this[kind].food ? null : this[kind];
+      if (!slot) continue;
+      this.orders.splice(this.orders.indexOf(o), 1);
+      const have = this.supply(o.food), wanted = this.open.filter(w => w.food === o.food).length;
+      if (have >= wanted) continue; // enough plates already ready or on the way for everyone waiting
+      Object.assign(slot, { food: o.food, npc: o.npc, n: Math.max(this.batch, wanted) - have, t: 0, need: COOK_TIME[o.food] });
+    }
+  }
+
+  /** Advance the kitchen. `speed` = Faster Chef multiplier. Returns [{ food, n }] plated this frame. */
   update(dt, speed = 1) {
-    for (const s of this.stoves) {
-      while (!s.food && this.orders.length) {
-        const o = this.orders.shift(), have = this.supply(o.food);
-        const wanted = this.open.filter(w => w.food === o.food).length;
-        if (have >= wanted) continue; // enough plates already ready or on the way for everyone waiting
-        const n = Math.max(this.batch, wanted) - have; // top up to a full tray
-        Object.assign(s, { food: o.food, npc: o.npc, n, t: 0, need: COOK_TIME[o.food] });
-      }
+    this.startOrders();
+    for (const s of this.slots) {
       if (!s.food) continue;
+      if (s.kind === 'fridge' && this.chef.mode !== 'pour') continue; // milk only pours while the chef is there
       s.t += dt * speed;
-      if (s.t >= s.need) { this.toPlate.push({ food: s.food, n: s.n }); Object.assign(s, freeStove(s.x)); }
+      if (s.t >= s.need) { this.toPlate.push({ food: s.food, n: s.n }); Object.assign(s, empty(s.x, s.kind)); }
     }
     return this.moveChef(dt, speed);
   }
 
-  /** Chef: carry finished dishes to their spot on the counter; otherwise tend the busiest stove. */
+  /** Chef: carry finished batches to the counter, pour milk at the fridge, otherwise tend the busiest slot. */
   moveChef(dt, speed) {
     const c = this.chef, plated = [];
-    if (c.pause > 0) { c.pause -= dt * speed; return plated; } // putting a plate down
+    if (c.pause > 0) { c.pause -= dt * speed; return plated; } // putting plates down
     if (!c.carrying && this.toPlate.length) { const d = this.toPlate.shift(); c.carrying = d.food; c.count = d.n; }
+    let work = null;
     if (c.carrying) c.target = { x: LAYOUT.pads[c.carrying].x, y: KITCHEN.passY };
-    else { // stand at the stove that is closest to done, or wait in the middle
-      const busy = this.stoves.filter(s => s.food).sort((a, b) => b.t / b.need - a.t / a.need)[0];
-      c.target = busy ? { x: busy.x, y: KITCHEN.stoveY } : { ...KITCHEN.home };
+    else if (this.fridge.food) { c.target = { ...KITCHEN.fridge.stand }; work = 'pour'; }
+    else { // stand by whatever is closest to done, or wait in the middle
+      const busy = [...this.stoves, this.oven].filter(s => s.food).sort((a, b) => b.t / b.need - a.t / a.need)[0];
+      c.target = busy === this.oven ? { ...KITCHEN.oven.stand } : busy ? { x: busy.x, y: KITCHEN.stoveY } : { ...KITCHEN.home };
+      work = busy ? 'cook' : 'idle';
     }
     const dx = c.target.x - c.x, dy = c.target.y - c.y, d = Math.hypot(dx, dy), step = KITCHEN.chefSpeed * speed * dt;
     if (d > step) {
@@ -100,7 +118,7 @@ export class Kitchen {
       c.carrying = null; c.count = 0;
       c.pause = KITCHEN.plateTime;
       c.mode = 'plate';
-    } else c.mode = this.stoves.some(s => s.food) ? 'cook' : 'idle';
+    } else c.mode = work;
     return plated;
   }
 }

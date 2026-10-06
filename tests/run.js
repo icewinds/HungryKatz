@@ -95,6 +95,18 @@ test('kitchen: a seated customer\'s order is cooked as a full tray, plated, coll
   assert.equal(gm.kitchen.open.length, 0, 'served customers leave the order list');
 });
 
+test('kitchen: milk comes from the fridge (chef must be there), cupcakes from the oven, the rest from stoves', () => {
+  const k = new Kitchen(KITCHEN.stovesFor(1));
+  k.order({ requests: ['milk'] }); k.order({ requests: ['cupcake'] }); k.order({ requests: ['fish'] });
+  k.update(1 / 60);
+  assert.equal(k.fridge.food, 'milk');
+  assert.equal(k.oven.food, 'cupcake');
+  assert.deepEqual(k.stoves.map(s => s.food), ['fish', null], 'the oven and fridge leave the stoves free');
+  assert.equal(k.fridge.t, 0, 'milk does not pour until the chef reaches the fridge');
+  for (let i = 0; i < 60 * 20; i++) k.update(1 / 60);
+  assert.deepEqual(k.ready, { milk: 1, cupcake: 1, fish: 1 });
+});
+
 test('kitchen: no overcooking, cancelled orders, more stoves as the café grows', () => {
   const k = new Kitchen(KITCHEN.stovesFor(1));
   k.setBatch(4);
