@@ -17,6 +17,15 @@ export class Inventory {
   has(type) { return this.items[type] > 0; }
   isFull(type) { return this.items[type] >= this.max; }
 
+  /** Free space for one food type. */
+  room(type) { return Math.max(0, this.max - this.items[type]); }
+  /** Add up to `n` of one food type (never beyond max). Returns amount added. */
+  add(type, n) {
+    const k = Math.min(n, this.room(type));
+    this.items[type] += k;
+    return k;
+  }
+
   /** Top up ONE food type to max. Never touches other types. Returns amount added. */
   fill(type) {
     const add = Math.max(0, this.max - this.items[type]);

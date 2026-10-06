@@ -33,18 +33,18 @@ const SEAT_BACK = -34, SEAT_FRONT = 30;  // seat behind the table (faces us) and
 const blockerOf = t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 });
 
 export const LAYOUT = {
-  walk: { minX: 26, maxX: 514, minY: 248, maxY: 790 }, // where the player may stand
+  walk: { minX: 26, maxX: 514, minY: 248, maxY: 742 }, // where the player may stand (up to the kitchen counter)
   playerStart: { x: 270, y: 700 },
   entry: { x: -70, y: 330 },  // NPCs spawn here, off-screen left
   door: { x: 40, y: 330 },    // first waypoint just inside the door
   exit: { x: -80, y: 330 },   // NPCs are removed after reaching this
   windowBar: { x: 90, y: 168, w: 360, h: 54 },
   tables: TABLES,
-  kitchenY: 800,              // top of the kitchen counter
+  kitchenY: 770,              // top of the counter where the chef puts ready plates
   // Solid furniture for ALL tables (feet can't enter); see blockersForLevel for the active ones
   blockers: TABLES.map(blockerOf),
-  // One pickup pad per food, evenly spaced in front of the kitchen counter
-  pads: Object.fromEntries(FOODS.map((f, i) => [f.id, { x: 70 + i * 100, y: 752, r: 44 }])),
+  // One spot per food along the counter: plates appear on the counter, the waiter collects them standing here
+  pads: Object.fromEntries(FOODS.map((f, i) => [f.id, { x: 70 + i * 100, y: 744, r: 42 }])),
   // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction.
   // Spots come in pairs (linked via `partner` below) that chat: bar neighbours, the two side seats
   // of a table, and its back + front seats. `back` = seated with their back to us.
@@ -143,9 +143,10 @@ export const PETS = {
 };
 export const PET_BONUS = { goldfishCoins: 1, puppyPatience: 2, parrotTips: 0.1 };
 
-// Wardrobe for chef cats (Choose cat screen). Hats reuse cat accessories; aprons recolour the apron.
+// Wardrobe for your waiter cat (Choose cat screen). Hats reuse cat accessories; aprons recolour the apron.
 export const OUTFITS = {
   hats: [
+    { id: 'none', name: 'No hat', icon: '🐱', cost: 0 },
     { id: 'chef', name: 'Chef hat', icon: '🧑‍🍳', cost: 0 },
     { id: 'beanie', name: 'Beanie', icon: '🧶', cost: 60, color: '#5aa9e6' },
     { id: 'flower', name: 'Flower', icon: '🌸', cost: 80, color: '#ff8fab' },
@@ -165,6 +166,22 @@ export const OUTFITS = {
 };
 
 export const MAX_MISSED = 10;
+
+// The kitchen behind the counter (kitchen.js): seconds on a stove per batch, chef positions and pace.
+export const COOK_TIME = { milk: 1.2, catfood: 1.8, fish: 2.4, sushi: 2.8, cupcake: 3.2 };
+export const KITCHEN = {
+  passY: 836,      // chef's feet while putting plates on the counter (back to us)
+  stoveY: 902,     // chef's feet while cooking (facing us, behind the stove top)
+  stoveTop: 890,   // top edge of the stove counter
+  home: { x: 270, y: 902 },
+  chefSpeed: 260,  // world px per second
+  plateTime: 0.3,  // seconds to set plates down
+  /** Stove x positions: 2 stoves, 3 once the café is cosy (L5), 4 when it is fancy (L9). */
+  stovesFor: level => {
+    const n = level >= 9 ? 4 : level >= 5 ? 3 : 2;
+    return Array.from({ length: n }, (_, i) => 270 + (i - (n - 1) / 2) * 104);
+  },
+};
 export const FEED_RADIUS = 46;   // player<->NPC contact distance
 export const NPC_SPEED = 140;    // px per second
 export const MAX_UPGRADE_LEVEL = 10;
@@ -173,10 +190,17 @@ export const MAX_UPGRADE_LEVEL = 10;
 export const UPGRADES = {
   carry: {
     icon: '🥛', name: 'Carry Capacity',
-    desc: 'Carry more of every food at the same time.',
+    desc: 'Carry more plates of every food; the chef cooks enough to fill your tray.',
     values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     costs: [40, 90, 160, 260, 380, 520, 700, 900, 1150],
     fmt: v => `${v} each`,
+  },
+  chef: {
+    icon: '🧑‍🍳', name: 'Faster Chef',
+    desc: 'Chef Biscuit cooks and plates every order faster.',
+    values: [1, 1.12, 1.24, 1.36, 1.5, 1.64, 1.8, 1.96, 2.14, 2.35],
+    costs: [50, 100, 170, 260, 380, 520, 700, 900, 1150],
+    fmt: v => (v > 1 ? `+${Math.round((v - 1) * 100)}%` : 'normal'),
   },
   speed: {
     icon: '⚡', name: 'Movement Speed',

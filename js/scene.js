@@ -2,8 +2,8 @@
 // (shabby -> tidy -> cosy -> fancy) that unlock as the restaurant levels up.
 // A scene object is { stage: 0..3, pal: palette, level } — see makeScene().
 
-import { LAYOUT, WORLD, decorStage, tablesForLevel, spotsForLevel } from './config.js';
-import { ellipse, circle, rrect, tri, fillStroke, drawFoodIcon, drawHeart, hexRgb, INK, SHADOW } from './art.js';
+import { LAYOUT, WORLD, KITCHEN, decorStage, tablesForLevel, spotsForLevel } from './config.js';
+import { ellipse, circle, rrect, tri, fillStroke, drawFoodIcon, drawHeart, hexRgb, INK, SHADOW, FONT, drawCat, drawDish, KITCHEN_CHEF } from './art.js';
 
 const TAU = Math.PI * 2;
 
@@ -280,24 +280,33 @@ function bunting(ctx, p) {
 }
 
 function kitchen(ctx, sc) {
-  const p = sc.pal, st = sc.stage, y = LAYOUT.kitchenY, { W, H } = WORLD;
-  ctx.fillStyle = SHADOW; ctx.fillRect(0, y - 6, W, 8);
-  ctx.fillStyle = p.counterFront; ctx.fillRect(0, y + 24, W, H - y - 24);
-  ctx.fillStyle = p.tile; ctx.fillRect(0, y + 24, W, 16);
-  ctx.strokeStyle = p.tileLine; ctx.lineWidth = 2;
-  for (let x = 24; x < W; x += 24) { ctx.beginPath(); ctx.moveTo(x, y + 24); ctx.lineTo(x, y + 40); ctx.stroke(); }
-  rrect(ctx, 110, y + 50, 120, 74, 10); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
-  for (const bx of [136, 160, 184, 208]) { rrect(ctx, bx - 6, y + 74, 12, 30, 4); fillStroke(ctx, '#fff', '#9cc3ea', 1.5); }
-  rrect(ctx, 310, y + 50, 120, 74, 10); fillStroke(ctx, p.counter, p.counterEdge, 3);
-  drawFoodIcon(ctx, 'catfood', 370, y + 88, 1.1, 0.5);
-  if (st >= 3) for (const hx of [120, 320]) { rrect(ctx, hx, y + 80, 5, 18, 2); fillStroke(ctx, '#e3b94f', null); } // gold handles
-  rrect(ctx, -6, y, W + 12, 28, 10); fillStroke(ctx, p.counter, p.counterEdge, 2);
-  if (st === 0) { ctx.fillStyle = 'rgba(110,80,50,0.15)'; ellipse(ctx, 280, y + 12, 26, 6); ctx.fill(); } // stain
-  if (st >= 1) for (const px of [40, 500]) { // potted plants
+  const p = sc.pal, st = sc.stage, y = LAYOUT.kitchenY, { W, H } = WORLD, cab = KITCHEN.stoveTop + 20;
+  // tiled kitchen floor behind the counter
+  ctx.fillStyle = p.counterFront; ctx.fillRect(0, y + 20, W, H - y - 20);
+  ctx.fillStyle = p.tile;
+  for (let r = 0, ty = y + 26; ty < cab; ty += 20, r++) for (let tx = (r % 2) * 20; tx < W; tx += 40) ctx.fillRect(tx, ty, 20, 20);
+  // fridge on the right
+  rrect(ctx, 488, y + 36, 50, cab - y - 30, 7); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
+  ctx.strokeStyle = '#b9dff0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(488, y + 70); ctx.lineTo(538, y + 70); ctx.stroke();
+  for (const hy of [y + 50, y + 84]) { rrect(ctx, 494, hy, 4, 12, 2); fillStroke(ctx, '#9cc3ea', null); }
+  if (st >= 1) { // a plant on top of the fridge
     ctx.fillStyle = '#7fd1a1';
-    for (const [dx, dy, r] of [[-9, -22, 10], [9, -22, 10], [0, -32, 11]]) { circle(ctx, px + dx, y + dy, r); ctx.fill(); }
-    rrect(ctx, px - 12, y - 16, 24, 20, 5); fillStroke(ctx, '#f6a07c', null);
+    for (const [dx, dy, r] of [[-8, -20, 9], [8, -20, 9], [0, -29, 10]]) { circle(ctx, 513 + dx, y + 36 + dy, r); ctx.fill(); }
+    rrect(ctx, 502, y + 22, 22, 16, 5); fillStroke(ctx, '#f6a07c', null);
   }
+  // oven cabinets along the bottom (the stove top above them is drawn live, in front of the chef)
+  rrect(ctx, -6, cab, W + 12, H - cab + 6, 4); fillStroke(ctx, p.counter, p.counterEdge, 2);
+  for (const sx of KITCHEN.stovesFor(sc.level)) {
+    rrect(ctx, sx - 38, cab + 7, 76, 36, 5); fillStroke(ctx, '#ece6e8', '#c9bfc4', 2);
+    rrect(ctx, sx - 28, cab + 16, 56, 18, 3); fillStroke(ctx, '#3d3540', null);
+    rrect(ctx, sx - 18, cab + 10, 36, 3, 1.5); fillStroke(ctx, st >= 3 ? '#e3b94f' : '#a89aa1', null);
+  }
+  // the counter where the chef puts plates out for the waiter
+  ctx.fillStyle = SHADOW; ctx.fillRect(0, y - 6, W, 8);
+  rrect(ctx, -6, y, W + 12, 22, 8); fillStroke(ctx, p.counter, p.counterEdge, 2);
+  rrect(ctx, -6, y + 16, W + 12, 8, 3); fillStroke(ctx, p.counterEdge, null);
+  if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(0, y + 15, W, 2); }
+  if (st === 0) { ctx.fillStyle = 'rgba(110,80,50,0.15)'; ellipse(ctx, 224, y + 10, 22, 5); ctx.fill(); } // stain
 }
 
 // ---------------------------------------------------------------- tables (drawn per frame for depth)
@@ -485,7 +494,7 @@ function drawSeason(ctx, t, sc) {
     for (const wx of [26, 320]) { rrect(ctx, wx - 4, 112, 202, 5, 3); ctx.fill(); }
   }
   if (sc.season === 'halloween') {                                    // glowing pumpkins on the counter
-    for (const [px, s] of [[230, 1], [300, 0.8]]) {
+    for (const [px, s] of [[22, 0.9], [518, 0.75]]) { // counter ends, clear of the plates
       ctx.save(); ctx.translate(px, y + 2); ctx.scale(s, s);
       ellipse(ctx, 0, -10, 15, 12); fillStroke(ctx, '#ff8a2a', '#d96a12', 1.6);
       ctx.strokeStyle = '#d96a12'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, -21); ctx.lineTo(0, 1); ctx.stroke();
@@ -632,4 +641,36 @@ function drawKnob(ctx, x, y, nx, ny) {
   g.addColorStop(0, '#fff6c8'); g.addColorStop(0.35, '#ffd34d'); g.addColorStop(1, '#b8860b');
   circle(ctx, bx, by, 4.2); ctx.fillStyle = g; ctx.fill();                                  // ball
   ctx.strokeStyle = 'rgba(120,80,10,0.6)'; ctx.lineWidth = 0.8; ctx.stroke();
+}
+
+// ---------------------------------------------------------------- the kitchen, live
+/** Chef Biscuit (cooking at the stoves facing us, or carrying plates to the counter), then the stove top in
+ *  front of him: burners, sizzling pans with the dish, steam, and a ring showing how long each order has left. */
+export function drawKitchen(ctx, sc, kitchen, t) {
+  const p = sc.pal, c = kitchen.chef, top = KITCHEN.stoveTop;
+  const toCounter = c.mode === 'plate' || (c.carrying && c.mode === 'walk');
+  drawCat(ctx, c.x, c.y, KITCHEN_CHEF, {
+    state: c.mode === 'walk' ? 'walk' : c.mode === 'cook' ? 'eat' : 'idle',
+    t, facing: c.facing, back: toCounter, mood: c.mode === 'plate' ? 'happy' : null,
+  });
+  if (c.carrying) for (let i = 0; i < Math.min(c.count, 3); i++) drawDish(ctx, c.x + c.facing * 18, c.y - 58 - i * 6, c.carrying, 1);
+  rrect(ctx, -6, top, WORLD.W + 12, 22, 6); fillStroke(ctx, p.counter, p.counterEdge, 2);           // stove top
+  ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const s of kitchen.stoves) {
+    ellipse(ctx, s.x, top + 10, 24, 7); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                    // burner
+    if (!s.food) continue;
+    for (let i = 0; i < 6; i++) { // flickering flames round the burner
+      const a = (i / 6) * Math.PI * 2, fx = s.x + Math.cos(a) * 17, fy = top + 10 + Math.sin(a) * 5, h = 4 + Math.sin(t * 20 + i * 2) * 1.5;
+      ctx.fillStyle = i % 2 ? '#ffb347' : '#ff7a3d'; ellipse(ctx, fx, fy - h / 2, 2.2, h); ctx.fill();
+    }
+    rrect(ctx, s.x + 17, top + 1, 20, 5, 2.5); fillStroke(ctx, '#3d3540', null);                          // pan handle
+    ellipse(ctx, s.x, top + 5, 21, 7); fillStroke(ctx, '#5a5560', '#3d3540', 1.5);                         // pan
+    drawFoodIcon(ctx, s.food, s.x, top - 3 - Math.abs(Math.sin(t * 6 + s.x)) * 3, 0.62);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';                                                             // steam
+    for (let i = 0; i < 2; i++) { const k = (t * 0.8 + i * 0.5 + s.x * 0.01) % 1; circle(ctx, s.x - 6 + i * 12 + Math.sin(t * 3 + i) * 3, top - 16 - k * 22, 3 + k * 3); ctx.globalAlpha = 1 - k; ctx.fill(); ctx.globalAlpha = 1; }
+    const rx = s.x - 34, ry = top - 2, frac = Math.min(1, s.t / s.need);                                  // progress ring, beside the pan
+    circle(ctx, rx, ry, 10); fillStroke(ctx, '#fff', 'rgba(90,61,74,0.25)', 1.5);
+    ctx.beginPath(); ctx.arc(rx, ry, 7, -Math.PI / 2, -Math.PI / 2 + frac * Math.PI * 2); ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 3.5; ctx.stroke();
+    if (s.n > 1) { rrect(ctx, rx - 10, ry - 24, 20, 13, 6.5); fillStroke(ctx, '#ec5f89', '#fff', 1.2); ctx.fillStyle = '#fff'; ctx.fillText(`×${s.n}`, rx, ry - 17); }
+  }
 }

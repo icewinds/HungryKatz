@@ -7,7 +7,7 @@ export const DEFAULT_SAVE = () => ({
   coins: 0,
   level: 1,
   totalEarned: 0,
-  upgrades: { carry: 1, speed: 1, npcTime: 1, luckyTips: 1, plates: 1, reach: 1 },
+  upgrades: { carry: 1, chef: 1, speed: 1, npcTime: 1, luckyTips: 1, plates: 1, reach: 1 },
   highScores: [],     // [{ score, name }] top 5
   playerName: '',     // last name typed on Game Over (prefills the next one)
   character: 'mango', // chosen player cat (art.js PLAYER_LOOKS id)
@@ -17,7 +17,8 @@ export const DEFAULT_SAVE = () => ({
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
   stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false }, // lifetime, for stickers
   stickers: [],       // earned sticker ids (achievements.js)
-  outfit: { hat: 'chef', apron: 'classic' }, // what the chef cat wears
+  outfit: { hat: 'none', apron: 'classic' }, // what the waiter cat wears
+  waiter: true,       // saves from before the kitchen rework still wear the old default chef hat
   ownedOutfits: [],   // bought hats/aprons ids
   settings: { music: true, sfx: true, debug: false, difficulty: 'normal', scene: 'strawberry' },
 });
@@ -54,7 +55,9 @@ function sanitize(data) {
       petsAway: Array.isArray(data.petsAway) ? data.petsAway.filter(s => typeof s === 'string') : [],
       stats: { ...d.stats, ...(data.stats && typeof data.stats === 'object' ? data.stats : {}) },
       stickers: Array.isArray(data.stickers) ? data.stickers.filter(x => typeof x === 'string') : [],
-      outfit: { ...d.outfit, ...(data.outfit && typeof data.outfit === 'object' ? data.outfit : {}) },
+      outfit: (o => (data.waiter ? o : { ...o, hat: o.hat === 'chef' ? 'none' : o.hat }))( // old default chef hat -> waiter
+        { ...d.outfit, ...(data.outfit && typeof data.outfit === 'object' ? data.outfit : {}) }),
+      waiter: true,
       ownedOutfits: Array.isArray(data.ownedOutfits) ? data.ownedOutfits.filter(x => typeof x === 'string') : [],
       daily: {
         last: typeof data.daily?.last === 'string' ? data.daily.last : null,

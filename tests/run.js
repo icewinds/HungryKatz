@@ -14,10 +14,11 @@ import { EAT_TIME } from '../js/npc.js';
 import { DailyBonus, dayKey } from '../js/daily.js';
 import { TRACKS, trackForLevel } from '../js/audio.js';
 import { Inventory } from '../js/inventory.js';
+import { Kitchen } from '../js/kitchen.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus, levelSpawnPace,
-  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS,
+  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN,
 } from '../js/config.js';
 
 let passed = 0;
@@ -66,14 +67,49 @@ test('inventory: filling one food never touches the other', () => {
   assert.deepEqual(two(inv), { milk: 5, catfood: 4 });
 });
 
-test('stations: carry 5 milk AND 5 cat food at once', () => {
+test('counter: carry 5 milk AND 5 cat food at once (from plates the chef put out)', () => {
   const { gm, events } = setup({ ...MAX5, level: 3 });
+  gm.kitchen.ready = { milk: 9, catfood: 9 };
   place(gm, LAYOUT.pads.milk.x, LAYOUT.pads.milk.y - 20); tick(gm, 0.05);
   assert.deepEqual(two(gm.inventory), { milk: 5, catfood: 0 });
   place(gm, LAYOUT.pads.catfood.x, LAYOUT.pads.catfood.y - 20); tick(gm, 0.05);
   assert.deepEqual(two(gm.inventory), { milk: 5, catfood: 5 });
   place(gm, LAYOUT.pads.milk.x, LAYOUT.pads.milk.y - 20); tick(gm, 0.05);
   assert.equal(events.filter(e => e[0] === 'pickup').length, 2, 'no pickup when already full');
+  assert.equal(gm.kitchen.readyCount('milk'), 4, 'only what fits on the tray leaves the counter');
+});
+
+test('kitchen: a seated customer\'s order is cooked as a full tray, plated, collected and served', () => {
+  const { gm, save, events } = setup({ upgrades: { ...DEFAULT_SAVE().upgrades, carry: 3 } });
+  const npc = arrive(gm, { spot: LAYOUT.spots[0], request: 'milk' });
+  assert.equal(gm.kitchen.open.length, 1, 'arriving sends the order to the chef');
+  park(gm);
+  for (let i = 0; i < 60 * 8 && !gm.kitchen.readyCount('milk'); i++) gm.update(1 / 60);
+  assert.equal(gm.kitchen.readyCount('milk'), 3, 'one order cooks a tray of 3 (Carry Lv3)');
+  assert.ok(events.some(e => e[0] === 'plated'));
+  place(gm, LAYOUT.pads.milk.x, LAYOUT.pads.milk.y - 20); tick(gm, 0.05);
+  assert.equal(gm.inventory.count('milk'), 3);
+  place(gm, npc.x, npc.y); tick(gm, 1 / 60);
+  assert.equal(npc.state, 'eating');
+  assert.ok(save.coins > 0);
+  assert.equal(gm.kitchen.open.length, 0, 'served customers leave the order list');
+});
+
+test('kitchen: no overcooking, cancelled orders, more stoves as the café grows', () => {
+  const k = new Kitchen(KITCHEN.stovesFor(1));
+  k.setBatch(4);
+  const a = { requests: ['milk'] }, b = { requests: ['milk'] }, c = { requests: ['fish'] };
+  k.order(a); k.order(b); k.order(c);
+  for (let i = 0; i < 60 * 12; i++) k.update(1 / 60);
+  assert.deepEqual(k.ready, { milk: 4, fish: 4 }, 'two milk customers share one full tray');
+  const gone = { requests: ['sushi'] };
+  k.order(gone); k.cancel(gone);
+  for (let i = 0; i < 60 * 6; i++) k.update(1 / 60);
+  assert.equal(k.readyCount('sushi'), 0, 'a customer who left is not cooked for');
+  assert.equal(KITCHEN.stovesFor(1).length, 2);
+  assert.equal(KITCHEN.stovesFor(5).length, 3);
+  assert.equal(KITCHEN.stovesFor(9).length, 4);
+  assert.equal(k.take('milk', 10), 4);
 });
 
 test('feeding: correct food consumes one and pays coins + score', () => {
@@ -256,6 +292,7 @@ test('menu: milk only at Lv1; foods unlock every FOOD_UNLOCK_EVERY levels', () =
   assert.equal(foodsForLevel(99).length, FOODS.length);
   // locked pad gives nothing; customers only want what's on the menu
   const { gm } = setup({ ...MAX5, level: 1 });
+  gm.kitchen.ready = { catfood: 5 };
   place(gm, LAYOUT.pads.catfood.x, LAYOUT.pads.catfood.y - 20); tick(gm, 0.05);
   assert.equal(gm.inventory.count('catfood'), 0);
   const sp = new NpcSpawner([{ at: 0, maxNpcs: 9, interval: [0, 0], patience: 9 }], LAYOUT.spots);

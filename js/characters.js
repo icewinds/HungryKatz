@@ -1,4 +1,4 @@
-// Character Manager: which chef cats are unlocked, buying them, and the current pick.
+// Character Manager: which waiter cats are unlocked, buying them, and the current pick.
 // Coin cats are bought once (save.ownedCats); score cats unlock from the best high score.
 
 import { CHARACTER_UNLOCKS } from './config.js';

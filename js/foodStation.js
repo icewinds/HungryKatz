@@ -1,4 +1,4 @@
-// Food Station: walking into its zone refills that one food type.
+// Food Station: the spot in front of the counter where the waiter collects ready plates of one food.
 
 export class FoodStation {
   constructor(type, zone) {
@@ -16,12 +16,5 @@ export class FoodStation {
   update(dt) {
     this.flash = Math.max(0, this.flash - dt);
     this.hintCd = Math.max(0, this.hintCd - dt);
-  }
-
-  /** Fill the inventory with this station's food. Returns amount added (0 = already full). */
-  tryPickup(inventory) {
-    const n = inventory.fill(this.type);
-    if (n > 0) this.flash = 0.4;
-    return n;
   }
 }

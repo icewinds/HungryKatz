@@ -321,7 +321,7 @@ export class UIManager {
       const li = document.createElement('li');
       if (i === rank) li.className = 'me';
       const pos = document.createElement('span'); pos.className = 'pos'; pos.textContent = `${i + 1}.`;
-      const name = document.createElement('span'); name.className = 'who'; name.textContent = s.name || 'Chef';
+      const name = document.createElement('span'); name.className = 'who'; name.textContent = s.name || 'Waiter';
       const pts = document.createElement('b'); pts.textContent = s.score;
       li.append(pos, name, pts);
       ol.append(li);

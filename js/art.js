@@ -55,27 +55,30 @@ export function randomLook(rng = Math.random) {
   };
 }
 
-// Playable chef cats (character select). `acc` = apron colour.
-const CHEF = { accessory: 'chef', size: 1.08, seed: 0 };
+// Playable waiter cats (character select). `acc` = apron colour.
+const WAITER = { accessory: 'waiter', size: 1.08, seed: 0 };
+// Chef Biscuit runs the kitchen (not playable).
+export const KITCHEN_CHEF = { id: 'biscuit', name: 'Chef Biscuit', fur: '#f1dcb8', light: '#fff8ec', dark: '#b8925e', pattern: 'socks',
+  acc: '#ffffff', eye: '#4a7fc9', patch: '#fff', accessory: 'chef', size: 1.18, seed: 0.6 };
 export const PLAYER_LOOKS = [
-  { id: 'mango', name: 'Mango', fur: '#f4a259', light: '#fff1dc', dark: '#c0702c', pattern: 'stripes', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', ...CHEF },
-  { id: 'smokey', name: 'Smokey', fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes', acc: '#7fb3ff', eye: '#d4a017', patch: '#fff', ...CHEF },
-  { id: 'oreo', name: 'Frankie', fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', ...CHEF }, // id kept so saves still work
+  { id: 'mango', name: 'Mango', fur: '#f4a259', light: '#fff1dc', dark: '#c0702c', pattern: 'stripes', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', ...WAITER },
+  { id: 'smokey', name: 'Smokey', fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes', acc: '#7fb3ff', eye: '#d4a017', patch: '#fff', ...WAITER },
+  { id: 'oreo', name: 'Frankie', fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', ...WAITER }, // id kept so saves still work
   { id: 'mochi', name: 'Snowy', fur: '#fdfbf7', light: '#ffffff', dark: '#cdbfb3', pattern: 'patch', acc: '#6fcf9f', eye: '#9bbf3a', patchR: 6.5, // white body, small tan patch
-    patch: '#d6a273', headPatch: '#4a3328', ear: '#d9a273', tail: '#4a3328', ...CHEF }, // id kept so owned/selected saves still work
-  { id: 'lilac', name: 'Lilac', fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks', acc: '#ffc94d', eye: '#8a5cc7', patch: '#fff', ...CHEF },
-  { id: 'cocoa', name: 'Cocoa', fur: '#b07a52', light: '#f3dcc6', dark: '#7a4d2e', pattern: 'spots', acc: '#a07be0', eye: '#5cb85c', patch: '#fff', ...CHEF },
+    patch: '#d6a273', headPatch: '#4a3328', ear: '#d9a273', tail: '#4a3328', ...WAITER }, // id kept so owned/selected saves still work
+  { id: 'lilac', name: 'Lilac', fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks', acc: '#ffc94d', eye: '#8a5cc7', patch: '#fff', ...WAITER },
+  { id: 'cocoa', name: 'Cocoa', fur: '#b07a52', light: '#f3dcc6', dark: '#7a4d2e', pattern: 'spots', acc: '#a07be0', eye: '#5cb85c', patch: '#fff', ...WAITER },
   // secret: tap the top-left window plant 5 times
   { id: 'ghost', name: 'Ghost', fur: '#6d6c68', light: '#a9a7a0', dark: '#2e2d2b', pattern: 'none', acc: '#3b3f35', eye: '#c9b48a',
     patch: '#fff', tail: '#4a4945', accessory: 'ghost', size: 1.08, seed: 0, secret: true },
 ];
 /** Look for a saved character id (falls back to the first cat). */
 export const playerLook = id => PLAYER_LOOKS.find(l => l.id === id) || PLAYER_LOOKS[0];
-/** Chef cat wearing a wardrobe outfit ({ hat, apron } ids from OUTFITS). Ghost keeps his gear. */
+/** Waiter cat wearing a wardrobe outfit ({ hat, apron } ids from OUTFITS). Ghost keeps his gear. */
 export function dressUp(look, outfit, OUTFITS) {
-  if (look.accessory !== 'chef') return look;
+  if (look.accessory !== 'waiter') return look;
   const hat = OUTFITS.hats.find(h => h.id === outfit.hat), apron = OUTFITS.aprons.find(a => a.id === outfit.apron);
-  return { ...look, hat: hat?.id ?? 'chef', hatColor: hat?.color, acc: apron?.color ?? look.acc };
+  return { ...look, hat: hat?.id ?? 'none', hatColor: hat?.color, acc: apron?.color ?? look.acc };
 }
 
 // ---------------------------------------------------------------- cat
@@ -123,7 +126,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   ellipse(ctx, 0, -20, 19, 15); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); bodyPattern(ctx, look); ctx.restore();
   ellipse(ctx, 0, -20, 19, 15); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
-  if (look.accessory === 'chef') { // apron
+  if (look.accessory === 'chef' || look.accessory === 'waiter') { // apron
     rrect(ctx, -1, -31, 17, 22, 5); fillStroke(ctx, look.acc, '#e56b8c', 1.6);
     rrect(ctx, 3, -20, 9, 6, 2); fillStroke(ctx, '#ffd0de', null);
   }
@@ -428,6 +431,14 @@ export function accessory(ctx, look, hx, hy, blink = false) {
       ellipse(ctx, hx + 2, hy - 16, 16, 6); fillStroke(ctx, c, ol, 1.4);
       rrect(ctx, hx + 1, hy - 25, 3, 5, 1.5); fillStroke(ctx, c, null);
       break;
+    case 'waiter': { // bow tie, plus any wardrobe hat
+      const bx = hx + 3, by = hy + 19;
+      for (const d of [-1, 1]) { tri(ctx, [bx, by], [bx + d * 7.5, by - 4.5], [bx + d * 7.5, by + 4.5]); fillStroke(ctx, '#e8504f', ol, 1.2); }
+      circle(ctx, bx, by, 2.2); fillStroke(ctx, '#c43d5c', ol, 1);
+      if (look.hat === 'chef') accessory(ctx, { ...look, accessory: 'chef', hat: null }, hx, hy, blink);
+      else if (look.hat && look.hat !== 'none') accessory(ctx, { ...look, accessory: look.hat, acc: look.hatColor ?? look.acc }, hx, hy, blink);
+      break;
+    }
     case 'chef':
       if (look.hat && look.hat !== 'chef') { // wardrobe hat instead of the chef hat
         accessory(ctx, { ...look, accessory: look.hat, acc: look.hatColor ?? look.acc }, hx, hy, blink);
@@ -488,34 +499,41 @@ export function drawFoodIcon(ctx, type, x, y, s = 1, alpha = 1) {
 // ---------------------------------------------------------------- overlays
 export const SHADOW = 'rgba(120,70,60,0.13)';
 
-/** Flat pickup pad on the floor; pulses while the player can still pick up. Locked pads show their unlock level. */
-export function drawPad(ctx, zone, type, ready, t, flash, lockedLevel = 0) {
-  const { x, y } = zone;
+/** One food's spot at the counter: the plates the chef has put out (up to 3 drawn, then a ×N badge) and,
+ *  while there is something to collect, a glow on the floor where the waiter stands. Locked foods show their level. */
+export function drawPass(ctx, zone, type, ready, canTake, t, flash, lockedLevel = 0) {
+  const { x, y } = zone, cy = y + 38; // counter top
+  ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   if (lockedLevel) {
-    ellipse(ctx, x, y + 10, 46, 20); fillStroke(ctx, '#f1ebed', '#e2d8dc', 2);
-    drawFoodIcon(ctx, type, x, y - 4, 1.1, 0.25);
-    rrect(ctx, x - 20, y + 2, 40, 18, 9); fillStroke(ctx, '#fff', '#e2d8dc', 1.5);
-    ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    rrect(ctx, x - 26, cy - 6, 52, 18, 9); fillStroke(ctx, 'rgba(255,255,255,0.6)', '#e2d8dc', 1.5);
+    drawFoodIcon(ctx, type, x - 10, cy + 3, 0.55, 0.35);
     ctx.fillStyle = '#9a8590';
-    if (canvasIcons.icon) { canvasIcons.icon(ctx, 'lock', x - 7, y + 11, 13); ctx.fillText(lockedLevel, x + 7, y + 12); }
-    else ctx.fillText(`🔒${lockedLevel}`, x, y + 12);
+    if (canvasIcons.icon) { canvasIcons.icon(ctx, 'lock', x + 5, cy + 2, 12); ctx.fillText(lockedLevel, x + 16, cy + 3); }
+    else ctx.fillText(`🔒${lockedLevel}`, x + 8, cy + 3);
     return;
   }
-  ellipse(ctx, x, y + 10, 46, 20);
-  fillStroke(ctx, ready ? '#d6f4e8' : '#eee8ea', ready ? '#86d6b2' : '#ddd3d7', 3);
-  if (ready) {
+  if (ready && canTake) { // floor glow: stand here to collect
+    ellipse(ctx, x, y + 4, 34, 12); fillStroke(ctx, '#d6f4e8', '#86d6b2', 2.5);
     const k = (t * 0.7) % 1;
     ctx.globalAlpha = 1 - k;
-    ellipse(ctx, x, y + 10, 48 + k * 16, 21 + k * 7);
-    ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 2; ctx.stroke();
+    ellipse(ctx, x, y + 4, 36 + k * 14, 13 + k * 5); ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 2; ctx.stroke();
     ctx.globalAlpha = 1;
+  } else {
+    ellipse(ctx, x, y + 4, 30, 10); ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(90,61,74,0.15)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+  }
+  rrect(ctx, x - 30, cy - 4, 60, 16, 8); fillStroke(ctx, 'rgba(255,255,255,0.5)', 'rgba(90,61,74,0.12)', 1); // place mat
+  if (!ready) drawFoodIcon(ctx, type, x, cy + 3, 0.6, 0.3);
+  const shown = Math.min(ready, 3);
+  for (const dx of [[0], [-11, 11], [-17, 0, 17]][shown - 1] ?? []) drawDish(ctx, x + dx, cy - 6, type, 1);
+  if (ready > 3) {
+    rrect(ctx, x + 14, cy - 26, 26, 16, 8); fillStroke(ctx, '#ec5f89', '#fff', 1.5);
+    ctx.fillStyle = '#fff'; ctx.fillText(`×${ready}`, x + 27, cy - 17.5);
   }
   if (flash > 0) {
     ctx.globalAlpha = flash / 0.4;
-    ellipse(ctx, x, y + 10, 52, 24); ctx.fillStyle = '#fff'; ctx.fill();
+    ellipse(ctx, x, cy, 36, 14); ctx.fillStyle = '#fff'; ctx.fill();
     ctx.globalAlpha = 1;
   }
-  drawFoodIcon(ctx, type, x, y - 4 + (ready ? Math.sin(t * 3) * 3 : 0), 1.25, ready ? 1 : 0.45);
 }
 
 /** Tiny badge above the player: only the foods actually carried. Never flipped. */

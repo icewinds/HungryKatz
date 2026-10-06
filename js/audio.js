@@ -6,7 +6,7 @@
 export const SOUND_FILES = {
   music: null, click: null, pickup: null, feed: null, coin: null,
   arrive: null, sad: null, wrong: null, levelUp: null, gameOver: null, buy: null, tip: null,
-  bell: null, gnome: null, // e.g. 'assets/audio/gnome.mp3' to use your own clip
+  bell: null, plate: null, gnome: null, // e.g. 'assets/audio/gnome.mp3' to use your own clip
 };
 
 // note = [freqHz, durationSec, waveType, delaySec = 0, slideToHz = freq]
@@ -26,6 +26,7 @@ const SYNTH = {
   levelUp:  [[523, 0.1, 'square'], [659, 0.1, 'square', 0.1], [784, 0.1, 'square', 0.2],
              [1047, 0.6, 'triangle', 0.32], [1319, 0.6, 'triangle', 0.32], [1568, 0.6, 'triangle', 0.32],
              [523, 0.6, 'sine', 0.32], [2093, 0.2, 'sine', 0.5], [2637, 0.3, 'sine', 0.6]],
+  plate:    [[1320, 0.06, 'triangle'], [1760, 0.12, 'triangle', 0.05]], // plates set on the counter
   // café door bell: two bright "ding-ding" chimes
   bell:     [[1568, 0.5, 'sine'], [3136, 0.25, 'sine', 0.01], [2093, 0.7, 'sine', 0.14], [4186, 0.3, 'sine', 0.15]],
   gameOver: [[523, 0.18, 'triangle'], [440, 0.18, 'triangle', 0.2], [349, 0.18, 'triangle', 0.4], [262, 0.45, 'triangle', 0.6]],

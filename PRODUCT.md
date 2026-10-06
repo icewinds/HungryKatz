@@ -34,7 +34,8 @@ A hand-made, family game: built for one child, grown feature by feature from her
   - Levels with food unlocks and a café that grows from shabby to fancy.
   - Difficulty (Relaxed, Easy, Normal, Hard) and four scenes.
   - Character select, plus an outfit wardrobe.
-  - Upgrades and café pets (send home or bring back).
+  - A kitchen: Chef Biscuit cooks each order (a full tray at a time) and the player is the waiter collecting plates from the counter.
+  - Upgrades (incl. Faster Chef) and café pets (send home or bring back).
   - Combos, VIPs and weekend specials.
   - Daily bonus, sticker book, seasonal decorations, high scores with names, and tap-queue movement.
 - **Debug:** tools exist only behind `?debug`.

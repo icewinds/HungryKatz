@@ -81,6 +81,7 @@ js/
   player.js npc.js npcSpawner.js inventory.js foodStation.js
   upgrades.js highScores.js storage.js audio.js ui.js
   achievements.js     sticker book (achievements + lifetime stats)
+  kitchen.js          Chef Biscuit: cooking orders in batches, carrying plates to the counter
   icons.js            drawn icon set: replaces emoji in all UI text (add new emoji to its EMOJI map)
   art.js              procedural placeholder art (cats, food, café)
   config.js           ALL tuning: layout, spawn stages, upgrades, rewards
@@ -102,6 +103,7 @@ tests/run.js
 - **Stickers:** `STICKERS` in `js/achievements.js` (each has a `done(snapshot)` check).
 - **Outfits:** `OUTFITS` in `js/config.js` (hats reuse cat accessories; aprons are colours).
 - **Seasons:** `seasonFor` in `js/scene.js` picks Halloween (Oct), winter (1 Dec to 6 Jan) and Valentine's (1 to 14 Feb). Preview one with `?season=winter`, `halloween`, `valentine` or `none`.
+- **Kitchen:** `COOK_TIME` (seconds per batch) and `KITCHEN` (stove count by level, chef pace and positions) in `js/config.js`; the logic is `js/kitchen.js`. Chef Biscuit cooks each order as a batch that fills the waiter's tray (Carry upgrade) and puts it on the counter; the Faster Chef upgrade speeds him up.
 - **Save backup:** Settings > Save backup copies a one-line code (`HK1.<checksum>.<base64 save>`, see `Storage.toCode` / `fromCode` in `js/storage.js`); Restore checks it and asks before replacing the café.
 - **Relaxed mode:** the `relaxed` entry in `DIFFICULTY`. Customers wait forever, so there are no misses and no game over.
 - **Combos, VIPs, specials, pets:** `COMBO`, `VIP`, `SPECIALS` (which weekdays), `PETS` and `PET_BONUS` in `js/config.js`.

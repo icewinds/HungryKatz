@@ -1,10 +1,11 @@
 // Game Manager: all gameplay state and rules. No DOM access, so it runs in Node tests.
 // UI/audio react through onEvent(type, data):
-//   pickup, arrive, feed, wrongFood, missed, levelUp, gameOver
+//   pickup, plated, arrive, feed, wrongFood, missed, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN,
 } from './config.js';
+import { Kitchen } from './kitchen.js';
 import { Player } from './player.js';
 import { NPC } from './npc.js';
 import { NpcSpawner } from './npcSpawner.js';
@@ -22,6 +23,7 @@ export class GameManager {
     this.inventory = new Inventory(1);
     this.stations = FOODS.map(f => new FoodStation(f.id, LAYOUT.pads[f.id]));
     this.spawner = new NpcSpawner(undefined, LAYOUT.spots, rng);
+    this.kitchen = new Kitchen(KITCHEN.stovesFor(save.level ?? 1));
     this.npcs = [];
     this.fx = [];
     this.state = 'menu';
@@ -52,6 +54,7 @@ export class GameManager {
     this.target = null;   // stop the cat is walking to
     this.queue = [];      // further tapped stops, in order
     this.spawner.reset();
+    this.kitchen.reset(KITCHEN.stovesFor(this.level));
     this.applyUpgrades();
     this.combo = 0;                 // serves in a row (see COMBO)
     this.lastServeAt = -Infinity;
@@ -62,6 +65,7 @@ export class GameManager {
 
   applyUpgrades() {
     this.inventory.setMax(this.upgrades.value('carry'));
+    this.kitchen?.setBatch(this.upgrades.value('carry')); // the chef cooks a full tray's worth
     this.player.speed = this.upgrades.value('speed');
   }
 
@@ -102,7 +106,13 @@ export class GameManager {
       if (this.queue.length) this.walkTo(this.queue.shift());
     }
 
-    // food stations: each only fills its own food type, and only once it's on the menu
+    // kitchen: the chef cooks orders and puts the plates on the counter
+    for (const d of this.kitchen.update(dt, this.upgrades.value('chef'))) {
+      this.burst(LAYOUT.pads[d.food].x, LAYOUT.kitchenY + 4, 'sparkle', 5, '#ffe08a');
+      this.onEvent('plated', d);
+    }
+
+    // counter: the waiter collects ready plates of each food (only foods on the menu)
     const foods = this.foods;
     for (const s of this.stations) {
       s.update(dt);
@@ -114,8 +124,13 @@ export class GameManager {
         }
         continue;
       }
-      const n = s.tryPickup(this.inventory);
+      const n = this.inventory.add(s.type, this.kitchen.take(s.type, this.inventory.room(s.type)));
+      if (n === 0 && this.inventory.room(s.type) > 0 && s.hintCd <= 0 && this.kitchen.busyWith(s.type)) {
+        s.hintCd = 2.5;
+        this.text(s.zone.x, s.zone.y - 70, 'Cooking...', '#9a8590', 16);
+      }
       if (n > 0) {
+        s.flash = 0.4;
         p.squash = 1;
         this.text(p.x, p.y - 150, `+${n} ${FOOD_LABEL[s.type]}`, '#e0607e', 22);
         this.burst(s.zone.x, s.zone.y - 30, 'sparkle', 6, '#ffb3c6');
@@ -131,6 +146,7 @@ export class GameManager {
       const ev = npc.update(dt);
       if (ev === 'arrived') {
         if (npc.vip) this.text(npc.x, npc.y - 150, '👑 VIP!', '#c99a00', 20);
+        this.kitchen.order(npc); // their dishes go to the chef
         this.onEvent('arrive', { npc });
       }
       else if (ev === 'expired') this.missNpc(npc);
@@ -220,10 +236,11 @@ export class GameManager {
       // otherwise the new level is simply unlocked for next time.
       const before = this.foods, playingTop = this.runLevel === this.save.level;
       this.save.level = lvl;
-      if (playingTop) this.runLevel = lvl;
+      if (playingTop) { this.runLevel = lvl; this.kitchen.setStoves(KITCHEN.stovesFor(lvl)); }
       const newFoods = this.foods.filter(f => !before.includes(f));
       this.onEvent('levelUp', { level: lvl, reward: this.reward, newFoods, cafeGrew: playingTop });
     }
+    this.kitchen.cancel(npc); // served: anything still queued for them is not needed
     this.persist();
     this.onEvent('feed', { npc, reward: r, tip, combo: this.combo, vip: npc.vip });
     return true;
@@ -231,6 +248,7 @@ export class GameManager {
 
   missNpc(npc) {
     npc.leave('sad');
+    this.kitchen.cancel(npc);
     this.missed++;
     this.combo = 0; // a miss breaks the streak
     this.text(npc.x, npc.y - 150, 'Missed!', '#ff5d73', 26);
@@ -248,6 +266,7 @@ export class GameManager {
     this.missed = 0;
     this.npcs = [];
     this.inventory.clear();
+    this.kitchen.reset(KITCHEN.stovesFor(this.level));
     this.player.stop();
     this.persist();
     this.onEvent('gameOver', { score, fed, rank, scores: this.highScores.list() });
@@ -262,6 +281,7 @@ export class GameManager {
     this.npcs = [];
     this.fx = [];
     this.inventory.clear();
+    this.kitchen.reset(KITCHEN.stovesFor(this.level));
     this.player.stop();
     this.persist();
   }

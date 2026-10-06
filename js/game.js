@@ -18,10 +18,10 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPad,
+  drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPass,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
 canvasIcons.text = fillRichText;
@@ -66,6 +66,7 @@ const gm = new GameManager({ save, persist, upgrades, highScores, onEvent });
 function onEvent(type, d) {
   switch (type) {
     case 'pickup': audio.play('pickup'); break;
+    case 'plated': audio.play('plate'); break;
     case 'arrive': audio.play('arrive'); break;
     case 'wrongFood': audio.play('wrong'); break;
     case 'feed':
@@ -321,7 +322,7 @@ function showCharTab(tab) {
   }
 }
 
-/** Game over art: your chef cat by a "See you soon!" sign. */
+/** Game over art: your waiter cat by a "See you soon!" sign. */
 function drawClosedCat() {
   const c = document.getElementById('go-cat'), x = c.getContext('2d');
   x.setTransform(2, 0, 0, 2, 0, 0); // 360x240 backing for a 180x120 box
@@ -423,8 +424,8 @@ const bg = document.createElement('canvas');
 const view = { w: 0, h: 0, dpr: 1, scale: 1, ox: 0, oy: 0 };
 
 // World rows that must never sit under the HUD bar or the carry tray: from the top of the windows to
-// just below the food pads. The kitchen cupboard fronts underneath may tuck behind the tray.
-const VIEW_ROWS = { top: 8, bottom: 822 };
+// the stove top where the chef cooks. The oven fronts underneath may tuck behind the tray.
+const VIEW_ROWS = { top: 8, bottom: 915 };
 const hudInsets = { top: 66, bottom: 74 }; // last measured HUD bar / tray heights (defaults until first shown)
 function measureHud() {
   const bar = document.querySelector('#hud .hud-bar'), tray = document.getElementById('tray');
@@ -521,7 +522,7 @@ function eggTap() {
   eggTaps = 0;
   if (chars.current() === 'ghost') { // tap again to change back
     chars.select(preGhostCat && preGhostCat !== 'ghost' ? preGhostCat : 'mango');
-    ui.banner('😺 Back to the café, chef!');
+    ui.banner('😺 Back to work, waiter!');
     return;
   }
   preGhostCat = chars.current();
@@ -575,7 +576,7 @@ function render(time) {
   const menu = gm.foods;
   for (const s of gm.stations) {
     const locked = menu.includes(s.type) ? 0 : foodUnlockLevel(s.type);
-    drawPad(ctx, s.zone, s.type, !inv.isFull(s.type), time, s.flash, locked);
+    drawPass(ctx, s.zone, s.type, gm.kitchen.readyCount(s.type), inv.room(s.type) > 0, time, s.flash, locked);
   }
   drawFx(ctx, gm.fx, 'under');
   if (gm.target) drawTapQueue(ctx, [gm.target, ...gm.queue]);
@@ -614,6 +615,8 @@ function render(time) {
       drawCat(ctx, a.x + shake, a.y, look, { state: anim, t: time + a.phase, facing: a.facing, squash: a.squash, mood: a.mood, back: a.fromBehind });
     }
   }
+
+  drawKitchen(ctx, scene, gm.kitchen, time); // chef + stoves: in front of everything on the café floor
 
   // overlays: drawn after all cats, never flipped
   for (const n of npcs) {
@@ -662,14 +665,17 @@ function drawFirstGameHint(time) {
   const cat = hasMilk && gm.npcs.find(n => n.state === 'waiting');
   const pad = LAYOUT.pads.milk;
   if (hasMilk && !cat) return;
-  const [x, y, label] = hasMilk ? [cat.x, cat.y - 150, 'Bring it here!'] : [pad.x, pad.y - 58, 'Grab milk!'];
+  const milkReady = gm.kitchen.readyCount('milk') > 0;
+  if (!hasMilk && !milkReady && !gm.kitchen.busyWith('milk')) return; // nothing ordered yet
+  const [x, y, label] = hasMilk ? [cat.x, cat.y - 150, 'Bring it here!']
+    : [pad.x, pad.y - 58, milkReady ? 'Grab the milk!' : 'Chef is cooking...'];
   const by = y - (reduceMotion.matches ? 0 : Math.abs(Math.sin(time * 4)) * 8);
   ctx.save();
   ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(x - 15, by - 22); ctx.lineTo(x + 15, by - 22); ctx.lineTo(x, by); ctx.closePath();
   ctx.fillStyle = '#ec5f89'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke(); ctx.fill();
   ctx.font = `400 21px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  const lx = Math.min(Math.max(x, 70), WORLD.W - 70);
+  const lx = Math.min(Math.max(x, 100), WORLD.W - 100); // keep the whole label on screen
   ctx.lineWidth = 5; ctx.strokeText(label, lx, by - 38); ctx.fillStyle = '#c43d5c'; ctx.fillText(label, lx, by - 38);
   ctx.restore();
 }
