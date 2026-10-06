@@ -537,6 +537,38 @@ export function drawPass(ctx, zone, type, ready, canTake, t, flash, lockedLevel 
 }
 
 /** Tiny badge above the player: only the foods actually carried. Never flipped. */
+/** The waiter's silver tray. Empty: tucked under the arm, behind the body (draw before the cat).
+ *  Carrying food: held up on one paw beside the head with a little plate of each food (draw after the cat). */
+export function drawWaiterTray(ctx, x, y, facing, look, inv, t, walking, held) {
+  const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
+  if (held !== items.length > 0) return;
+  const s = look.size || 1, bob = walking ? -Math.abs(Math.sin(t * 11)) * 3 : Math.sin(t * 2.4) * 0.8;
+  ctx.save();
+  ctx.translate(x, y); ctx.scale(s, s);
+  ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+  if (!held) { // tucked: seen edge-on behind the far side of the body
+    ctx.save(); ctx.translate(-facing * 15, -30 + bob); ctx.rotate(facing * 0.25);
+    ellipse(ctx, 0, 0, 4, 17); fillStroke(ctx, '#dfe3ea', '#9aa3b2', 1.6);
+    ctx.restore(); ctx.restore();
+    return;
+  }
+  const tx = facing * 30, ty = -66 + bob;
+  ctx.strokeStyle = look.dark; ctx.lineWidth = 9;                       // arm up to the tray
+  ctx.beginPath(); ctx.moveTo(facing * 13, -30 + bob); ctx.quadraticCurveTo(facing * 30, -38 + bob, tx, ty + 4); ctx.stroke();
+  ctx.strokeStyle = look.fur; ctx.lineWidth = 6; ctx.stroke();
+  ellipse(ctx, tx, ty + 3, 23, 6.5); fillStroke(ctx, '#c7ccd6', '#8e97a6', 1.6); // tray rim
+  ellipse(ctx, tx, ty + 1.5, 20, 5); fillStroke(ctx, '#eef1f6', null);           // tray top
+  ellipse(ctx, tx - 7, ty, 7, 1.6); ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill(); // shine
+  const shown = items.slice(0, 3), gap = shown.length > 1 ? 26 / (shown.length - 1) : 0;
+  shown.forEach((k, i) => {
+    const px = tx - (shown.length > 1 ? 13 : 0) + i * gap;
+    ellipse(ctx, px, ty + 1, 8, 3); fillStroke(ctx, '#fff', '#f0d0dc', 1);
+    drawFoodIcon(ctx, k, px, ty - 5, 0.5);
+  });
+  circle(ctx, tx, ty + 8, 4.5); fillStroke(ctx, look.light ?? look.fur, look.dark, 1.4); // paw under the tray
+  ctx.restore();
+}
+
 export function drawCarryBadge(ctx, x, y, inv) {
   const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
   if (!items.length) return;

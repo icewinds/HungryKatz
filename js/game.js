@@ -18,7 +18,7 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawCat, drawFoodIcon, drawCarryBadge, drawRequest, drawPass,
+  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
@@ -606,7 +606,10 @@ function render(time) {
     } else if (a.table) {
       drawTable(ctx, a.table, scene, time);
     } else if (a.chef) {
-      drawCat(ctx, p.x, p.y, playerOutfit(), { state: p.state, t: time, facing: p.facing, squash: p.squash });
+      const look = playerOutfit(), walking = p.state === 'walk';
+      drawWaiterTray(ctx, p.x, p.y, p.facing, look, inv, time, walking, false); // empty: tucked behind
+      drawCat(ctx, p.x, p.y, look, { state: p.state, t: time, facing: p.facing, squash: p.squash });
+      drawWaiterTray(ctx, p.x, p.y, p.facing, look, inv, time, walking, true);  // carrying: held up
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 && !reduceMotion.matches ? Math.sin(time * 40) * 1.2 : 0;
       const anim = speaking.has(a) ? 'talk' : a.anim;
