@@ -2,7 +2,7 @@
 // PWA install/offline hooks and the debug panel.
 
 import {
-  WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
+  WORLD, LAYOUT, KITCHEN, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
   REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES,
 } from './config.js';
@@ -496,14 +496,14 @@ const ctx = canvas.getContext('2d');
 const bg = document.createElement('canvas');
 const view = { w: 0, h: 0, dpr: 1, scale: 1, ox: 0, oy: 0 };
 
-// World rows that must never sit under the HUD bar or the carry tray: from the top of the windows to
-// the stove top where the chef cooks. The oven fronts underneath may tuck behind the tray.
-const VIEW_ROWS = { top: 8, bottom: 915 };
-const hudInsets = { top: 66, bottom: 74 }; // last measured HUD bar / tray heights (defaults until first shown)
+// World rows that must always be on screen: from the top of the windows to just below the stove top
+// where the chef cooks (the oven fronts underneath may run off the bottom on wide phones).
+const VIEW_ROWS = { top: 8, bottom: KITCHEN.stoveTop + 25 };
+const hudInsets = { left: 92, right: 92 }; // last measured side rails (defaults until first shown)
 function measureHud() {
-  const bar = document.querySelector('#hud .hud-bar'), tray = document.getElementById('tray');
-  if (bar?.offsetHeight) hudInsets.top = bar.getBoundingClientRect().bottom + 4;
-  if (tray?.offsetHeight) hudInsets.bottom = innerHeight - tray.getBoundingClientRect().top + 4;
+  const bar = document.querySelector('#hud .hud-bar'), tray = document.getElementById('tray-items');
+  if (bar?.offsetWidth) hudInsets.left = bar.getBoundingClientRect().right + 6;
+  if (tray?.offsetWidth) hudInsets.right = innerWidth - tray.getBoundingClientRect().left + 6;
 }
 
 function resize() {
@@ -512,13 +512,13 @@ function resize() {
   Object.assign(view, { w, h, dpr });
   canvas.width = Math.round(w * dpr);
   canvas.height = Math.round(h * dpr);
-  // Fit the important rows between the HUD bar and the tray (so the windows are never hidden on phones),
-  // proportions preserved; anything outside that band can run under the bars or into the letterbox.
+  // Fit the café between the score rail (left) and the carry rail (right), keeping the important rows
+  // on screen top to bottom; proportions preserved, anything else runs into the letterbox.
   measureHud();
-  const top = hudInsets.top, band = Math.max(1, h - hudInsets.bottom - top), rows = VIEW_ROWS.bottom - VIEW_ROWS.top;
-  view.scale = Math.min(w / WORLD.W, band / rows);
-  view.ox = (w - WORLD.W * view.scale) / 2;
-  view.oy = top - VIEW_ROWS.top * view.scale + (band - rows * view.scale) / 2;
+  const left = hudInsets.left, band = Math.max(1, w - hudInsets.right - left), rows = VIEW_ROWS.bottom - VIEW_ROWS.top;
+  view.scale = Math.min(band / WORLD.W, h / rows);
+  view.ox = left + (band - WORLD.W * view.scale) / 2;
+  view.oy = -VIEW_ROWS.top * view.scale + (h - rows * view.scale) / 2;
   buildBackground();
 }
 
@@ -872,6 +872,10 @@ function frame(now) {
 }
 
 // ---------------------------------------------------------------- lifecycle
+// Landscape only: held upright, a card asks to turn the phone (and a running game pauses).
+matchMedia('(orientation: portrait)').addEventListener('change', e => {
+  if (e.matches && gm.state === 'playing' && !gm.paused) { gm.paused = true; ui.show('pause'); }
+});
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     audio.suspend();

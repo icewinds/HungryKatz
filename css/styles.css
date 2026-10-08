@@ -705,12 +705,6 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 .menu-grid .btn[data-action="openSettings"] { background-color: #dcf2e7; border-color: #9fd6bd; box-shadow: 0 3px 0 #9fd6bd; }
 .menu-grid .btn:active { box-shadow: none; }
 
-/* Short screens (phones): trim the hero so the whole menu fits */
-@media (max-height: 760px) and (orientation: portrait) {
-  .menu-hero { margin-top: -6px; }
-  #menu-window { width: 200px; height: 180px; }
-  #menu-cat { height: 240px; width: 188px; left: -27px; }
-}
 /* Landscape: logo + cat on the left, Play / score / tagline on the right, buttons along the bottom */
 @media (orientation: landscape) and (max-height: 600px) {
   #screen-menu .panel {
@@ -730,3 +724,35 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
   #screen-menu .menu-grid > .btn { grid-column: auto; justify-self: stretch; min-width: 0; }
   #screen-menu #install-hint { display: none; }
 }
+
+/* ---------- Landscape: score rail on the left, carry rail on the right ---------- */
+:root { --rail: 84px; }
+#hud {
+  top: 0; bottom: 0; right: auto;
+  width: calc(env(safe-area-inset-left) + var(--rail)); max-width: none; margin: 0;
+  padding: calc(env(safe-area-inset-top) + 8px) 6px 8px calc(env(safe-area-inset-left) + 6px);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.hud-bar { flex-direction: column; gap: 10px; padding: 10px 4px; }
+.hud-bar .spacer { display: none; }
+.hud-bar .stat.coins { flex-direction: column; gap: 3px; }
+.hud-bar .stat b { font-size: 17px; }
+.score { align-items: center; }
+.hud-bar [data-action="pause"] { position: fixed; top: calc(env(safe-area-inset-top) + 8px); right: calc(env(safe-area-inset-right) + (var(--rail) - 40px) / 2); box-shadow: var(--shadow); }
+.paws { display: grid; grid-template-columns: repeat(2, 16px); justify-content: center; gap: 4px; margin: 0; }
+#tray {
+  top: 0; bottom: 0; left: auto;
+  width: calc(env(safe-area-inset-right) + var(--rail)); max-width: none; margin: 0;
+  flex-direction: column; gap: 8px;
+  padding: calc(env(safe-area-inset-top) + 58px) calc(env(safe-area-inset-right) + 6px) calc(env(safe-area-inset-bottom) + 8px) 6px;
+}
+.tray-items { flex-direction: column; justify-content: center; gap: 6px; padding: 8px 4px; }
+.btn-upgrade { min-height: 52px; padding: 6px 2px; font-size: 15px; }
+
+/* Held upright: ask for landscape */
+.rotate { display: none; position: fixed; inset: 0; z-index: 100; place-items: center; padding: 16px; background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
+@media (orientation: portrait) { .rotate { display: grid; } }
+.rotate .panel { animation: none; }
+.rotate-phone { width: 44px; height: 72px; margin: 4px auto 14px; border: 5px solid var(--pink); border-radius: 10px; animation: turn 2.4s ease-in-out infinite; }
+@keyframes turn { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
+@media (prefers-reduced-motion: reduce) { .rotate-phone { animation: none; transform: rotate(-90deg); } }

@@ -1,7 +1,7 @@
-// Central tuning knobs. All positions are in WORLD units: a fixed 540x960
-// portrait world that game.js scales to fit any screen.
+// Central tuning knobs. All positions are in WORLD units: a fixed 1280x780
+// landscape world that game.js scales to fit any screen.
 
-export const WORLD = { W: 540, H: 960 };
+export const WORLD = { W: 1280, H: 780 };
 
 // The menu. Food i unlocks at restaurant level 1 + i * FOOD_UNLOCK_EVERY
 // (milk L1, cat food L3, fish L5, ...). `bonus` = extra coins per serve.
@@ -17,39 +17,40 @@ export const foodUnlockLevel = id => 1 + FOODS.findIndex(f => f.id === id) * FOO
 /** Food ids on the menu at a restaurant level, in unlock order. */
 export const foodsForLevel = level => FOODS.filter(f => foodUnlockLevel(f.id) <= level).map(f => f.id);
 
-// Café floor plan: back wall + window bar (top), up to five round tables (middle),
+// Café floor plan: back wall + window bar (top), a row of up to five round tables (middle),
 // kitchen counter with one pickup pad per food (bottom). Door on the left wall.
 // The café starts small and gains a table at the levels listed below.
 const BAR_Y = 258;                       // feet of cats sitting at the window bar
+const KITCHEN_Y = 590;                  // top of the kitchen counter
 export const TABLES = [
-  { x: 270, y: 520, level: 1 },          // the first, slightly wobbly table
-  { x: 130, y: 420, level: 3 },
-  { x: 410, y: 420, level: 5 },
-  { x: 130, y: 615, level: 7 },
-  { x: 410, y: 615, level: 9 },
+  { x: 640, y: 440, level: 1 },          // the first, slightly wobbly table
+  { x: 390, y: 410, level: 3 },
+  { x: 890, y: 410, level: 5 },
+  { x: 160, y: 455, level: 7 },
+  { x: 1120, y: 455, level: 9 },
 ];
 const SEAT_DX = 66;                      // side seats sit either side of each table
 const SEAT_BACK = -34, SEAT_FRONT = 30;  // seat behind the table (faces us) and in front (back to us)
 const blockerOf = t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 });
 
 export const LAYOUT = {
-  walk: { minX: 26, maxX: 514, minY: 248, maxY: 742 }, // where the player may stand (up to the kitchen counter)
-  playerStart: { x: 270, y: 700 },
+  walk: { minX: 26, maxX: 1254, minY: 248, maxY: KITCHEN_Y - 28 }, // where the player may stand (up to the kitchen counter)
+  playerStart: { x: 640, y: 540 },
   entry: { x: -70, y: 330 },  // NPCs spawn here, off-screen left
   door: { x: 40, y: 330 },    // first waypoint just inside the door
   exit: { x: -80, y: 330 },   // NPCs are removed after reaching this
-  windowBar: { x: 90, y: 168, w: 360, h: 54 },
+  windowBar: { x: 460, y: 168, w: 360, h: 54 },
   tables: TABLES,
-  kitchenY: 770,              // top of the counter where the chef puts ready plates
+  kitchenY: KITCHEN_Y,        // top of the counter where the chef puts ready plates
   // Solid furniture for ALL tables (feet can't enter); see blockersForLevel for the active ones
   blockers: TABLES.map(blockerOf),
   // One spot per food along the counter: plates appear on the counter, the waiter collects them standing here
-  pads: Object.fromEntries(FOODS.map((f, i) => [f.id, { x: 70 + i * 100, y: 744, r: 42 }])),
+  pads: Object.fromEntries(FOODS.map((f, i) => [f.id, { x: 340 + i * 150, y: KITCHEN_Y - 26, r: 42 }])),
   // Waiting spots; NPCs stand at (x, y) = feet position, `face` = sprite direction.
   // Spots come in pairs (linked via `partner` below) that chat: bar neighbours, the two side seats
   // of a table, and its back + front seats. `back` = seated with their back to us.
   spots: [
-    ...[150, 230, 310, 390].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1, level: 1, back: true })),
+    ...[520, 600, 680, 760].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1, level: 1, back: true })),
     ...TABLES.flatMap((t, i) => [
       { id: `T${i + 1}a`, row: 'table', table: t, x: t.x - SEAT_DX, y: t.y, face: 1, level: t.level },
       { id: `T${i + 1}b`, row: 'table', table: t, x: t.x + SEAT_DX, y: t.y, face: -1, level: t.level },
@@ -182,8 +183,8 @@ export const CLEARING = {
   coinPerPlate: 1,               // the waiter earns this for each plate returned
   cleanerSpeed: 130,
   cleanerStack: 4,               // plates Dusty carries before heading to the counter
-  cleanerHome: { x: 470, y: 700 },
-  dropOff: { x: 270, y: 730 },   // where Dusty hands plates in
+  cleanerHome: { x: 1200, y: 530 },
+  dropOff: { x: 640, y: 560 },   // where Dusty hands plates in
 };
 export const STAFF = {
   cleaner: { icon: '🧹', name: 'Dusty the cleaner', cost: 500, level: 5, desc: 'Clears empty plates from the tables for you.' },
@@ -217,18 +218,18 @@ export const MAX_MISSED = 10;
 export const FOOD_SOURCE = { milk: 'fridge', cupcake: 'oven' }; // everything else cooks on a stove
 export const COOK_TIME = { milk: 1.0, catfood: 1.8, fish: 2.4, sushi: 2.8, cupcake: 3.4 };
 export const KITCHEN = {
-  passY: 836,      // chef's feet while putting plates on the counter (back to us)
-  stoveY: 902,     // chef's feet while cooking (facing us, behind the stove top)
-  stoveTop: 890,   // top edge of the stove counter
-  home: { x: 270, y: 902 },
-  fridge: { x: 30, stand: { x: 80, y: 866 } },  // left end, next to the milk spot on the counter
-  oven: { x: 510, stand: { x: 460, y: 866 } },   // right end, next to the cupcakes
+  passY: KITCHEN_Y + 66,     // chef's feet while putting plates on the counter (back to us)
+  stoveY: KITCHEN_Y + 132,   // chef's feet while cooking (facing us, behind the stove top)
+  stoveTop: KITCHEN_Y + 120, // top edge of the stove counter
+  home: { x: 640, y: KITCHEN_Y + 132 },
+  fridge: { x: 290, stand: { x: 340, y: KITCHEN_Y + 96 } },  // left of the milk spot on the counter
+  oven: { x: 990, stand: { x: 940, y: KITCHEN_Y + 96 } },    // right of the cupcakes
   chefSpeed: 260,  // world px per second
   plateTime: 0.3,  // seconds to set plates down
   /** Stove x positions: 2 stoves, 3 once the café is cosy (L5), 4 when it is fancy (L9). */
   stovesFor: level => {
     const n = level >= 9 ? 4 : level >= 5 ? 3 : 2;
-    return Array.from({ length: n }, (_, i) => 270 + (i - (n - 1) / 2) * 104);
+    return Array.from({ length: n }, (_, i) => 640 + (i - (n - 1) / 2) * 104);
   },
 };
 export const FEED_RADIUS = 46;   // player<->NPC contact distance

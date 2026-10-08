@@ -284,7 +284,7 @@ test('pathing: walks around tables instead of getting stuck', () => {
     [[topL.x, topL.y - 60], [topL.x, topL.y + 40]],       // straight through a top table
     [[mid.x - 120, mid.y - 10], [mid.x + 120, mid.y - 10]], // across the middle table
     [[topR.x - 100, topR.y - 10], [topR.x + 90, topR.y - 10]], // across a top table to the wall
-    [[270, 700], [150, 300]],                             // pads area -> window bar
+    [[640, 545], [560, 300]],                             // pads area -> window bar
     [[60, 300], [LAYOUT.pads.cupcake.x, LAYOUT.pads.cupcake.y - 20]], // door -> far pad
   ];
   for (const [[sx, sy], [tx, ty]] of trips) {
@@ -721,7 +721,7 @@ test('seasons: decorations by date', () => {
 test('taps queue up: the cat visits every tapped spot in order', () => {
   const { gm } = setup();
   park(gm);
-  const stops = [[150, 600], [400, 600], [270, 700]], seen = [];
+  const stops = [[300, 530], [1000, 530], [640, 545]], seen = [];
   for (const [x, y] of stops) gm.tap(x, y);
   assert.equal(gm.queue.length, 2);
   for (let i = 0; i < 60 * 10; i++) {
@@ -731,8 +731,8 @@ test('taps queue up: the cat visits every tapped spot in order', () => {
   }
   assert.deepEqual(seen, [0, 1, 2]);
   assert.equal(gm.target, null);
-  gm.tap(150, 600); gm.tap(400, 600);
-  gm.tap(200, 650, false); // dragging steers directly and drops the queue
+  gm.tap(300, 530); gm.tap(1000, 530);
+  gm.tap(500, 540, false); // dragging steers directly and drops the queue
   assert.equal(gm.queue.length, 0);
 });
 

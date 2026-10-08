@@ -6,6 +6,9 @@ import { LAYOUT, WORLD, KITCHEN, decorStage, tablesForLevel, spotsForLevel } fro
 import { ellipse, circle, rrect, tri, fillStroke, drawFoodIcon, drawHeart, hexRgb, INK, SHADOW, FONT, drawCat, drawDish, KITCHEN_CHEF } from './art.js';
 
 const TAU = Math.PI * 2;
+// Scattered decorations were first placed on a 540-wide, 960-tall café: spread them over this one.
+const sx = x => x * WORLD.W / 540;
+const fy = y => 258 + (y - 258) * (LAYOUT.walk.maxY - 258) / 484;
 
 export const THEMES = {
   strawberry: {
@@ -97,8 +100,9 @@ export function drawBackground(ctx, sc) {
   }
   if (st === 0) shabbyFloor(ctx);
   if (st >= 2) { // rug under the first table
-    ellipse(ctx, 270, 530, 150, 74); ctx.fillStyle = p.rug; ctx.fill();
-    ellipse(ctx, 270, 530, 136, 64); ctx.setLineDash([10, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
+    const rt = LAYOUT.tables[0];
+    ellipse(ctx, rt.x, rt.y + 10, 170, 64); ctx.fillStyle = p.rug; ctx.fill();
+    ellipse(ctx, rt.x, rt.y + 10, 156, 54); ctx.setLineDash([10, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 3; ctx.stroke(); ctx.setLineDash([]);
   }
 
   // back wall
@@ -130,7 +134,7 @@ export function drawBackground(ctx, sc) {
   rrect(ctx, b.x + 4, b.y + 3, b.w - 8, 3, 1.5); fillStroke(ctx, p.barHi, null);                       // sheen
   if (st === 0) { // scratches
     ctx.strokeStyle = 'rgba(80,50,30,0.25)'; ctx.lineWidth = 1.5;
-    for (const [x, y, l] of [[130, 182, 30], [250, 190, 22], [360, 178, 34]]) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + l, y + 3); ctx.stroke(); }
+    for (const [x, y, l] of [[b.x + 40, 182, 30], [b.x + 160, 190, 22], [b.x + 270, 178, 34]]) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + l, y + 3); ctx.stroke(); }
   }
   if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(b.x - 4, b.y + 21, b.w + 8, 2); } // gold edge trim
 
@@ -214,19 +218,22 @@ function cardboardBoxes(ctx) {
     ctx.beginPath(); ctx.moveTo(x, y - h); ctx.lineTo(x + w, y - h); ctx.lineTo(x + w - 2, y - h + 9); ctx.lineTo(x + 2, y - h + 9); ctx.closePath();
     fillStroke(ctx, '#c99560', EDGE, 1.2);                                                                // front flap folded down
   };
+  ctx.save(); ctx.translate(WORLD.W - 540, 0); // the right-hand corner
   // flattened box leaning on the right wall, then the stack
   ctx.beginPath(); ctx.moveTo(522, 268); ctx.lineTo(540, 270); ctx.lineTo(540, 196); ctx.lineTo(530, 194); ctx.closePath();
   fillStroke(ctx, SIDE, EDGE, 1.2);
   ellipse(ctx, 494, 268, 40, 6); ctx.fillStyle = SHADOW; ctx.fill();
   box(462, 268, 46, 30, 14, false);
   box(468, 236, 34, 22, 11, true);
+  ctx.restore();
 }
 
 /** An old broom leaning on the right wall: frayed bristles, taped handle. */
 function oldBroom(ctx) {
-  ellipse(ctx, 519, 694, 16, 4); ctx.fillStyle = SHADOW; ctx.fill();
+  const bx = WORLD.W - 22, by = LAYOUT.walk.maxY - 48;
+  ellipse(ctx, bx + 1, by + 2, 16, 4); ctx.fillStyle = SHADOW; ctx.fill();
   ctx.save();
-  ctx.translate(518, 692); ctx.rotate(0.2); // leans right, against the wall
+  ctx.translate(bx, by); ctx.rotate(0.2); // leans right, against the wall
   rrect(ctx, -2.5, -128, 5, 112, 2.5); fillStroke(ctx, '#b07a48', '#7d5230', 1);                      // handle
   clipped(ctx, () => rrect(ctx, -2.5, -128, 5, 112, 2.5), () => woodGrain(ctx, -2.5, -128, 5, 112, 11, true));
   rrect(ctx, -3.2, -96, 6.4, 7, 1.5); fillStroke(ctx, '#d8d0c4', '#a89a88', 0.8);                     // old tape wrap
@@ -241,24 +248,28 @@ function oldBroom(ctx) {
 
 function shabbyFloor(ctx) {
   ctx.fillStyle = 'rgba(110,80,50,0.10)';
-  for (const [x, y, rx, ry] of [[90, 300, 38, 14], [430, 480, 44, 16], [200, 680, 30, 11], [470, 300, 26, 10]]) { ellipse(ctx, x, y, rx, ry); ctx.fill(); }
+  for (const [x, y, rx, ry] of [[90, 300, 38, 14], [430, 480, 44, 16], [200, 680, 30, 11], [470, 300, 26, 10]]) { ellipse(ctx, sx(x), fy(y), rx, ry); ctx.fill(); }
   ctx.strokeStyle = 'rgba(80,55,35,0.35)'; ctx.lineWidth = 1.5;
-  for (const [x, y] of [[320, 360], [60, 560], [380, 700]]) { // cracks
+  for (const [x0, y0] of [[320, 360], [60, 560], [380, 700]]) { // cracks
+    const x = sx(x0), y = fy(y0);
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 10, y + 6); ctx.lineTo(x + 18, y + 3); ctx.lineTo(x + 30, y + 10); ctx.stroke();
   }
-  rrect(ctx, 236, 372, 70, 14, 2); ctx.fillStyle = 'rgba(70,45,30,0.18)'; ctx.fill(); // loose plank
+  rrect(ctx, sx(236), fy(372), 70, 14, 2); ctx.fillStyle = 'rgba(70,45,30,0.18)'; ctx.fill(); // loose plank
 }
 
 function shabbyWall(ctx, p) {
   // peeling patches
   ctx.fillStyle = 'rgba(255,255,255,0.35)';
-  for (const [x, y] of [[236, 14], [470, 128], [8, 132]]) {
+  for (const [x0, y] of [[236, 14], [470, 128], [8, 132]]) {
+    const x = sx(x0);
     ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 22, y + 4); ctx.lineTo(x + 16, y + 18); ctx.lineTo(x + 4, y + 22); ctx.closePath(); ctx.fill();
   }
   // crack and stain
   ctx.strokeStyle = 'rgba(70,50,40,0.35)'; ctx.lineWidth = 1.5;
+  ctx.save(); ctx.translate(sx(300) - 300, 0);
   ctx.beginPath(); ctx.moveTo(300, 100); ctx.lineTo(308, 110); ctx.lineTo(303, 118); ctx.lineTo(312, 126); ctx.stroke();
-  ellipse(ctx, 230, 150, 16, 8); ctx.fillStyle = 'rgba(110,80,50,0.12)'; ctx.fill();
+  ctx.restore();
+  ellipse(ctx, sx(230), 150, 16, 8); ctx.fillStyle = 'rgba(110,80,50,0.12)'; ctx.fill();
   cobweb(ctx, 0, 0, 1);
   cobweb(ctx, WORLD.W, 0, -1);
 }
@@ -269,10 +280,17 @@ function cobweb(ctx, x, y, dir) {
   for (const r of [12, 22, 32]) { ctx.beginPath(); ctx.arc(x, y, r, dir > 0 ? 0.1 : Math.PI - 1.45, dir > 0 ? 1.45 : Math.PI - 0.1); ctx.stroke(); }
 }
 
+/** A string sagging between hooks every 270 units across the wall, starting at height y0. */
+function garland(ctx, y0, sag) {
+  ctx.beginPath(); ctx.moveTo(0, y0);
+  for (let x = 0; x < WORLD.W; x += 270) ctx.quadraticCurveTo(x + 135, y0 + sag, x + 270, y0);
+  ctx.stroke();
+}
+
 function bunting(ctx, p) {
   ctx.strokeStyle = 'rgba(90,61,74,0.3)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(0, 6); ctx.quadraticCurveTo(135, 20, 270, 6); ctx.quadraticCurveTo(405, 20, 540, 6); ctx.stroke();
-  for (let i = 0; i < 18; i++) {
+  garland(ctx, 6, 14);
+  for (let i = 0; i < Math.ceil(WORLD.W / 30); i++) {
     const fx = 8 + i * 30, sag = Math.sin(((fx % 270) / 270) * Math.PI) * 7;
     tri(ctx, [fx, 6 + sag], [fx + 20, 6 + sag], [fx + 10, 22 + sag]);
     ctx.fillStyle = p.bunting[i % p.bunting.length]; ctx.fill();
@@ -293,6 +311,7 @@ function kitchen(ctx, sc) {
   rrect(ctx, ox - 26, y + 36, 52, uh, 7); fillStroke(ctx, '#ece6e8', '#c9bfc4', 3);
   for (const dx of [-12, 0, 12]) { circle(ctx, ox + dx, y + 46, 3.5); fillStroke(ctx, '#d8cfd3', '#a89aa1', 1); } // dials
   rrect(ctx, ox - 20, y + 58, 40, 4, 2); fillStroke(ctx, st >= 3 ? '#e3b94f' : '#a89aa1', null);                  // handle
+  for (const x0 of [40, WORLD.W - 220]) pantry(ctx, x0, y + 34, st);
   // oven cabinets along the bottom (the stove top above them is drawn live, in front of the chef)
   rrect(ctx, -6, cab, W + 12, H - cab + 6, 4); fillStroke(ctx, p.counter, p.counterEdge, 2);
   for (const sx of KITCHEN.stovesFor(sc.level)) {
@@ -306,6 +325,25 @@ function kitchen(ctx, sc) {
   rrect(ctx, -6, y + 16, W + 12, 8, 3); fillStroke(ctx, p.counterEdge, null);
   if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(0, y + 15, W, 2); }
   if (st === 0) { ctx.fillStyle = 'rgba(110,80,50,0.15)'; ellipse(ctx, 224, y + 10, 22, 5); ctx.fill(); } // stain
+}
+
+/** Kitchen shelves at the far ends: jars, a sack of flour and a pot plant. */
+function pantry(ctx, x, y, st) {
+  for (const sy of [y + 26, y + 70]) {
+    rrect(ctx, x, sy, 180, 7, 2); fillStroke(ctx, '#d9a878', '#b8865a', 1.5);
+    for (const bx of [x + 14, x + 164]) { ctx.fillStyle = '#b8865a'; ctx.fillRect(bx, sy + 7, 3, 8); }
+  }
+  const jars = ['#ffd3df', '#d6f4e8', '#fff1c2', '#dbe9ff', '#eadcff'];
+  for (const [i, c] of jars.entries()) {
+    const jx = x + 22 + i * 32, jy = y + 26;
+    rrect(ctx, jx - 9, jy - 22, 18, 22, 4); fillStroke(ctx, 'rgba(255,255,255,0.75)', '#c9bfc4', 1.2);
+    rrect(ctx, jx - 7, jy - 14, 14, 13, 3); fillStroke(ctx, c, null);
+    rrect(ctx, jx - 10, jy - 26, 20, 5, 2); fillStroke(ctx, st >= 3 ? '#e3b94f' : '#b8865a', null);
+  }
+  rrect(ctx, x + 20, y + 42, 34, 28, 8); fillStroke(ctx, '#f1e4cc', '#c9b48e', 1.5);           // flour sack
+  ctx.fillStyle = '#c9b48e'; ctx.font = `400 9px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('FLOUR', x + 37, y + 58);
+  rrect(ctx, x + 130, y + 52, 22, 18, 3); fillStroke(ctx, '#f6a07c', '#c97a5a', 1.2);            // pot plant
+  ctx.fillStyle = '#7fd1a1'; for (const [dx, dy] of [[-6, -6], [6, -7], [0, -12]]) { circle(ctx, x + 141 + dx, y + 50 + dy, 6); ctx.fill(); }
 }
 
 // ---------------------------------------------------------------- tables (drawn per frame for depth)
@@ -346,10 +384,10 @@ export const sceneTables = sc => tablesForLevel(sc.level);
 
 // ---------------------------------------------------------------- live wall: sky, clock, lights
 /** Tap area (world coords) of the top-left window-sill plant: 5 taps = secret Ghost cat. */
-export const EGG_POT = { x: 28, y: 76, w: 56, h: 48 };
+export const EGG_POT = { x: 122, y: 76, w: 56, h: 48 }; // the first window's sill
 /** Seaside Diner only: a garden gnome on the right window sill who screams when tapped. */
-export const GNOME_SPOT = { x: 446, y: 70, w: 50, h: 52 };
-export const gnome = { x: 471, y: 116, screamAt: -1e9 }; // screamAt = render time (s) of the last tap
+export const GNOME_SPOT = { x: 1046, y: 70, w: 50, h: 52 }; // the last window's sill
+export const gnome = { x: 1071, y: 116, screamAt: -1e9 }; // screamAt = render time (s) of the last tap
 
 function drawGnome(ctx, t) {
   const since = t - gnome.screamAt, scream = since >= 0 && since < 0.8;
@@ -376,12 +414,15 @@ function drawGnome(ctx, t) {
   tri(ctx, [-7.5, -22], [7.5, -22], [2, -42]); fillStroke(ctx, '#e8504f', '#c43d3d', 1.2); // hat
   ctx.restore();
 }
-const WINDOWS = [{ x: 26, y: 22, w: 194, h: 96 }, { x: 320, y: 22, w: 194, h: 96 }];
+const WINDOWS = [{ x: 120, y: 22, w: 240, h: 96 }, { x: 520, y: 22, w: 240, h: 96 }, { x: 920, y: 22, w: 240, h: 96 }];
+const CLOCK_X = 440; // between the first two windows
 // Clouds live in one strip spanning both windows, so they drift from pane to pane.
 const CLOUDS = [
   { x: 0, y: 52, s: 1, v: 9 }, { x: 150, y: 78, s: 0.75, v: 6 }, { x: 290, y: 44, s: 1.15, v: 8 },
-  { x: 420, y: 84, s: 0.7, v: 5 }, { x: 520, y: 60, s: 0.9, v: 7 },
+  { x: 420, y: 84, s: 0.7, v: 5 }, { x: 520, y: 60, s: 0.9, v: 7 }, { x: 700, y: 50, s: 1, v: 8 },
+  { x: 860, y: 80, s: 0.8, v: 6 }, { x: 1010, y: 56, s: 1.1, v: 9 }, { x: 1180, y: 74, s: 0.75, v: 5 },
 ];
+const CLOUD_LOOP = WORLD.W + 60;
 // Sky colour through a day (local hour -> colour), interpolated.
 // Purple/pink steps at dawn and dusk keep the blend from going muddy grey.
 const SKY = [
@@ -402,7 +443,7 @@ export function drawWallLive(ctx, t, sc, now = new Date()) {
   const sky = skyAt(now);
   for (const [i, win] of WINDOWS.entries()) { drawPane(ctx, win, i, t, sc, sky); drawWindowFrame(ctx, win, i, sc); }
   // wall clock showing the real time
-  const cx = 270, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
+  const cx = CLOCK_X, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
   circle(ctx, cx, cy, 25); fillStroke(ctx, '#fff', st >= 3 ? '#e3b94f' : p.clockRim, 4);
   ctx.strokeStyle = INK; ctx.lineCap = 'round';
   const hand = (a, len, lw) => {
@@ -440,11 +481,11 @@ function drawPane(ctx, { x, y, w, h }, i, t, sc, { color: sky, night }) {
     }
     ctx.fillStyle = night ? 'rgba(160,170,220,0.55)' : '#fff';
     for (const c of CLOUDS) {
-      const cx = ((c.x + t * c.v) % 600) - 40;
+      const cx = ((c.x + t * c.v) % CLOUD_LOOP) - 40;
       for (const [dx, dy, r] of [[-14, 4, 10], [0, -2, 14], [15, 4, 10]]) { circle(ctx, cx + dx * c.s, c.y + dy * c.s, r * c.s); ctx.fill(); }
     }
     if (!night) { // a pair of birds every ~22s
-      const bx = ((t * 45) % 1000) - 60, by = 46 + Math.sin(t * 1.5) * 6, flap = Math.sin(t * 12) * 3;
+      const bx = ((t * 45) % (WORLD.W + 460)) - 60, by = 46 + Math.sin(t * 1.5) * 6, flap = Math.sin(t * 12) * 3;
       ctx.strokeStyle = '#6b5a66'; ctx.lineWidth = 1.6; ctx.lineCap = 'round';
       for (const [ox, oy] of [[0, 0], [16, 8]]) {
         ctx.beginPath();
@@ -506,10 +547,10 @@ function drawSeason(ctx, t, sc) {
   if (sc.season === 'winter') {
     if (sc.stage < 3) fairyLights(ctx, t);                          // (fancy cafés already have them)
     ctx.fillStyle = '#ffffff';                                        // snow on the sills
-    for (const wx of [26, 320]) { rrect(ctx, wx - 4, 112, 202, 5, 3); ctx.fill(); }
+    for (const w of WINDOWS) { rrect(ctx, w.x - 4, 112, w.w + 8, 5, 3); ctx.fill(); }
   }
   if (sc.season === 'halloween') {                                    // glowing pumpkins on the counter
-    for (const [px, s] of [[22, 0.9], [518, 0.75]]) { // counter ends, clear of the plates
+    for (const [px, s] of [[22, 0.9], [WORLD.W - 22, 0.75]]) { // counter ends, clear of the plates
       ctx.save(); ctx.translate(px, y + 2); ctx.scale(s, s);
       ellipse(ctx, 0, -10, 15, 12); fillStroke(ctx, '#ff8a2a', '#d96a12', 1.6);
       ctx.strokeStyle = '#d96a12'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(0, -21); ctx.lineTo(0, 1); ctx.stroke();
@@ -524,15 +565,15 @@ function drawSeason(ctx, t, sc) {
   }
   if (sc.season === 'valentine') {                                    // hearts garland + floating hearts
     ctx.strokeStyle = 'rgba(90,61,74,0.3)'; ctx.lineWidth = 1.2;
-    ctx.beginPath(); ctx.moveTo(0, 124); ctx.quadraticCurveTo(270, 150, 540, 124); ctx.stroke();
-    for (let i = 0; i < 12; i++) {
-      const hx = 22 + i * 45, sag = Math.sin((hx / 540) * Math.PI) * 13;
+    garland(ctx, 124, 26);
+    for (let i = 0; i < Math.ceil(WORLD.W / 45); i++) {
+      const hx = 22 + i * 45, sag = Math.sin(((hx % 270) / 270) * Math.PI) * 13;
       drawHeart(ctx, hx, 128 + sag + Math.sin(t * 2 + i) * 1.5, 12, i % 2 ? '#ff6b8a' : '#ffb3c6');
     }
     for (let k = 0; k < 4; k++) {
       const p = (t * 0.12 + k * 0.25) % 1;
       ctx.globalAlpha = Math.sin(p * Math.PI) * 0.7;
-      drawHeart(ctx, 60 + k * 130 + Math.sin(t + k) * 12, 760 - p * 520, 11, '#ff8fab');
+      drawHeart(ctx, 60 + k * (WORLD.W / 4) + Math.sin(t + k) * 12, y - 10 - p * (y - 250), 11, '#ff8fab');
     }
     ctx.globalAlpha = 1;
   }
@@ -541,8 +582,8 @@ function drawSeason(ctx, t, sc) {
 function fairyLights(ctx, t) {
   const y0 = 128, cols = ['#ffd166', '#ff8fab', '#9fd3ff', '#8fd9b6'];
   ctx.strokeStyle = 'rgba(90,61,74,0.35)'; ctx.lineWidth = 1.2;
-  ctx.beginPath(); ctx.moveTo(0, y0); ctx.quadraticCurveTo(135, y0 + 22, 270, y0); ctx.quadraticCurveTo(405, y0 + 22, 540, y0); ctx.stroke();
-  for (let i = 0; i < 22; i++) {
+  garland(ctx, y0, 22);
+  for (let i = 0; i < Math.ceil(WORLD.W / 25); i++) {
     const x = 6 + i * 25, sag = Math.sin(((x % 270) / 270) * Math.PI) * 11;
     const glow = 0.55 + 0.45 * Math.sin(t * 3 + i * 1.7);
     ctx.globalAlpha = glow * 0.35; circle(ctx, x, y0 + sag + 3, 6); ctx.fillStyle = cols[i % 4]; ctx.fill();
@@ -555,7 +596,7 @@ function fairyLights(ctx, t) {
 /** Draw owned pets: goldfish bowl (bar, left end), parrot (bar, right end), puppy (floor, right). */
 export function drawPets(ctx, pets, t) {
   if (pets.includes('goldfish')) {
-    const bx = 98, by = 176;
+    const bx = LAYOUT.windowBar.x + 8, by = 176;
     ellipse(ctx, bx, by + 13, 14, 4); ctx.fillStyle = SHADOW; ctx.fill();
     circle(ctx, bx, by, 15); fillStroke(ctx, 'rgba(205,236,250,0.7)', '#b5dcf0', 2);
     ctx.save(); circle(ctx, bx, by, 13.5); ctx.clip();
@@ -570,7 +611,7 @@ export function drawPets(ctx, pets, t) {
     ellipse(ctx, bx, by - 12, 8, 2.5); ctx.strokeStyle = '#b5dcf0'; ctx.lineWidth = 2; ctx.stroke();
   }
   if (pets.includes('parrot')) {
-    const x = 452, y = 170 + Math.sin(t * 2) * 1.5;
+    const x = LAYOUT.windowBar.x + LAYOUT.windowBar.w + 2, y = 170 + Math.sin(t * 2) * 1.5;
     tri(ctx, [x - 2, y - 4], [x + 3, y - 4], [x - 4, y + 10]); ctx.fillStyle = '#4a90e2'; ctx.fill();   // tail
     ellipse(ctx, x, y - 12, 7, 11); fillStroke(ctx, '#4cc36a', '#2f9e4f', 1.2);                         // body
     ellipse(ctx, x - 3, y - 11, 4, 8); ctx.fillStyle = '#2f9e4f'; ctx.fill();                           // wing
@@ -581,7 +622,7 @@ export function drawPets(ctx, pets, t) {
     ctx.beginPath(); ctx.moveTo(x - 3, y - 1); ctx.lineTo(x - 3, y + 2); ctx.moveTo(x + 2, y - 1); ctx.lineTo(x + 2, y + 2); ctx.stroke();
   }
   if (pets.includes('puppy')) {
-    const x = 488, y = 304, wag = Math.sin(t * 10) * 0.6;
+    const x = WORLD.W - 52, y = 304, wag = Math.sin(t * 10) * 0.6;
     ellipse(ctx, x, y + 2, 22, 5); ctx.fillStyle = SHADOW; ctx.fill();
     ctx.save(); ctx.translate(x + 16, y - 10); ctx.rotate(-0.6 + wag);                                // wagging tail
     rrect(ctx, -2, -12, 4, 12, 2); fillStroke(ctx, '#c98b55', null); ctx.restore();

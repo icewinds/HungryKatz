@@ -1,6 +1,6 @@
 // NPC customer cat: enters from the left, waits at a spot, eats or gives up, leaves left.
 
-import { LAYOUT, NPC_SPEED } from './config.js';
+import { LAYOUT, NPC_SPEED, WORLD } from './config.js';
 import { route } from './pathing.js';
 
 let nextId = 1;
@@ -58,7 +58,7 @@ export class NPC {
           this.state = 'waiting';
           this.arriveT = 0;
           this.squash = 1;
-          this.facing = this.spot.face ?? (this.x < 270 ? 1 : -1);
+          this.facing = this.spot.face ?? (this.x < WORLD.W / 2 ? 1 : -1);
           return 'arrived';
         }
         break;
