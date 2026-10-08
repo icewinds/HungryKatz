@@ -664,3 +664,66 @@ html, body {
 .challenge-pay { font-size: 15px; color: #8a6a00; white-space: nowrap; }
 .challenge.done { background: var(--mint-soft); }
 .challenge.done .challenge-pay { color: #24865b; }
+
+/* ---------- Felt café theme: paw-print wallpaper, paper panels, stitched felt buttons ---------- */
+:root { --paper: #fffaf1; --tan: #ecd3b4; --tan-d: #c9a37a; --stitch: rgba(90, 61, 74, 0.28); }
+html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
+.screen { background: rgba(251, 239, 223, 0.72); }
+.recipe, .friend { background-color: #fffdf8; border-color: #f0e0c8; }
+.friend.best { background-color: #fff0f4; border-color: var(--pink); }
+.challenge.done { background-color: var(--mint-soft); }
+.panel {
+  background: url(../assets/ui/felt.svg), var(--paper);
+  border: 3px solid var(--tan);
+  box-shadow: 0 10px 28px rgba(120, 80, 50, 0.18), inset 0 0 0 5px var(--paper), inset 0 0 0 7px rgba(201, 163, 122, 0.35);
+}
+.btn { background-image: url(../assets/ui/felt.svg); box-shadow: 0 4px 0 #c94a72, 0 8px 14px rgba(120, 80, 50, 0.16); outline: 2px dashed rgba(255, 255, 255, 0.55); outline-offset: -6px; }
+.btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #c94a72; }
+.btn.secondary { background-color: #fff6e6; border: 2px solid #e6cfaa; box-shadow: 0 3px 0 #e6cfaa; outline-color: var(--stitch); }
+.btn.secondary:active { box-shadow: 0 0 0 #e6cfaa; }
+.btn.mint, .btn-upgrade, .btn.buy, .btn.save-name { box-shadow: 0 4px 0 #19643f, 0 8px 14px rgba(120, 80, 50, 0.16); }
+.btn.buy.poor, .btn.buy.max { box-shadow: none; outline: none; background-image: none; }
+.toggle[aria-pressed="false"] { background-color: #fff; }
+
+/* Menu: two-line felt logo, café window behind the cat, ribbons, pastel buttons */
+.logo { font-size: 54px; line-height: 0.92; }
+.logo span { display: block; color: #f27aa0; text-shadow: 0 3px 0 #cf5680, 0 5px 0 #b8456d, 0 9px 14px rgba(120, 60, 80, 0.25); transform: rotate(-3deg); }
+.logo .katz { color: #f6a53b; text-shadow: 0 3px 0 #d9822a, 0 5px 0 #b86a1e, 0 9px 14px rgba(120, 80, 30, 0.25); transform: rotate(2deg); margin-top: 2px; }
+.menu-hero { margin: 4px -20px 0; background: url(../assets/ui/menu-window.svg) center 6px / 300px auto no-repeat; }
+.tagline {
+  position: relative; z-index: 1; display: inline-block; margin: -14px 0 16px; padding: 7px 30px;
+  background: #fff3df; color: var(--ink); font-size: 16px;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 12px) 50%, 100% 100%, 0 100%, 12px 50%);
+  filter: drop-shadow(0 2px 0 var(--tan-d));
+}
+.btn.big[data-action="play"] { width: 78%; font-size: 30px; padding: 14px 20px; }
+.best { display: inline-block; margin: 12px 0 12px; padding: 5px 22px; background: #fffdf8; border: 2px solid var(--tan); border-radius: 8px; box-shadow: 0 2px 0 var(--tan); }
+.menu-grid .btn[data-action="openChallenges"] { background-color: #fff0bf; border-color: #e9cd72; box-shadow: 0 3px 0 #e9cd72; }
+.menu-grid .btn[data-action="openCharacters"] { background-color: #ffe4cc; border-color: #f0b98a; box-shadow: 0 3px 0 #f0b98a; }
+.menu-grid .btn[data-action="openStickers"] { background-color: #ffe3ec; border-color: #f1a9c0; box-shadow: 0 3px 0 #f1a9c0; }
+.menu-grid .btn[data-action="openSettings"] { background-color: #dcf2e7; border-color: #9fd6bd; box-shadow: 0 3px 0 #9fd6bd; }
+.menu-grid .btn:active { box-shadow: none; }
+
+/* Short screens (phones): trim the hero so the whole menu fits */
+@media (max-height: 760px) and (orientation: portrait) {
+  .menu-hero { margin-top: -6px; background-size: 270px auto; }
+  #menu-cat { height: 240px; width: 188px; left: -27px; }
+}
+/* Landscape: logo + cat on the left, Play / score / tagline on the right, buttons along the bottom */
+@media (orientation: landscape) and (max-height: 600px) {
+  #screen-menu .panel {
+    width: min(900px, 100%); display: grid; align-items: center; column-gap: 12px;
+    grid-template-columns: 1fr 1fr; grid-template-areas: 'logo play' 'hero play' 'grid grid';
+  }
+  #screen-menu .logo { grid-area: logo; font-size: 40px; }
+  #screen-menu .logo span { display: inline-block; margin: 0 4px; }
+  #screen-menu .panel { padding: 16px 18px 14px; }
+  #screen-menu .menu-hero { grid-area: hero; margin: 0; background-size: 210px auto; background-position: center 2px; }
+  #screen-menu #menu-cat { height: 170px; width: 133px; left: -19px; }
+  #screen-menu .menu-side { grid-area: play; display: flex; flex-direction: column; align-items: center; }
+  #screen-menu .tagline { margin: 4px 0 0; order: 3; }
+  #screen-menu .menu-grid { grid-area: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  #screen-menu .menu-grid .btn { min-height: 42px; padding-block: 6px; font-size: 16px; }
+  #screen-menu .menu-grid > .btn { grid-column: auto; justify-self: stretch; min-width: 0; }
+  #screen-menu #install-hint { display: none; }
+}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" viewBox="0 0 140 140">
+  <!-- Wallpaper tile: paw prints and fish bones, drawn in a soft tan on the cream page. -->
+  <defs>
+    <g id="paw" fill="#ecd3b4">
+      <ellipse cx="0" cy="5" rx="8" ry="6.5"/>
+      <ellipse cx="-9" cy="-4" rx="3.2" ry="4.2"/>
+      <ellipse cx="-3.3" cy="-9" rx="3.2" ry="4.2"/>
+      <ellipse cx="3.3" cy="-9" rx="3.2" ry="4.2"/>
+      <ellipse cx="9" cy="-4" rx="3.2" ry="4.2"/>
+    </g>
+    <g id="bone" fill="none" stroke="#ecd3b4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-14 0 H10"/>
+      <path d="M-8 -6 V6 M-2 -7 V7 M4 -6 V6"/>
+      <path d="M10 0 L17 -7 Q22 0 17 7 Z" fill="#ecd3b4"/>
+      <path d="M-14 0 L-20 -6 M-14 0 L-20 6"/>
+    </g>
+  </defs>
+  <use href="#paw" transform="translate(28 30) rotate(-18)"/>
+  <use href="#bone" transform="translate(100 44) rotate(-30)"/>
+  <use href="#paw" transform="translate(98 106) rotate(14)"/>
+  <use href="#bone" transform="translate(30 104) rotate(20)"/>
+</svg>

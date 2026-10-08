@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="250" viewBox="0 0 320 250">
+  <!-- The café window behind the menu cat: sky, sun, a tree outside, plants on the sill. -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bfe4f6"/>
+      <stop offset="1" stop-color="#eaf7f4"/>
+    </linearGradient>
+    <clipPath id="glass"><rect x="62" y="22" width="196" height="168" rx="6"/></clipPath>
+  </defs>
+  <!-- hanging plant, left -->
+  <path d="M30 0 V40" stroke="#c9a37a" stroke-width="2"/>
+  <path d="M18 40 h24 l-4 16 h-16 z" fill="#e9967a" stroke="#b8705a" stroke-width="2" stroke-linejoin="round"/>
+  <g fill="#86c78f" stroke="#5f9e6a" stroke-width="1.6">
+    <ellipse cx="22" cy="38" rx="9" ry="5" transform="rotate(-25 22 38)"/>
+    <ellipse cx="38" cy="37" rx="9" ry="5" transform="rotate(25 38 37)"/>
+    <ellipse cx="14" cy="58" rx="4" ry="8"/>
+    <ellipse cx="44" cy="62" rx="4" ry="9"/>
+  </g>
+  <!-- window -->
+  <rect x="54" y="14" width="212" height="184" rx="10" fill="#e8c296" stroke="#b8865a" stroke-width="3"/>
+  <g clip-path="url(#glass)">
+    <rect x="62" y="22" width="196" height="168" fill="url(#sky)"/>
+    <circle cx="214" cy="56" r="17" fill="#ffd77a"/>
+    <circle cx="214" cy="56" r="25" fill="#ffd77a" opacity="0.3"/>
+    <g fill="#fff">
+      <ellipse cx="104" cy="52" rx="20" ry="8"/><ellipse cx="116" cy="46" rx="12" ry="8"/>
+      <ellipse cx="176" cy="88" rx="16" ry="6"/><ellipse cx="185" cy="83" rx="9" ry="6"/>
+    </g>
+    <g fill="#9fd39a">
+      <circle cx="78" cy="170" r="30"/><circle cx="108" cy="182" r="26"/>
+      <circle cx="240" cy="166" r="32"/><circle cx="208" cy="184" r="24"/>
+    </g>
+    <g fill="#bfe3a8"><circle cx="70" cy="160" r="12"/><circle cx="246" cy="154" r="13"/></g>
+  </g>
+  <path d="M160 22 V190 M62 106 H258" stroke="#e8c296" stroke-width="7"/>
+  <path d="M160 22 V190 M62 106 H258" stroke="#b8865a" stroke-width="1.5" opacity="0.4"/>
+  <!-- sill -->
+  <rect x="44" y="194" width="232" height="12" rx="4" fill="#d9a878" stroke="#b8865a" stroke-width="2.5"/>
+  <!-- pots -->
+  <path d="M68 180 h22 l-3 14 h-16 z" fill="#f2a7b8" stroke="#c9768c" stroke-width="2" stroke-linejoin="round"/>
+  <g fill="#86c78f" stroke="#5f9e6a" stroke-width="1.6">
+    <ellipse cx="73" cy="170" rx="4.5" ry="10" transform="rotate(-20 73 170)"/>
+    <ellipse cx="85" cy="169" rx="4.5" ry="11" transform="rotate(18 85 169)"/>
+    <ellipse cx="79" cy="166" rx="4" ry="12"/>
+  </g>
+  <path d="M232 182 h20 l-3 12 h-14 z" fill="#a8d5f0" stroke="#6fa6c8" stroke-width="2" stroke-linejoin="round"/>
+  <g fill="#ff9fb5" stroke="#d66a86" stroke-width="1.4">
+    <circle cx="236" cy="172" r="5"/><circle cx="248" cy="170" r="5"/><circle cx="242" cy="164" r="5"/>
+  </g>
+  <g fill="#ffd77a"><circle cx="236" cy="172" r="1.8"/><circle cx="248" cy="170" r="1.8"/><circle cx="242" cy="164" r="1.8"/></g>
+  <!-- sparkles -->
+  <g fill="#ffc94d">
+    <path d="M286 30 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z"/>
+    <path d="M20 120 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#9fd6ff"/>
+    <path d="M296 150 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#ff9fb5"/>
+  </g>
+</svg>
