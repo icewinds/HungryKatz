@@ -772,3 +772,41 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 .rotate-phone { width: 44px; height: 72px; margin: 4px auto 14px; border: 5px solid var(--pink); border-radius: 10px; animation: turn 2.4s ease-in-out infinite; }
 @keyframes turn { 0%, 25% { transform: rotate(0); } 55%, 100% { transform: rotate(-90deg); } }
 @media (prefers-reduced-motion: reduce) { .rotate-phone { animation: none; transform: rotate(-90deg); } }
+
+/* ---------- Landscape screens: wide cards, content in columns, little scrolling ---------- */
+.panel { padding: 16px 22px; }
+.panel.wide { width: min(820px, 100%); }
+.panel h2 { margin: 0 0 10px; font-size: 26px; }
+.close-x { top: 10px; right: 10px; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; align-items: start; }
+.cols.three { grid-template-columns: repeat(3, 1fr); }
+.coins-big { margin: 0 0 8px; }
+.hint { margin-block: 8px; }
+
+/* How to play: steps in a 3-across grid */
+.help-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 8px; }
+.help-steps li { margin: 0; }
+.dedication { margin-top: 12px; }
+
+/* Lists and grids use the width */
+.char-grid { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); }
+.sticker-grid { grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); }
+.friend-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+#recipe-list { display: grid; grid-template-columns: 1fr 1fr; }
+#challenge-list { display: grid; grid-template-columns: repeat(3, 1fr); }
+#challenge-list .challenge { grid-template-columns: 40px 1fr; row-gap: 4px; }
+#challenge-list .challenge-pay { grid-column: 2; }
+.level-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
+#upg-list { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+#upg-list .pets-title { grid-column: 1 / -1; }
+.daily-grid { grid-template-columns: repeat(7, 1fr); }
+#screen-daily .panel, #screen-challenges .panel { width: min(700px, 100%); }
+
+/* Pause: Resume on top, the rest side by side */
+.panel.pause { width: min(560px, 100%); }
+.panel.pause .stack { display: grid; grid-template-columns: repeat(3, 1fr); }
+.panel.pause .stack .btn.big { grid-column: 1 / -1; }
+
+/* Game over: your result on the left, top 5 and buttons on the right */
+#screen-gameover .cols > div:last-child h3 { margin-top: 4px; }
+#screen-gameover .stack { margin-top: 0; }

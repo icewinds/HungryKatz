@@ -139,6 +139,8 @@
       </ol>
       <details class="more-tips">
         <summary>More tips</summary>
+        <div class="cols three">
+        <div>
         <h3>Earn more</h3>
         <ul class="help-tips">
           <li><span class="tip-ico" aria-hidden="true">⬆️</span><span>Spend coins on <b>upgrades</b> (up to level 10): carry more, walk faster, make cats wait longer, earn more tips and coins, and reach further.</span></li>
@@ -148,6 +150,8 @@
           <li><span class="tip-ico" aria-hidden="true">🍽️</span><span>On weekends some cats order a <b>two-dish special</b>.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🎁</span><span>Come back every day for a <b>daily bonus</b> and three new <b>challenges</b>.</span></li>
         </ul>
+        </div>
+        <div>
         <h3>Your café</h3>
         <ul class="help-tips">
           <li><span class="tip-ico" aria-hidden="true">🏠</span><span>Your café starts <b>shabby</b>. Level up to fix it up, add <b>more tables</b> and welcome more cats.</span></li>
@@ -156,12 +160,16 @@
           <li><span class="tip-ico" aria-hidden="true">⚙️</span><span>Pick a <b>difficulty</b> and a <b>scene</b> in Settings.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🌸</span><span>Little chefs can pick <b>Relaxed</b> in Settings: nobody leaves sad.</span></li>
         </ul>
+        </div>
+        <div>
         <h3>Collect</h3>
         <ul class="help-tips">
           <li><span class="tip-ico" aria-hidden="true">🏅</span><span>Collect <b>stickers</b> and buy <b>hats and aprons</b> in Choose cat.</span></li>
           <li><span class="tip-ico" aria-hidden="true">💖</span><span>Named <b>regulars</b> come back for their favourite dish. Make them best friends for a gift (see the <b>Café book</b>).</span></li>
           <li><span class="tip-ico" aria-hidden="true">😺</span><span>Buy new <b>waiter cats</b>, or unlock the rarest ones with a high score.</span></li>
         </ul>
+        </div>
+        </div>
       </details>
       <div class="dedication">
         <span class="dedication-hearts" aria-hidden="true">💖🐾💖</span>
@@ -174,7 +182,7 @@
 
   <!-- Daily challenges -->
   <section id="screen-challenges" class="screen">
-    <div class="panel">
+    <div class="panel wide">
       <button class="close-x" data-action="closeChallenges" aria-label="Back">✕</button>
       <h2>Today's challenges</h2>
       <p class="hint hint-top0">Three new challenges every day. Finish one for bonus coins!</p>
@@ -184,7 +192,7 @@
 
   <!-- Daily bonus -->
   <section id="screen-daily" class="screen">
-    <div class="panel">
+    <div class="panel wide">
       <h2>Daily bonus</h2>
       <p class="hint hint-tight">Come back every day to grow your streak!</p>
       <div id="daily-days" class="daily-grid"></div>
@@ -219,9 +227,11 @@
 
   <!-- Settings -->
   <section id="screen-settings" class="screen">
-    <div class="panel">
+    <div class="panel wide">
       <button class="close-x" data-action="closeSettings" aria-label="Back">✕</button>
       <h2>Settings</h2>
+      <div class="cols">
+      <div>
       <div class="stack">
         <button class="btn secondary toggle toggle-music" data-action="toggleMusic">🎵 Music</button>
         <button class="btn secondary toggle toggle-sfx" data-action="toggleSfx">🔊 Sound FX</button>
@@ -235,6 +245,8 @@
         <button class="chip" data-action="setDifficulty" data-value="hard">😼 Hard</button>
       </div>
       <p class="hint hint-top0">Relaxed: nobody leaves sad, no game over. Easy: patient customers. Hard: impatient and busy!</p>
+      </div>
+      <div>
       <h3>Scene</h3>
       <div class="scene-grid" role="group" aria-label="Café scene">
         <button class="scene-chip" data-action="setScene" data-value="strawberry"><span class="swatch sw-strawberry" aria-hidden="true"></span>Strawberry Café</button>
@@ -256,12 +268,14 @@
         <p id="restore-msg" class="name-msg error" role="alert"></p>
         <button class="btn" data-action="restoreBackup">Restore my café</button>
       </div>
+      </div>
+      </div>
     </div>
   </section>
 
   <!-- Pause -->
   <section id="screen-pause" class="screen">
-    <div class="panel">
+    <div class="panel pause">
       <h2>Paused</h2>
       <div class="stack">
         <button class="btn big" data-action="resume">▶ Resume</button>
@@ -292,7 +306,9 @@
 
   <!-- Game over -->
   <section id="screen-gameover" class="screen">
-    <div class="panel">
+    <div class="panel wide">
+      <div class="cols">
+      <div>
       <canvas id="go-cat" width="360" height="240" aria-hidden="true"></canvas>
       <h2 class="gameover">Café closed!</h2>
       <p class="go-sub">Thanks for running the café today.</p>
@@ -315,12 +331,16 @@
         </div>
         <p id="go-name-msg" class="name-msg" role="status"></p>
       </form>
+      </div>
+      <div>
       <h3>Top 5</h3>
       <ol id="go-scores" class="scores"></ol>
       <div class="stack">
         <button class="btn big" data-action="restart">↻ Play Again</button>
         <button class="btn mint" data-action="shareScore">📤 Share my score</button>
         <button class="btn secondary" data-action="menu">🏠 Main Menu</button>
+      </div>
+      </div>
       </div>
     </div>
   </section>
