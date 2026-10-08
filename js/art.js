@@ -588,6 +588,14 @@ export function drawWaiterTray(ctx, x, y, facing, look, inv, t, walking, held, d
   ctx.restore();
 }
 
+/** A regular's name tag, just under their feet. */
+export function drawNameTag(ctx, x, y, name) {
+  ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const w = ctx.measureText(name).width + 14;
+  rrect(ctx, x - w / 2, y, w, 17, 6); fillStroke(ctx, 'rgba(255,255,255,0.95)', '#f2b8c8', 1.2);
+  ctx.fillStyle = '#c43d5c'; ctx.fillText(name, x, y + 9);
+}
+
 export function drawCarryBadge(ctx, x, y, inv, dirty = 0) {
   const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
   if (dirty) items.push('dirty');

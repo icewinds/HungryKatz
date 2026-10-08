@@ -4,6 +4,7 @@
 import {
   WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -18,7 +19,7 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK,
+  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
@@ -68,6 +69,14 @@ function onEvent(type, d) {
     case 'pickup': audio.play('pickup'); break;
     case 'plated': audio.play('plate'); break;
     case 'cleared': audio.play('click'); break;
+    case 'friend':
+      if (d.gift) {
+        audio.play('levelUp');
+        ui.banners([`💖 ${REGULARS.find(r => r.id === d.id).name} is your best friend!`, `🎁 A thank-you gift: +${d.gift} 🪙`]);
+        checkStickers();
+        persist();
+      }
+      break;
     case 'plates': if (!d.cleaner) { audio.play('plate'); setTimeout(() => audio.play('coin'), 100); } break;
     case 'arrive': audio.play('arrive'); break;
     case 'wrongFood': audio.play('wrong'); break;
@@ -141,7 +150,19 @@ const ui = new UIManager({
   askQuit: () => { document.getElementById('quit-confirm').classList.remove('hidden'); document.querySelector('#quit-confirm [data-action="quit"]').focus(); },
   cancelQuit: () => document.getElementById('quit-confirm').classList.add('hidden'),
   playRelaxed: () => { save.settings.difficulty = 'relaxed'; persist(); syncToggles(); startGame(lastRunLevel); },
-  openStickers: () => { checkStickers(); ui.renderStickers(STICKERS, save.stickers); ui.show('stickers'); },
+  openStickers: () => {
+    checkStickers();
+    ui.renderStickers(STICKERS, save.stickers);
+    ui.renderRecipes(FOODS.map(f => ({ label: f.label, icon: foodIcons[f.id], served: save.stats.byFood?.[f.id] ?? 0,
+      locked: foodUnlockLevel(f.id) > save.level, unlock: foodUnlockLevel(f.id) })), RECIPE_TIERS);
+    ui.renderFriends(REGULARS.map(r => ({ name: r.name, look: r.look, met: r.id in save.friends, level: save.friends[r.id] ?? 0,
+      max: FRIENDSHIP.max, best: (save.friends[r.id] ?? 0) >= FRIENDSHIP.max,
+      favIcon: foodIcons[r.fav], favLabel: FOODS.find(f => f.id === r.fav)?.label ?? '' })),
+      (canvas, look, met) => drawCatPortrait(canvas, met ? look : greyLook(look)));
+    showTabs(BOOK_TABS, 'stickers');
+    ui.show('stickers');
+  },
+  bookTab: btn => showTabs(BOOK_TABS, btn.dataset.tab),
   closeStickers: () => ui.show('menu'),
   pickOutfit: btn => {
     const kind = btn.dataset.kind, item = OUTFITS[kind]?.find(o => o.id === btn.dataset.id);
@@ -332,6 +353,13 @@ function syncToggles() {
 }
 
 /** Choose cat: switch between the Cats and Wardrobe tabs. */
+const BOOK_TABS = ['stickers', 'recipes', 'friends'];
+function showTabs(tabs, tab) {
+  for (const t of tabs) {
+    document.getElementById(`tab-${t}`).hidden = t !== tab;
+    document.getElementById(`tab-btn-${t}`).setAttribute('aria-selected', t === tab);
+  }
+}
 function showCharTab(tab) {
   for (const t of ['cats', 'wardrobe']) {
     document.getElementById(`tab-${t}`).hidden = t !== tab;
@@ -648,6 +676,7 @@ function render(time) {
   for (const n of npcs) {
     const top = n.y - 96 * n.look.size;
     if (speaking.has(n)) drawChatBubble(ctx, n.x, n.y, n.facing, Math.floor(time / 1.8) + n.id, time);
+    if (n.regular && n.state !== 'leaving') drawNameTag(ctx, n.x, n.y + 4, REGULARS.find(r => r.id === n.regular).name);
     if (n.state === 'waiting') drawRequest(ctx, n, time);
     else if (n.mood === 'sad') drawMissBadge(ctx, n.x, top - 6, time);
     else if (n.mood === 'happy' || n.state === 'eating') drawHeart(ctx, n.x, top + Math.sin(time * 6) * 3, 16);

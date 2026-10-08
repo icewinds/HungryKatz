@@ -143,6 +143,26 @@ export const PETS = {
 };
 export const PET_BONUS = { goldfishCoins: 1, puppyPatience: 2, parrotTips: 0.1 };
 
+// Regular customers: named cats who keep coming back for their favourite dish. Each serve fills their
+// friendship meter; at full friendship they become best friends and bring a gift of coins.
+export const FRIENDSHIP = { max: 5, chance: 0.15 }; // serves to best friends; chance a new customer is a regular
+export const REGULARS = [
+  { id: 'whiskers', name: 'Mrs Whiskers', fav: 'milk', gift: 120,
+    look: { fur: '#c7c2d0', light: '#f4f1f8', dark: '#857f92', pattern: 'socks', acc: '#a07be0', eye: '#5a8fd6', patch: '#fff', accessory: 'glasses', size: 1, seed: 0.11 } },
+  { id: 'pip', name: 'Little Pip', fav: 'milk', gift: 100,
+    look: { fur: '#fdf6ef', light: '#ffffff', dark: '#d8c8b8', pattern: 'none', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', accessory: 'bow', size: 0.85, seed: 0.42 } },
+  { id: 'biscotti', name: 'Biscotti', fav: 'catfood', gift: 150,
+    look: { fur: '#c98b55', light: '#f6dcc0', dark: '#8a5a33', pattern: 'spots', acc: '#ff6b8a', eye: '#5cb85c', patch: '#fff', accessory: 'bell', size: 1.05, seed: 0.63 } },
+  { id: 'captain', name: 'Captain Fluff', fav: 'fish', gift: 180,
+    look: { fur: '#f0a55a', light: '#fff1dc', dark: '#b8702c', pattern: 'stripes', acc: '#5aa9e6', eye: '#3b2a33', patch: '#fff', accessory: 'hat', size: 1.1, seed: 0.27 } },
+  { id: 'sakura', name: 'Sakura', fav: 'sushi', gift: 220,
+    look: { fur: '#e8d3e8', light: '#fbf3fb', dark: '#a98aa9', pattern: 'spots', acc: '#ff8fab', eye: '#8a5cc7', patch: '#fff', accessory: 'flower', size: 1, seed: 0.81 } },
+  { id: 'duke', name: 'The Duke', fav: 'cupcake', gift: 300,
+    look: { fur: '#3f3846', light: '#f6f2f6', dark: '#221d27', pattern: 'tuxedo', acc: '#ffc94d', eye: '#e8b33a', patch: '#fff', accessory: 'scarf', size: 1.12, seed: 0.55 } },
+];
+// Recipe book: bronze, silver and gold stars for serving a dish this many times.
+export const RECIPE_TIERS = [10, 50, 100];
+
 // Clearing tables: happy customers leave their empty plate behind, and that seat can't be used until
 // someone takes the plate back to the counter. Staff can be hired in the Upgrades screen.
 export const CLEARING = {

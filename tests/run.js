@@ -18,7 +18,7 @@ import { Kitchen } from '../js/kitchen.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus, levelSpawnPace,
-  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING,
+  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING, REGULARS, FRIENDSHIP,
 } from '../js/config.js';
 
 let passed = 0;
@@ -138,6 +138,38 @@ test('cleaner: once hired, Dusty clears every empty plate and hands them in', ()
   assert.equal(gm.dirty.size, 0);
   assert.equal(gm.cleaner.carrying, 0);
   assert.ok(events.some(([type, d]) => type === 'plates' && d.cleaner && d.n === 2));
+});
+
+test('regulars: drop in for their favourite dish; five serves make best friends and bring a gift once', () => {
+  const { gm, save } = setup({ ...MAX5, level: 9 }, () => 0); // rng 0: the next customer is a regular
+  const npc = gm.spawnNpc({ spot: LAYOUT.spots[0] });
+  const who = REGULARS.find(r => r.id === npc.regular);
+  assert.ok(who, 'a regular came in');
+  assert.equal(npc.request, who.fav);
+  assert.equal(save.friends[who.id], 0, 'met, not yet friends');
+  const events = [];
+  gm.onEvent = (type, d) => events.push([type, d]);
+  for (let i = 1; i <= FRIENDSHIP.max + 1; i++) {
+    const coins = save.coins;
+    npc.state = 'waiting';
+    gm.inventory.fill(who.fav);
+    gm.tryFeed(npc);
+    assert.equal(save.friends[who.id], Math.min(i, FRIENDSHIP.max));
+    if (i === FRIENDSHIP.max) assert.ok(save.coins - coins >= who.gift, 'best friends: a gift of coins');
+  }
+  assert.equal(events.filter(([type, d]) => type === 'friend' && d.gift).length, 1, 'the gift comes once');
+  assert.equal(new Set(REGULARS.map(r => r.id)).size, REGULARS.length);
+});
+
+test('recipe book + tiered stickers: serves are counted per dish; series stickers have tiers', () => {
+  const save = DEFAULT_SAVE();
+  recordServe(save.stats, { npc: { requests: ['fish', 'sushi'] }, combo: 1 });
+  recordServe(save.stats, { npc: { requests: ['fish'] }, combo: 1 });
+  assert.deepEqual(save.stats.byFood, { fish: 2, sushi: 1 });
+  assert.deepEqual(STICKERS.filter(s => /^serve\d/.test(s.id)).map(s => s.tier), ['bronze', 'silver', 'gold']);
+  save.friends = Object.fromEntries(REGULARS.map(r => [r.id, FRIENDSHIP.max]));
+  const got = awardStickers(save, 0).map(s => s.id);
+  assert.ok(got.includes('friend') && got.includes('friendsAll'));
 });
 
 test('kitchen: no overcooking, cancelled orders, more stoves as the café grows', () => {

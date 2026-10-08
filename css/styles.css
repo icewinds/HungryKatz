@@ -625,3 +625,32 @@ html, body {
 .restore-box .btn { width: 100%; margin-top: 4px; }
 
 .hint a { color: var(--pink-d); text-underline-offset: 3px; }
+
+/* Café book: three tabs, tiered stickers, recipes and friends */
+.tabs.three { grid-template-columns: repeat(3, 1fr); }
+.tabs.three .tab { font-size: 14px; padding-left: 4px; padding-right: 4px; }
+.sticker .tier { font-size: 11px; font-style: normal; text-transform: capitalize; color: var(--ink-soft); }
+.sticker.got.tier-bronze { background: #fbe9da; box-shadow: inset 0 0 0 2px #e8b083; }
+.sticker.got.tier-silver { background: #f1f4f8; box-shadow: inset 0 0 0 2px #c3ccd8; }
+.sticker.got.tier-gold { background: #fff1c2; box-shadow: inset 0 0 0 2px #f2c94c; }
+.book-list { display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.recipe { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; background: var(--cream); border: 2px solid var(--line); }
+.recipe img { width: 40px; height: 40px; }
+.recipe b { display: block; font-size: 16px; }
+.recipe small { color: var(--ink-soft); font-size: 13px; }
+.recipe.locked { opacity: 0.6; }
+.stars { display: flex; gap: 2px; font-size: 22px; line-height: 1; }
+.star { color: #e7dde2; }
+.star.on.bronze { color: #d08a52; }
+.star.on.silver { color: #9aa6b6; }
+.star.on.gold { color: #f2b80c; }
+.friend-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.friend { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 10px; border-radius: 8px; background: var(--cream); border: 2px solid var(--line); }
+.friend canvas { width: 84px; height: 84px; }
+.friend b { font-size: 15px; }
+.friend small { display: flex; align-items: center; gap: 4px; color: var(--ink-soft); font-size: 12.5px; min-height: 24px; }
+.friend small img { width: 22px; height: 22px; }
+.friend .hearts img, .friend .hearts .ico { width: 18px; height: 18px; }
+.friend em { font-style: normal; color: var(--pink-d); font-size: 13px; }
+.friend.best { background: #fff0f4; border-color: var(--pink); }
+.friend.unmet b { color: var(--ink-soft); }

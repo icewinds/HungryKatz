@@ -1,9 +1,9 @@
 // Game Manager: all gameplay state and rules. No DOM access, so it runs in Node tests.
 // UI/audio react through onEvent(type, data):
-//   pickup, plated, arrive, feed, wrongFood, missed, cleared, plates, levelUp, gameOver
+//   pickup, plated, arrive, feed, friend, wrongFood, missed, cleared, plates, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF, REGULARS, FRIENDSHIP,
 } from './config.js';
 import { Kitchen } from './kitchen.js';
 import { Cleaner } from './cleaner.js';
@@ -193,6 +193,12 @@ export class GameManager {
     spot ??= this.spawner.randomFreeSpot(this.npcs, this.spots);
     if (!spot) return null;
     const foods = this.foods, pick = list => list[Math.floor(this.rng() * list.length)];
+    let regular = null;
+    if (!request && !requests && this.rng() < FRIENDSHIP.chance) { // now and then a regular drops in
+      const here = new Set(this.npcs.map(n => n.regular));
+      const pool = REGULARS.filter(r => foods.includes(r.fav) && !here.has(r.id));
+      if (pool.length) { regular = pick(pool); request = regular.fav; vip = false; }
+    }
     request ??= requests?.[0] ?? pick(foods);
     if (!requests) { // weekend special: a second, different dish
       requests = [request];
@@ -200,7 +206,7 @@ export class GameManager {
     }
     vip ??= this.runTime >= VIP.after && this.rng() < VIP.chance;
     patience ??= this.spawner.stage(this.runTime).patience;
-    const look = randomLook(this.rng);
+    const look = regular ? { ...regular.look } : randomLook(this.rng);
     if (vip) look.accessory = 'crown';
     const npc = new NPC({
       spot, request: requests[0], look,
@@ -210,6 +216,8 @@ export class GameManager {
     });
     npc.requests = requests;
     npc.vip = vip;
+    npc.regular = regular?.id ?? null;
+    if (regular) this.save.friends[regular.id] ??= 0; // met
     npc.relaxed = !!this.difficulty.relaxed;
     npc.x -= 50 * trail; // the second friend follows a step behind
     npc.phase += trail * 0.3;
@@ -265,10 +273,22 @@ export class GameManager {
       const newFoods = this.foods.filter(f => !before.includes(f));
       this.onEvent('levelUp', { level: lvl, reward: this.reward, newFoods, cafeGrew: playingTop });
     }
+    if (npc.regular) this.befriend(npc);
     this.kitchen.cancel(npc); // served: anything still queued for them is not needed
     this.persist();
     this.onEvent('feed', { npc, reward: r, tip, combo: this.combo, vip: npc.vip });
     return true;
+  }
+
+  /** A regular was served: their friendship grows; reaching best friends brings a gift of coins. */
+  befriend(npc) {
+    const f = this.save.friends, id = npc.regular, now = Math.min(FRIENDSHIP.max, (f[id] ?? 0) + 1);
+    if (now === f[id]) return; // already best friends
+    f[id] = now;
+    this.text(npc.x, npc.y - 178, `💖 ${now}/${FRIENDSHIP.max}`, '#ec5f89', 18);
+    const gift = now === FRIENDSHIP.max ? REGULARS.find(r => r.id === id).gift : 0;
+    if (gift) { this.save.coins += gift; this.burst(npc.x, npc.y - 80, 'heart', 10, '#ff6b8a'); }
+    this.onEvent('friend', { id, level: now, gift });
   }
 
   /** The waiter hands their empty plates in at the counter: a coin each, and the score goes up too. */

@@ -16,7 +16,8 @@ export const DEFAULT_SAVE = () => ({
   petsAway: [],       // bought pets sent home (no bonus; can come back free)
   staff: [],          // hired staff (STAFF ids)
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
-  stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false }, // lifetime, for stickers
+  stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false, byFood: {} }, // lifetime, for stickers + recipe book
+  friends: {},        // regular id -> friendship (serves, up to FRIENDSHIP.max); present = met
   stickers: [],       // earned sticker ids (achievements.js)
   outfit: { hat: 'none', apron: 'classic' }, // what the waiter cat wears
   waiter: true,       // saves from before the kitchen rework still wear the old default chef hat
@@ -56,6 +57,8 @@ function sanitize(data) {
       petsAway: Array.isArray(data.petsAway) ? data.petsAway.filter(s => typeof s === 'string') : [],
       staff: Array.isArray(data.staff) ? data.staff.filter(s => typeof s === 'string') : [],
       stats: { ...d.stats, ...(data.stats && typeof data.stats === 'object' ? data.stats : {}) },
+      friends: Object.fromEntries(Object.entries(data.friends && typeof data.friends === 'object' ? data.friends : {})
+        .filter(([, v]) => Number.isFinite(v)).map(([k, v]) => [k, Math.max(0, Math.floor(v))])),
       stickers: Array.isArray(data.stickers) ? data.stickers.filter(x => typeof x === 'string') : [],
       outfit: (o => (data.waiter ? o : { ...o, hat: o.hat === 'chef' ? 'none' : o.hat }))( // old default chef hat -> waiter
         { ...d.outfit, ...(data.outfit && typeof data.outfit === 'object' ? data.outfit : {}) }),

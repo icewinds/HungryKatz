@@ -208,17 +208,64 @@ export class UIManager {
     requestAnimationFrame(() => bestCard?.scrollIntoView({ block: 'center' }));
   }
 
+  /** Recipe book: one row per dish with serves, three stars (bronze/silver/gold) and the next goal. */
+  renderRecipes(rows, tiers) {
+    $('recipe-list').replaceChildren(...rows.map(r => {
+      const row = document.createElement('div');
+      row.className = 'recipe' + (r.locked ? ' locked' : '');
+      const img = document.createElement('img'); img.src = r.icon; img.alt = '';
+      const body = document.createElement('div');
+      const name = document.createElement('b'); name.textContent = r.label;
+      const note = document.createElement('small');
+      const next = tiers.find(n => r.served < n);
+      note.textContent = r.locked ? `Unlocks at café level ${r.unlock}` : next ? `Served ${r.served} · next star at ${next}` : `Served ${r.served} · all stars!`;
+      body.append(name, note);
+      const stars = document.createElement('span');
+      stars.className = 'stars';
+      stars.setAttribute('aria-label', `${tiers.filter(n => r.served >= n).length} of 3 stars`);
+      ['bronze', 'silver', 'gold'].forEach((t, k) => {
+        const st = document.createElement('span'); st.className = 'star' + (r.served >= tiers[k] ? ` on ${t}` : ''); st.textContent = '★';
+        st.setAttribute('aria-hidden', 'true'); stars.append(st);
+      });
+      row.append(img, body, stars);
+      return row;
+    }));
+  }
+
+  /** Friends: a card per regular (grey until met) with favourite dish and a five-heart meter. */
+  renderFriends(rows, portrait) {
+    $('friend-list').replaceChildren(...rows.map(r => {
+      const card = document.createElement('div');
+      card.className = 'friend' + (r.best ? ' best' : '') + (r.met ? '' : ' unmet');
+      const pic = Object.assign(document.createElement('canvas'), { width: 120, height: 120 });
+      pic.setAttribute('aria-hidden', 'true');
+      portrait(pic, r.look, r.met);
+      const name = document.createElement('b'); name.textContent = r.met ? r.name : '???';
+      const fav = document.createElement('small');
+      if (r.met) { const img = document.createElement('img'); img.src = r.favIcon; img.alt = r.favLabel; fav.append('Loves ', img); }
+      else fav.textContent = 'Not met yet';
+      const hearts = document.createElement('span');
+      hearts.className = 'hearts';
+      hearts.setAttribute('aria-label', `Friendship ${r.level} of ${r.max}`);
+      hearts.textContent = '💖'.repeat(r.level) + '🤍'.repeat(r.max - r.level);
+      card.append(pic, name, fav, hearts);
+      if (r.best) { const tag = document.createElement('em'); tag.textContent = 'Best friends!'; card.append(tag); }
+      return card;
+    }));
+  }
+
   /** Sticker book grid: earned stickers as drawn badges, the rest as dashed empty slots. DOM APIs only. */
   renderStickers(all, earned) {
     $('sticker-count').textContent = `${earned.length} / ${all.length}`;
     const grid = $('sticker-grid');
     grid.replaceChildren(...all.map(st => {
       const got = earned.includes(st.id), card = document.createElement('div');
-      card.className = 'sticker' + (got ? ' got' : '');
-      const icon = stickerBadge(st.icon, all.indexOf(st), got);
+      card.className = 'sticker' + (got ? ' got' : '') + (st.tier ? ` tier-${st.tier}` : '');
+      const icon = stickerBadge(st.icon, all.indexOf(st), got, st.tier);
       const name = document.createElement('b'); name.textContent = st.name;
       const desc = document.createElement('small'); desc.textContent = st.desc;
       card.append(icon, name, desc);
+      if (st.tier) { const tier = document.createElement('em'); tier.className = 'tier'; tier.textContent = st.tier; card.append(tier); }
       return card;
     }));
   }

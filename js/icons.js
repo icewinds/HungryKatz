@@ -320,6 +320,16 @@ export const ICONS = {
     fillStroke(ctx, '#7fb3ff', OL, LW);
     arrow(ctx, 0, -20, 0, 2, '#24865b', 3.6);
   },
+  book(ctx) {
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.quadraticCurveTo(-10, -18, -20, -14); ctx.lineTo(-20, 14); ctx.quadraticCurveTo(-10, 10, 0, 16); ctx.closePath();
+    fillStroke(ctx, '#ffd3df', OL, LW);
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.quadraticCurveTo(10, -18, 20, -14); ctx.lineTo(20, 14); ctx.quadraticCurveTo(10, 10, 0, 16); ctx.closePath();
+    fillStroke(ctx, '#fff7f9', OL, LW);
+    ctx.strokeStyle = 'rgba(90,61,74,0.35)'; ctx.lineWidth = 1.6;
+    for (const y of [-6, 0, 6]) { ctx.beginPath(); ctx.moveTo(5, y); ctx.lineTo(15, y - 1.5); ctx.stroke(); }
+    drawHeart(ctx, -10, 0, 9, '#ec5f89');
+  },
+  heartEmpty(ctx) { drawHeart(ctx, 0, 0, 26, '#f3e6ec'); },
   question(ctx) { // a locked sticker slot
     ctx.strokeStyle = '#b7a4ad'; ctx.lineWidth = 3.6; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.arc(0, -6, 7, Math.PI * 1.1, Math.PI * 0.45); ctx.lineTo(0, 4); ctx.stroke();
@@ -336,7 +346,7 @@ const EMOJI = {
   '🐶': 'puppy', '💰': 'bag', '💖': 'heart', '✨': 'sparkles', '🔗': 'link', '❓': 'help', '⚙': 'gear', '📲': 'install', '👆': 'tap',
   '🍣': 'sushi', '🧁': 'cupcake', '👒': 'sunhat', '🧹': 'broom', '🧙': 'gnome', '🐟': 'goldfish', '🦜': 'parrot', '🧑‍🍳': 'chefhat',
   '🧶': 'beanie', '🥳': 'partyhat', '🎨': 'beret', '🎩': 'tophat', '🩷': 'apronPink', '🟢': 'apronMint', '🔵': 'apronSky', '🟡': 'apronSunny',
-  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore',
+  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '🤍': 'heartEmpty',
 };
 const EMOJI_RE = /\p{Extended_Pictographic}️?(?:‍\p{Extended_Pictographic}️?)*/gu;
 export const iconFor = emoji => EMOJI[emoji.replace(/️/g, '')];
@@ -408,8 +418,9 @@ export function outfitCanvas(look) {
 }
 
 const BADGE_TINTS = ['#ffd3df', '#d6f4e8', '#dbe9ff', '#fff1c2', '#eadcff'];
+const TIER_TINTS = { bronze: '#e8b083', silver: '#d4dbe4', gold: '#ffd34d' };
 /** Sticker-book badge: scalloped sticker with the drawn icon, or a dashed empty slot while locked. */
-export function stickerBadge(emoji, index, earned) {
+export function stickerBadge(emoji, index, earned, tier = null) {
   return iconCanvas(ctx => {
     ctx.beginPath();
     for (let k = 0; k <= 40; k++) { const a = (k / 40) * TAU, r = k % 2 ? 21 : 23; ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r); }
@@ -418,7 +429,7 @@ export function stickerBadge(emoji, index, earned) {
       ICONS.question(ctx);
       return;
     }
-    fillStroke(ctx, BADGE_TINTS[index % BADGE_TINTS.length], OL, LW);
+    fillStroke(ctx, TIER_TINTS[tier] ?? BADGE_TINTS[index % BADGE_TINTS.length], OL, LW);
     circle(ctx, 0, 0, 16.5); fillStroke(ctx, '#fff', 'rgba(90,61,74,0.25)', 1.4);
     ctx.save(); ctx.scale(0.62, 0.62); ICONS[iconFor(emoji)]?.(ctx, INK); ctx.restore();
     ellipse(ctx, -9, -13, 5, 2.4); ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fill(); // sticker shine

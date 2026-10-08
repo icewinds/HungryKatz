@@ -67,7 +67,7 @@
       <div class="menu-grid">
         <button class="btn secondary" data-action="openHelp">❓ How to play</button>
         <button class="btn secondary" data-action="openCharacters">🐱 Choose cat</button>
-        <button class="btn secondary" data-action="openStickers">🏅 Stickers</button>
+        <button class="btn secondary" data-action="openStickers">📖 Café book</button>
         <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
         <button class="btn secondary" data-action="share">📤 Share</button>
         <button id="btn-install" class="btn mint hidden" data-action="install">📲 Install</button>
@@ -90,9 +90,24 @@
   <section id="screen-stickers" class="screen">
     <div class="panel wide">
       <button class="close-x" data-action="closeStickers" aria-label="Back">✕</button>
-      <h2>Sticker book</h2>
-      <p class="coins-big">🏅 <b id="sticker-count">0 / 0</b></p>
-      <div id="sticker-grid" class="sticker-grid"></div>
+      <h2>Café book</h2>
+      <div class="tabs three" role="tablist" aria-label="Café book">
+        <button class="tab" role="tab" id="tab-btn-stickers" aria-selected="true" aria-controls="tab-stickers" data-action="bookTab" data-tab="stickers">🏅 Stickers</button>
+        <button class="tab" role="tab" id="tab-btn-recipes" aria-selected="false" aria-controls="tab-recipes" data-action="bookTab" data-tab="recipes">📖 Recipes</button>
+        <button class="tab" role="tab" id="tab-btn-friends" aria-selected="false" aria-controls="tab-friends" data-action="bookTab" data-tab="friends">💖 Friends</button>
+      </div>
+      <div id="tab-stickers" role="tabpanel" aria-labelledby="tab-btn-stickers">
+        <p class="coins-big">🏅 <b id="sticker-count">0 / 0</b></p>
+        <div id="sticker-grid" class="sticker-grid"></div>
+      </div>
+      <div id="tab-recipes" role="tabpanel" aria-labelledby="tab-btn-recipes" hidden>
+        <p class="hint hint-top0">Serve a dish 10, 50 and 100 times for a bronze, silver and gold star.</p>
+        <div id="recipe-list" class="book-list"></div>
+      </div>
+      <div id="tab-friends" role="tabpanel" aria-labelledby="tab-btn-friends" hidden>
+        <p class="hint hint-top0">Regulars come back for their favourite dish. Serve one 5 times to become best friends, and they bring you a gift!</p>
+        <div id="friend-list" class="friend-grid"></div>
+      </div>
     </div>
   </section>
 
@@ -130,6 +145,7 @@
         <h3>Collect</h3>
         <ul class="help-tips">
           <li><span class="tip-ico" aria-hidden="true">🏅</span><span>Collect <b>stickers</b> and buy <b>hats and aprons</b> in Choose cat.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">💖</span><span>Named <b>regulars</b> come back for their favourite dish. Make them best friends for a gift (see the <b>Café book</b>).</span></li>
           <li><span class="tip-ico" aria-hidden="true">😺</span><span>Buy new <b>waiter cats</b>, or unlock the rarest ones with a high score.</span></li>
         </ul>
       </details>
