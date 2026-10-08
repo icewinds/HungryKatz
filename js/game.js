@@ -22,7 +22,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawMenuWindow, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
 canvasIcons.text = fillRichText;
@@ -801,6 +801,7 @@ function updateDebugPanel(now) {
 // ---------------------------------------------------------------- menu mascot
 const menuCanvas = document.getElementById('menu-cat');
 const mctx = menuCanvas.getContext('2d');
+const menuWindow = document.getElementById('menu-window'), wctx = menuWindow.getContext('2d');
 // After a minute with no taps, keys or mouse movement the menu cat stretches and yawns (then every minute).
 const IDLE_MS = 60000, YAWN_S = 4.2;
 const menuIdle = { since: performance.now(), tapAt: -Infinity };
@@ -823,6 +824,10 @@ function yawnPose(T) {
 
 function drawMenuCat(time) {
   if (ui.current !== 'menu') return;
+  wctx.setTransform(1, 0, 0, 1, 0, 0);
+  wctx.clearRect(0, 0, menuWindow.width, menuWindow.height);
+  wctx.setTransform(2, 0, 0, 2, 0, 0); // drawn at 2x for crisp edges
+  drawMenuWindow(wctx, time, scene);
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
   mctx.setTransform(2.2, 0, 0, 2.2, 126, menuCanvas.height - 17); // room for the tail swing (122px left) and a tall hat mid-stretch (246px up)

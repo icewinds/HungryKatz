@@ -399,11 +399,30 @@ function skyColor(hour) {
 /** Animated windows (clouds, sun/moon, stars, birds), real-time clock, and fairy lights when fancy. */
 export function drawWallLive(ctx, t, sc, now = new Date()) {
   const p = sc.pal, st = sc.stage;
-  const hour = now.getHours() + now.getMinutes() / 60;
-  const night = hour < 6 || hour >= 20.5;
-  const sky = skyColor(hour);
-  for (const [i, { x, y, w, h }] of WINDOWS.entries()) {
-    ctx.save();
+  const sky = skyAt(now);
+  for (const [i, win] of WINDOWS.entries()) { drawPane(ctx, win, i, t, sc, sky); drawWindowFrame(ctx, win, i, sc); }
+  // wall clock showing the real time
+  const cx = 270, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
+  circle(ctx, cx, cy, 25); fillStroke(ctx, '#fff', st >= 3 ? '#e3b94f' : p.clockRim, 4);
+  ctx.strokeStyle = INK; ctx.lineCap = 'round';
+  const hand = (a, len, lw) => {
+    ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.sin(a) * len, cy - Math.cos(a) * len); ctx.stroke();
+  };
+  hand((hr / 12) * TAU, 10, 3.5);
+  hand((m / 60) * TAU, 16, 2.5);
+  circle(ctx, cx, cy, 2.5); ctx.fillStyle = '#ff8fab'; ctx.fill();
+  if (st >= 3) fairyLights(ctx, t);
+  if (sc.theme === 'seaside') drawGnome(ctx, t);
+  if (sc.season) drawSeason(ctx, t, sc);
+}
+
+const skyAt = now => { const hour = now.getHours() + now.getMinutes() / 60; return { color: skyColor(hour), night: hour < 6 || hour >= 20.5 }; };
+
+/** The view through one window: sky for the time of day, sun or moon, clouds, birds, seasonal weather. */
+function drawPane(ctx, { x, y, w, h }, i, t, sc, { color: sky, night }) {
+  const st = sc.stage;
+  ctx.save();
     rrect(ctx, x, y, w, h, 16); ctx.fillStyle = sky; ctx.fill(); ctx.clip();
     if (night) {
       for (let k = 0; k < 14; k++) { // twinkling stars
@@ -452,37 +471,34 @@ export function drawWallLive(ctx, t, sc, now = new Date()) {
       ctx.fillStyle = 'rgba(120,95,70,0.22)';
       for (const [dx, dy, rx, ry] of [[40, 70, 34, 16], [130, 30, 28, 12], [160, 80, 24, 14]]) { ellipse(ctx, x + dx, y + dy, rx, ry); ctx.fill(); }
     }
-    ctx.restore();
-    // frame, mullion, sill (+ plant once it's cosy)
-    rrect(ctx, x, y, w, h, 16); ctx.strokeStyle = p.frame; ctx.lineWidth = 6; ctx.stroke();
-    ctx.fillStyle = p.frame; ctx.fillRect(x + w / 2 - 2, y, 4, h);
-    rrect(ctx, x - 6, y + h - 2, w + 12, 8, 4); fillStroke(ctx, p.frame, null);
-    if (st === 0 && i === 1) { // cracked pane
-      ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.moveTo(x + 150, y + 6); ctx.lineTo(x + 140, y + 30); ctx.lineTo(x + 156, y + 44); ctx.lineTo(x + 146, y + 70); ctx.stroke();
-    }
-    if (st >= 2 || i === 0) { // the left pot is always there (easter-egg target); wilted until the café is cosy
-      const wilted = st < 2;
-      ctx.fillStyle = wilted ? '#a8a172' : '#7fd1a1';
-      const leaves = wilted ? [[-8, -8, 5], [7, -9, 5], [0, -12, 4.5]] : [[-6, -12, 6], [6, -12, 6], [0, -18, 6]];
-      for (const [dx, dy, r] of leaves) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
-      rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, wilted ? '#c99a7a' : '#f6a07c', null);
-    }
+  ctx.restore();
+}
+
+/** Window frame, mullion and sill (+ plant once it's cosy). */
+function drawWindowFrame(ctx, { x, y, w, h }, i, sc) {
+  const p = sc.pal, st = sc.stage;
+  rrect(ctx, x, y, w, h, 16); ctx.strokeStyle = p.frame; ctx.lineWidth = 6; ctx.stroke();
+  ctx.fillStyle = p.frame; ctx.fillRect(x + w / 2 - 2, y, 4, h);
+  rrect(ctx, x - 6, y + h - 2, w + 12, 8, 4); fillStroke(ctx, p.frame, null);
+  if (st === 0 && i === 1) { // cracked pane
+    ctx.strokeStyle = 'rgba(255,255,255,0.85)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x + 150, y + 6); ctx.lineTo(x + 140, y + 30); ctx.lineTo(x + 156, y + 44); ctx.lineTo(x + 146, y + 70); ctx.stroke();
   }
-  // wall clock showing the real time
-  const cx = 270, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
-  circle(ctx, cx, cy, 25); fillStroke(ctx, '#fff', st >= 3 ? '#e3b94f' : p.clockRim, 4);
-  ctx.strokeStyle = INK; ctx.lineCap = 'round';
-  const hand = (a, len, lw) => {
-    ctx.lineWidth = lw; ctx.beginPath(); ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.sin(a) * len, cy - Math.cos(a) * len); ctx.stroke();
-  };
-  hand((hr / 12) * TAU, 10, 3.5);
-  hand((m / 60) * TAU, 16, 2.5);
-  circle(ctx, cx, cy, 2.5); ctx.fillStyle = '#ff8fab'; ctx.fill();
-  if (st >= 3) fairyLights(ctx, t);
-  if (sc.theme === 'seaside') drawGnome(ctx, t);
-  if (sc.season) drawSeason(ctx, t, sc);
+  if (st >= 2 || i === 0) { // the left pot is always there (easter-egg target); wilted until the café is cosy
+    const wilted = st < 2;
+    ctx.fillStyle = wilted ? '#a8a172' : '#7fd1a1';
+    const leaves = wilted ? [[-8, -8, 5], [7, -9, 5], [0, -12, 4.5]] : [[-6, -12, 6], [6, -12, 6], [0, -18, 6]];
+    for (const [dx, dy, r] of leaves) { circle(ctx, x + 28 + dx, y + h - 8 + dy, r); ctx.fill(); }
+    rrect(ctx, x + 20, y + h - 14, 16, 12, 3); fillStroke(ctx, wilted ? '#c99a7a' : '#f6a07c', null);
+  }
+}
+
+/** The menu's café window: the same live sky as the café, in one tall window (world units, 200x180). */
+export function drawMenuWindow(ctx, t, sc, now = new Date()) {
+  const win = { x: 12, y: 12, w: 176, h: 150 };
+  drawPane(ctx, win, 0, t, sc, skyAt(now));
+  drawWindowFrame(ctx, win, 0, sc);
+  ctx.fillStyle = sc.pal.frame; ctx.fillRect(win.x, win.y + win.h / 2 - 2, win.w, 4); // cross bar
 }
 
 function drawSeason(ctx, t, sc) {
