@@ -65,6 +65,7 @@
       <button class="btn big" data-action="play">▶ Play</button>
       <p class="best">🏆 High Score: <b id="menu-best">0</b></p>
       <div class="menu-grid">
+        <button class="btn secondary wide" data-action="openChallenges">🎯 Today's challenges <span id="challenge-count" class="challenge-count">0/3</span></button>
         <button class="btn secondary" data-action="openHelp">❓ How to play</button>
         <button class="btn secondary" data-action="openCharacters">🐱 Choose cat</button>
         <button class="btn secondary" data-action="openStickers">📖 Café book</button>
@@ -132,7 +133,7 @@
           <li><span class="tip-ico" aria-hidden="true">👑</span><span><b>VIP cats</b> wear crowns: they're impatient but pay triple!</span></li>
           <li><span class="tip-ico" aria-hidden="true">💰</span><span>Happy cats sometimes leave a <b>tip</b>.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🍽️</span><span>On weekends some cats order a <b>two-dish special</b>.</span></li>
-          <li><span class="tip-ico" aria-hidden="true">🎁</span><span>Come back every day for a <b>daily bonus</b>.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🎁</span><span>Come back every day for a <b>daily bonus</b> and three new <b>challenges</b>.</span></li>
         </ul>
         <h3>Your café</h3>
         <ul class="help-tips">
@@ -155,6 +156,16 @@
       </div>
       <p class="hint"><a href="privacy.html">Privacy policy</a> · no ads, no tracking, saves stay on your device</p>
       <button class="btn" data-action="closeHelp">Let's play!</button>
+    </div>
+  </section>
+
+  <!-- Daily challenges -->
+  <section id="screen-challenges" class="screen">
+    <div class="panel">
+      <button class="close-x" data-action="closeChallenges" aria-label="Back">✕</button>
+      <h2>Today's challenges</h2>
+      <p class="hint hint-top0">Three new challenges every day. Finish one for bonus coins!</p>
+      <div id="challenge-list" class="book-list"></div>
     </div>
   </section>
 

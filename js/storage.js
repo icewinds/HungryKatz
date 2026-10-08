@@ -15,6 +15,7 @@ export const DEFAULT_SAVE = () => ({
   pets: [],           // café pets bought and at the café (PETS ids)
   petsAway: [],       // bought pets sent home (no bonus; can come back free)
   staff: [],          // hired staff (STAFF ids)
+  challenges: { day: null, list: [] }, // today's daily challenges (see daily.js)
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
   stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false, byFood: {} }, // lifetime, for stickers + recipe book
   friends: {},        // regular id -> friendship (serves, up to FRIENDSHIP.max); present = met
@@ -64,6 +65,12 @@ function sanitize(data) {
         { ...d.outfit, ...(data.outfit && typeof data.outfit === 'object' ? data.outfit : {}) }),
       waiter: true,
       ownedOutfits: Array.isArray(data.ownedOutfits) ? data.ownedOutfits.filter(x => typeof x === 'string') : [],
+      challenges: (() => { // a broken list just re-rolls today
+        const c = data.challenges, ok = x => x && typeof x.kind === 'string' && [x.goal, x.reward, x.n].every(Number.isFinite);
+        return typeof c?.day === 'string' && Array.isArray(c.list) && c.list.every(ok)
+          ? { day: c.day, list: c.list.map(x => ({ kind: x.kind, food: typeof x.food === 'string' ? x.food : null, goal: x.goal, reward: x.reward, n: x.n, done: !!x.done })) }
+          : { day: null, list: [] };
+      })(),
       daily: {
         last: typeof data.daily?.last === 'string' ? data.daily.last : null,
         streak: Number.isInteger(data.daily?.streak) ? data.daily.streak : 0,

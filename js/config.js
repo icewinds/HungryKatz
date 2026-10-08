@@ -126,6 +126,19 @@ export const TIPS = { min: 2, max: 6 };
 // Daily bonus coins for streak days 1..7 (missing a day restarts at day 1; after day 7 it loops).
 export const DAILY_REWARDS = [20, 30, 40, 50, 60, 80, 120];
 
+// Daily challenges: three a day, each a different kind. A random goal (with its coin reward) is picked per day.
+// `best` kinds track the best single value (a combo, a score) instead of adding up.
+export const CHALLENGES = {
+  serve:   { icon: '🐱', goals: [15, 25, 40], rewards: [40, 60, 90], text: 'Serve {goal} cats' },
+  food:    { icon: '🍽', goals: [6, 12], rewards: [40, 70], text: 'Serve {goal} {food}' },
+  combo:   { icon: '🔥', goals: [5, 8], rewards: [50, 80], text: 'Reach a combo of ×{goal}', best: true },
+  vip:     { icon: '👑', goals: [2, 4], rewards: [50, 90], text: 'Serve {goal} VIP cats' },
+  plates:  { icon: '🧹', goals: [10, 20], rewards: [30, 50], text: 'Clear {goal} plates' },
+  score:   { icon: '⭐', goals: [300, 600], rewards: [50, 90], text: 'Score {goal} in one game', best: true },
+  regular: { icon: '💖', goals: [2, 4], rewards: [50, 80], text: 'Serve {goal} regulars' },
+};
+export const CHALLENGES_PER_DAY = 3;
+
 // Combo: serve again within `window` seconds to grow the streak; each step adds coins (capped). A miss resets it.
 export const COMBO = { window: 12, bonusPerStep: 2, maxBonus: 10 };
 

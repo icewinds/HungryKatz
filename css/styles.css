@@ -654,3 +654,13 @@ html, body {
 .friend em { font-style: normal; color: var(--pink-d); font-size: 13px; }
 .friend.best { background: #fff0f4; border-color: var(--pink); }
 .friend.unmet b { color: var(--ink-soft); }
+
+/* Daily challenges */
+.menu-grid .btn.wide { grid-column: 1 / -1; }
+.challenge-count { margin-left: 4px; padding: 1px 8px; border-radius: 6px; background: #fff1c2; color: #8a6a00; font-size: 14px; }
+.challenge-ico { display: grid; place-items: center; width: 40px; height: 40px; font-size: 30px; }
+.challenge-ico img, .challenge-ico .ico { width: 36px; height: 36px; }
+.challenge progress { width: 100%; height: 10px; margin-top: 4px; accent-color: var(--pink); }
+.challenge-pay { font-size: 15px; color: #8a6a00; white-space: nowrap; }
+.challenge.done { background: var(--mint-soft); }
+.challenge.done .challenge-pay { color: #24865b; }

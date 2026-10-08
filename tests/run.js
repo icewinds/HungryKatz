@@ -11,7 +11,7 @@ import { CharacterManager } from '../js/characters.js';
 import { NpcSpawner } from '../js/npcSpawner.js';
 import { THEMES, makeScene, seasonFor } from '../js/scene.js';
 import { EAT_TIME } from '../js/npc.js';
-import { DailyBonus, dayKey } from '../js/daily.js';
+import { DailyBonus, dayKey, todaysChallenges, progressChallenges } from '../js/daily.js';
 import { TRACKS, trackForLevel } from '../js/audio.js';
 import { Inventory } from '../js/inventory.js';
 import { Kitchen } from '../js/kitchen.js';
@@ -751,6 +751,27 @@ test('backup code: round-trips the save, rejects broken codes, sanitises the res
   const clean = Storage.fromCode(evil);
   assert.equal(clean.coins, 0);
   assert.deepEqual(clean.stickers, ['first']);
+});
+
+test('daily challenges: three different kinds a day, progress pays once, new day re-rolls', () => {
+  const save = DEFAULT_SAVE(), day = d => new Date(2026, 9, d, 10);
+  const list = todaysChallenges(save, ['milk'], day(1), () => 0); // rng 0: first remaining kind, first goal
+  assert.equal(list.length, 3);
+  assert.equal(new Set(list.map(c => c.kind)).size, 3, 'no repeated kind');
+  assert.equal(todaysChallenges(save, ['milk'], day(1)), list, 'same day keeps the same list');
+  const serve = list.find(c => c.kind === 'serve'), food = list.find(c => c.kind === 'food');
+  const coins = save.coins;
+  progressChallenges(save, list, 'food', 1, 'fish');
+  assert.equal(food.n, 0, 'the wrong dish does not count');
+  for (let i = 1; i < serve.goal; i++) assert.deepEqual(progressChallenges(save, list, 'serve'), []);
+  assert.deepEqual(progressChallenges(save, list, 'serve'), [serve]);
+  assert.equal(save.coins, coins + serve.reward);
+  assert.deepEqual(progressChallenges(save, list, 'serve'), [], 'pays only once');
+  assert.equal(save.stats.challenges, 1);
+  const best = { kind: 'combo', goal: 5, reward: 1, n: 0, done: false };
+  progressChallenges(save, [best], 'combo', 3); progressChallenges(save, [best], 'combo', 2);
+  assert.equal(best.n, 3, 'combo keeps the best, not the sum');
+  assert.notEqual(todaysChallenges(save, ['milk'], day(2), () => 0.99), list, 'a new day re-rolls');
 });
 
 console.log(`${passed} passed`);

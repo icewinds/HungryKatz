@@ -23,6 +23,7 @@ export const STICKERS = [
   { id: 'friend', icon: '💖', name: 'Best friends', desc: 'Become best friends with a regular.', tier: 'bronze', done: s => s.bestFriends >= 1 },
   { id: 'friendsAll', icon: '🥳', name: 'Everybody\'s friend', desc: 'Become best friends with every regular.', tier: 'gold', done: s => s.bestFriends >= REGULARS.length },
   { id: 'recipesGold', icon: '📖', name: 'Master menu', desc: 'Earn a gold star for every dish.', tier: 'gold', done: s => s.goldRecipes >= FOODS.length },
+  { id: 'challenges10', icon: '🎯', name: 'Go-getter', desc: 'Finish 10 daily challenges.', tier: 'silver', done: s => (s.stats.challenges ?? 0) >= 10 },
   { id: 'ghost', icon: '🎖️', name: 'Secret agent', desc: 'Discover the secret cat.', done: s => s.ghost },
 ];
 

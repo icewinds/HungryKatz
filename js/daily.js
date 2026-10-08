@@ -2,7 +2,7 @@
 // save.daily = { last: 'YYYY-MM-DD' | null, streak: 0..7 }
 // ponytail: trusts the device clock; a server timestamp would stop clock-change cheating.
 
-import { DAILY_REWARDS } from './config.js';
+import { DAILY_REWARDS, CHALLENGES, CHALLENGES_PER_DAY } from './config.js';
 
 /** Local calendar day as 'YYYY-MM-DD'. */
 export const dayKey = (d = new Date()) =>
@@ -33,4 +33,36 @@ export class DailyBonus {
     this.persist();
     return s.reward;
   }
+}
+
+/**
+ * Today's challenges, rolled fresh on a new day from the dishes on the menu.
+ * save.challenges = { day: 'YYYY-MM-DD', list: [{ kind, food, goal, reward, n, done }] }
+ */
+export function todaysChallenges(save, foods, now = new Date(), rng = Math.random) {
+  const day = dayKey(now);
+  if (save.challenges?.day === day) return save.challenges.list;
+  const kinds = Object.keys(CHALLENGES), list = [];
+  while (list.length < CHALLENGES_PER_DAY) {
+    const kind = kinds.splice(Math.floor(rng() * kinds.length), 1)[0], c = CHALLENGES[kind];
+    const i = Math.floor(rng() * c.goals.length);
+    list.push({ kind, food: kind === 'food' ? foods[Math.floor(rng() * foods.length)] : null, goal: c.goals[i], reward: c.rewards[i], n: 0, done: false });
+  }
+  save.challenges = { day, list };
+  return list;
+}
+
+/** Count `amount` towards today's `kind` challenges; pays out and returns the ones just finished. */
+export function progressChallenges(save, list, kind, amount = 1, food = null) {
+  const done = [];
+  for (const c of list) {
+    if (c.done || c.kind !== kind || (c.food && c.food !== food)) continue;
+    c.n = Math.min(c.goal, CHALLENGES[kind].best ? Math.max(c.n, amount) : c.n + amount);
+    if (c.n < c.goal) continue;
+    c.done = true;
+    save.coins += c.reward;
+    save.stats.challenges = (save.stats.challenges ?? 0) + 1;
+    done.push(c);
+  }
+  return done;
 }

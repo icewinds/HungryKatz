@@ -330,6 +330,13 @@ export const ICONS = {
     drawHeart(ctx, -10, 0, 9, '#ec5f89');
   },
   heartEmpty(ctx) { drawHeart(ctx, 0, 0, 26, '#f3e6ec'); },
+  target(ctx) {
+    for (const [r, col] of [[19, '#ff6b8a'], [13.5, '#fff7f9'], [8, '#ff6b8a'], [3.5, '#fff7f9']]) { circle(ctx, 0, 1, r); fillStroke(ctx, col, OL, r > 15 ? LW : 1.4); }
+    ctx.save(); ctx.translate(2, -1); ctx.rotate(-0.75);
+    ctx.fillStyle = '#5a3d4a'; ctx.fillRect(0, -1.5, 22, 3);
+    ctx.beginPath(); ctx.moveTo(16, -1.5); ctx.lineTo(23, -6); ctx.lineTo(22, -1.5); ctx.lineTo(23, 3); ctx.lineTo(16, 1.5); fillStroke(ctx, '#5aa9e6', OL, 1.2);
+    ctx.restore();
+  },
   question(ctx) { // a locked sticker slot
     ctx.strokeStyle = '#b7a4ad'; ctx.lineWidth = 3.6; ctx.lineCap = 'round';
     ctx.beginPath(); ctx.arc(0, -6, 7, Math.PI * 1.1, Math.PI * 0.45); ctx.lineTo(0, 4); ctx.stroke();
@@ -346,7 +353,7 @@ const EMOJI = {
   '🐶': 'puppy', '💰': 'bag', '💖': 'heart', '✨': 'sparkles', '🔗': 'link', '❓': 'help', '⚙': 'gear', '📲': 'install', '👆': 'tap',
   '🍣': 'sushi', '🧁': 'cupcake', '👒': 'sunhat', '🧹': 'broom', '🧙': 'gnome', '🐟': 'goldfish', '🦜': 'parrot', '🧑‍🍳': 'chefhat',
   '🧶': 'beanie', '🥳': 'partyhat', '🎨': 'beret', '🎩': 'tophat', '🩷': 'apronPink', '🟢': 'apronMint', '🔵': 'apronSky', '🟡': 'apronSunny',
-  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '🤍': 'heartEmpty',
+  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '🎯': 'target', '🤍': 'heartEmpty',
 };
 const EMOJI_RE = /\p{Extended_Pictographic}️?(?:‍\p{Extended_Pictographic}️?)*/gu;
 export const iconFor = emoji => EMOJI[emoji.replace(/️/g, '')];

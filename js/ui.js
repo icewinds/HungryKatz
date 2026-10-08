@@ -208,6 +208,26 @@ export class UIManager {
     requestAnimationFrame(() => bestCard?.scrollIntoView({ block: 'center' }));
   }
 
+  /** Today's challenges: what to do, a progress bar and the coin reward (ticked once done). */
+  renderChallenges(rows) {
+    $('challenge-count').textContent = `${rows.filter(r => r.done).length}/${rows.length}`;
+    $('challenge-list').replaceChildren(...rows.map(r => {
+      const row = document.createElement('div');
+      row.className = 'recipe challenge' + (r.done ? ' done' : '');
+      const ico = document.createElement('span'); ico.className = 'challenge-ico'; ico.setAttribute('aria-hidden', 'true');
+      if (r.img) { const img = document.createElement('img'); img.src = r.img; img.alt = ''; ico.append(img); } else ico.textContent = r.icon;
+      const body = document.createElement('div');
+      const name = document.createElement('b'); name.textContent = r.text;
+      const bar = Object.assign(document.createElement('progress'), { max: r.goal, value: r.n });
+      bar.setAttribute('aria-label', `${r.n} of ${r.goal}`);
+      body.append(name, bar);
+      const pay = document.createElement('span'); pay.className = 'challenge-pay';
+      pay.textContent = r.done ? '✔ Done' : `🪙 ${r.reward}`;
+      row.append(ico, body, pay);
+      return row;
+    }));
+  }
+
   /** Recipe book: one row per dish with serves, three stars (bronze/silver/gold) and the next goal. */
   renderRecipes(rows, tiers) {
     $('recipe-list').replaceChildren(...rows.map(r => {

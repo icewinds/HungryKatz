@@ -4,7 +4,7 @@
 import {
   WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
-  REGULARS, FRIENDSHIP, RECIPE_TIERS,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -16,7 +16,7 @@ import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
 import { EAT_TIME } from './npc.js';
 import { CharacterManager } from './characters.js';
-import { DailyBonus } from './daily.js';
+import { DailyBonus, todaysChallenges, progressChallenges } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag,
@@ -51,6 +51,22 @@ const playerOutfit = () => dressUp(playerLook(chars.current()), save.outfit, OUT
 /** Your cat trying on a hat (wardrobe previews). */
 const hatLook = hat => dressUp(playerLook(chars.current() === 'ghost' ? 'mango' : chars.current()), { ...save.outfit, hat }, OUTFITS);
 
+/** Today's challenges into the list (also refreshes the menu button's count). */
+function showChallenges() {
+  ui.renderChallenges(todaysChallenges(save, foodsForLevel(save.level)).map(c => ({
+    ...c, icon: CHALLENGES[c.kind].icon, img: c.food && foodIcons[c.food], text: challengeText(c) })));
+}
+const challengeText = c => CHALLENGES[c.kind].text.replace('{goal}', c.goal).replace('{food}', FOODS.find(f => f.id === c.food)?.label ?? '');
+/** Count towards today's challenges; finished ones pay out with a banner. */
+function challenge(kind, amount = 1, food = null) {
+  const done = progressChallenges(save, todaysChallenges(save, foodsForLevel(save.level)), kind, amount, food);
+  if (!done.length) return;
+  setTimeout(() => audio.play('buy'), 250);
+  ui.banners(done.map(c => `🎯 Challenge done: ${challengeText(c)}! +${c.reward} 🪙`));
+  persist();
+  checkStickers();
+}
+
 function maybeShowDaily() {
   const s = daily.status();
   if (s.available) ui.showDaily(s);
@@ -77,12 +93,20 @@ function onEvent(type, d) {
         persist();
       }
       break;
-    case 'plates': if (!d.cleaner) { audio.play('plate'); setTimeout(() => audio.play('coin'), 100); } break;
+    case 'plates':
+      if (!d.cleaner) { audio.play('plate'); setTimeout(() => audio.play('coin'), 100); }
+      challenge('plates', d.n);
+      break;
     case 'arrive': audio.play('arrive'); break;
     case 'wrongFood': audio.play('wrong'); break;
     case 'feed':
       recordServe(save.stats, d);
       checkStickers();
+      challenge('serve');
+      for (const f of d.npc.requests) challenge('food', 1, f);
+      if (d.vip) challenge('vip');
+      if (d.npc.regular) challenge('regular');
+      challenge('combo', d.combo);
       ghostQuip(d.npc);
       if (d.combo >= 3) setTimeout(() => audio.play('pickup'), 220); // extra jingle on a hot streak
       audio.play('feed');
@@ -113,6 +137,7 @@ function onEvent(type, d) {
       break;
     case 'gameOver':
       lastScore = d.score;
+      challenge('score', d.score);
       audio.play('gameOver');
       ui.showHud(false);
       ui.showGameOver(d, save.playerName, save.settings.difficulty !== 'relaxed' && d.fed < 15);
@@ -164,6 +189,8 @@ const ui = new UIManager({
   },
   bookTab: btn => showTabs(BOOK_TABS, btn.dataset.tab),
   closeStickers: () => ui.show('menu'),
+  openChallenges: () => { showChallenges(); ui.show('challenges'); },
+  closeChallenges: () => ui.show('menu'),
   pickOutfit: btn => {
     const kind = btn.dataset.kind, item = OUTFITS[kind]?.find(o => o.id === btn.dataset.id);
     if (!item) return;
@@ -430,6 +457,7 @@ function goToMenu() {
   refreshScene(); // back to the best-level café behind the menu
   ui.showHud(false);
   ui.setMenuBest(highScores.best());
+  showChallenges();
   ui.show('menu');
   maybeShowDaily();
 }
@@ -886,6 +914,7 @@ if (isIOS) {
     ' then ', Object.assign(document.createElement('b'), { textContent: 'Add to Home Screen' }), ' to play full-screen, even offline.');
 }
 ui.setMenuBest(highScores.best());
+showChallenges();
 ui.show('menu');
 maybeShowDaily();
 requestAnimationFrame(frame);
