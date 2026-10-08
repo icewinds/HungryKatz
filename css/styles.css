@@ -760,6 +760,8 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
   flex-direction: column; gap: 8px;
   padding: calc(env(safe-area-inset-top) + 58px) calc(env(safe-area-inset-right) + 6px) calc(env(safe-area-inset-bottom) + 8px) 6px;
 }
+#tray { pointer-events: none; } /* full-height rail: let taps through to the pause button above it */
+#tray > * { pointer-events: auto; }
 .tray-items { flex-direction: column; justify-content: center; gap: 6px; padding: 8px 4px; }
 .btn-upgrade { min-height: 52px; padding: 6px 2px; font-size: 15px; }
 
