@@ -22,7 +22,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawMenuWindow, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
 canvasIcons.text = fillRichText;
@@ -140,6 +140,7 @@ function onEvent(type, d) {
       challenge('score', d.score);
       audio.play('gameOver');
       ui.showHud(false);
+      resize();
       ui.showGameOver(d, save.playerName, save.settings.difficulty !== 'relaxed' && d.fed < 15);
       drawClosedCat();
       ui.setUnlockNote(chars.unlocked().filter(id => !unlockedAtStart.includes(id)).map(id => playerLook(id).name));
@@ -456,6 +457,7 @@ function goToMenu() {
   gm.quitRun();
   refreshScene(); // back to the best-level café behind the menu
   ui.showHud(false);
+  resize();
   ui.setMenuBest(highScores.best());
   showChallenges();
   ui.show('menu');
@@ -512,13 +514,14 @@ function resize() {
   Object.assign(view, { w, h, dpr });
   canvas.width = Math.round(w * dpr);
   canvas.height = Math.round(h * dpr);
-  // Fit the café between the score rail (left) and the carry rail (right), keeping the important rows
-  // on screen top to bottom; proportions preserved, anything else runs into the letterbox.
+  // Playing: fit the café between the score rail (left) and the carry rail (right), keeping the important
+  // rows on screen top to bottom. Menus: the café fills the screen behind them, windows at the top.
   measureHud();
-  const left = hudInsets.left, band = Math.max(1, w - hudInsets.right - left), rows = VIEW_ROWS.bottom - VIEW_ROWS.top;
-  view.scale = Math.min(band / WORLD.W, h / rows);
+  const playing = !document.getElementById('hud').classList.contains('hidden');
+  const left = playing ? hudInsets.left : 0, band = Math.max(1, w - (playing ? hudInsets.right : 0) - left), rows = VIEW_ROWS.bottom - VIEW_ROWS.top;
+  view.scale = playing ? Math.min(band / WORLD.W, h / rows) : Math.max(w / WORLD.W, h / rows);
   view.ox = left + (band - WORLD.W * view.scale) / 2;
-  view.oy = -VIEW_ROWS.top * view.scale + (h - rows * view.scale) / 2;
+  view.oy = -VIEW_ROWS.top * view.scale + (playing ? (h - rows * view.scale) / 2 : 0);
   buildBackground();
 }
 
@@ -685,6 +688,7 @@ function render(time) {
     } else if (a.table) {
       drawTable(ctx, a.table, scene, time);
     } else if (a.chef) {
+      if (ui.current === 'menu') continue; // the home screen shows your cat up front instead
       const look = playerOutfit(), walking = p.state === 'walk';
       drawWaiterTray(ctx, p.x, p.y, p.facing, look, inv, time, walking, false, gm.dirtyCarried); // empty: tucked behind
       drawCat(ctx, p.x, p.y, look, { state: p.state, t: time, facing: p.facing, squash: p.squash });
@@ -801,7 +805,6 @@ function updateDebugPanel(now) {
 // ---------------------------------------------------------------- menu mascot
 const menuCanvas = document.getElementById('menu-cat');
 const mctx = menuCanvas.getContext('2d');
-const menuWindow = document.getElementById('menu-window'), wctx = menuWindow.getContext('2d');
 // After a minute with no taps, keys or mouse movement the menu cat stretches and yawns (then every minute).
 const IDLE_MS = 60000, YAWN_S = 4.2;
 const menuIdle = { since: performance.now(), tapAt: -Infinity };
@@ -824,10 +827,6 @@ function yawnPose(T) {
 
 function drawMenuCat(time) {
   if (ui.current !== 'menu') return;
-  wctx.setTransform(1, 0, 0, 1, 0, 0);
-  wctx.clearRect(0, 0, menuWindow.width, menuWindow.height);
-  wctx.setTransform(2, 0, 0, 2, 0, 0); // drawn at 2x for crisp edges
-  drawMenuWindow(wctx, time, scene);
   mctx.setTransform(1, 0, 0, 1, 0, 0);
   mctx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
   mctx.setTransform(2.2, 0, 0, 2.2, 126, menuCanvas.height - 17); // room for the tail swing (122px left) and a tall hat mid-stretch (246px up)

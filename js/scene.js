@@ -534,13 +534,6 @@ function drawWindowFrame(ctx, { x, y, w, h }, i, sc) {
   }
 }
 
-/** The menu's café window: the same live sky as the café, in one tall window (world units, 200x180). */
-export function drawMenuWindow(ctx, t, sc, now = new Date()) {
-  const win = { x: 12, y: 12, w: 176, h: 150 };
-  drawPane(ctx, win, 0, t, sc, skyAt(now));
-  drawWindowFrame(ctx, win, 0, sc);
-  ctx.fillStyle = sc.pal.frame; ctx.fillRect(win.x, win.y + win.h / 2 - 2, win.w, 4); // cross bar
-}
 
 function drawSeason(ctx, t, sc) {
   const y = LAYOUT.kitchenY;

@@ -690,7 +690,6 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 .logo span { display: block; color: #f27aa0; text-shadow: 0 3px 0 #cf5680, 0 5px 0 #b8456d, 0 9px 14px rgba(120, 60, 80, 0.25); transform: rotate(-3deg); }
 .logo .katz { color: #f6a53b; text-shadow: 0 3px 0 #d9822a, 0 5px 0 #b86a1e, 0 9px 14px rgba(120, 80, 30, 0.25); transform: rotate(2deg); margin-top: 2px; }
 .menu-hero { position: relative; margin: 4px -20px 0; }
-#menu-window { position: absolute; left: 50%; top: 8px; width: 220px; height: 198px; transform: translateX(-50%); }
 .tagline {
   position: relative; z-index: 1; display: inline-block; margin: -14px 0 16px; padding: 7px 30px;
   background: #fff3df; color: var(--ink); font-size: 16px;
@@ -705,25 +704,40 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 .menu-grid .btn[data-action="openSettings"] { background-color: #dcf2e7; border-color: #9fd6bd; box-shadow: 0 3px 0 #9fd6bd; }
 .menu-grid .btn:active { box-shadow: none; }
 
-/* Landscape: logo + cat on the left, Play / score / tagline on the right, buttons along the bottom */
-@media (orientation: landscape) and (max-height: 600px) {
-  #screen-menu .panel {
-    width: min(900px, 100%); display: grid; align-items: center; column-gap: 12px;
-    grid-template-columns: 1fr 1fr; grid-template-areas: 'logo play' 'hero play' 'grid grid';
-  }
-  #screen-menu .logo { grid-area: logo; font-size: 40px; }
-  #screen-menu .logo span { display: inline-block; margin: 0 4px; }
-  #screen-menu .panel { padding: 16px 18px 14px; }
-  #screen-menu .menu-hero { grid-area: hero; margin: 0; }
-  #screen-menu #menu-window { width: 150px; height: 135px; top: 4px; }
-  #screen-menu #menu-cat { height: 170px; width: 133px; left: -19px; }
-  #screen-menu .menu-side { grid-area: play; display: flex; flex-direction: column; align-items: center; }
-  #screen-menu .tagline { margin: 4px 0 0; order: 3; }
-  #screen-menu .menu-grid { grid-area: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
-  #screen-menu .menu-grid .btn { min-height: 42px; padding-block: 6px; font-size: 16px; }
-  #screen-menu .menu-grid > .btn { grid-column: auto; justify-self: stretch; min-width: 0; }
-  #screen-menu #install-hint { display: none; }
+/* Home: the live café is the backdrop, in a cream frame with a paw-print border.
+   Logo + your cat on the left, Play / score / tagline on the right, a row of buttons along the bottom. */
+#screen-menu {
+  background: none; backdrop-filter: none; -webkit-backdrop-filter: none;
+  padding: calc(env(safe-area-inset-top) + 18px) calc(env(safe-area-inset-right) + 18px) calc(env(safe-area-inset-bottom) + 18px) calc(env(safe-area-inset-left) + 18px);
 }
+#screen-menu::before { /* the border only: a mask cuts out the middle */
+  content: ''; position: absolute; inset: 0; z-index: -1; box-sizing: border-box; padding: inherit;
+  background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px;
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+#screen-menu .panel {
+  width: 100%; height: 100%; max-height: none; padding: 0; overflow: hidden; animation: none;
+  background: none; border: 6px solid #fffaf1; border-radius: 18px;
+  box-shadow: 0 0 0 2px var(--tan), 0 10px 28px rgba(120, 80, 50, 0.25);
+  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto 1fr auto;
+  grid-template-areas: 'logo side' 'hero side' 'grid grid';
+}
+#screen-menu .logo { grid-area: logo; justify-self: start; padding: 2vh 0 0 4vw; font-size: clamp(38px, 12.5vh, 110px); }
+#screen-menu .menu-hero { grid-area: hero; align-self: end; justify-self: start; margin: 0; padding-left: 5vw; }
+#screen-menu .menu-hero::after { content: ""; display: block; width: 130%; height: 14px; margin: -12px 0 0 -12%; border-radius: 6px; background: #d9a878; box-shadow: inset 0 -4px 0 #b8865a, 0 4px 8px rgba(90, 60, 40, 0.2); }
+#screen-menu #menu-cat { height: clamp(140px, 44vh, 380px); width: auto; aspect-ratio: 210 / 268; left: 0; }
+#screen-menu .menu-side { grid-area: side; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 1.6vh; padding-right: 3vw; }
+#screen-menu .btn.big[data-action="play"] { width: min(80%, 380px); font-size: clamp(24px, 7.5vh, 48px); padding-block: 1.6vh; }
+#screen-menu .best { margin: 0; font-size: clamp(15px, 4.2vh, 24px); }
+#screen-menu .tagline { margin: 0; padding: 8px 34px; font-size: clamp(14px, 4.2vh, 24px); }
+#screen-menu .menu-grid {
+  grid-area: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 8px;
+  padding: 8px 10px; background: url(../assets/ui/felt.svg), var(--paper); border-top: 2px solid var(--tan);
+}
+#screen-menu .menu-grid > .btn { grid-column: auto; justify-self: stretch; min-width: 0; min-height: 42px; padding: 6px 4px; font-size: clamp(13px, min(3.8vh, 1.7vw), 19px); }
+#screen-menu .challenge-count { padding: 0 5px; font-size: 0.8em; }
+#screen-menu #install-hint { display: none; }
 
 /* ---------- Landscape: score rail on the left, carry rail on the right ---------- */
 :root { --rail: 84px; }
