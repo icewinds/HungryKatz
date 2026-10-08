@@ -57,6 +57,24 @@ export function randomLook(rng = Math.random) {
 
 // Playable waiter cats (character select). `acc` = apron colour.
 const WAITER = { accessory: 'waiter', size: 1.08, seed: 0 };
+// Dusty the cleaner (hired staff, not playable): blue-grey with a mint scarf and a broom.
+export const CLEANER_LOOK = { id: 'dusty', name: 'Dusty', fur: '#9fb0c4', light: '#eef3f8', dark: '#5f6f82', pattern: 'stripes',
+  acc: '#6fcf9f', eye: '#3b2a33', patch: '#fff', accessory: 'scarf', size: 1, seed: 0.3 };
+/** Dusty's broom, held at the side (drawn after the cat). */
+export function drawBroom(ctx, x, y, facing, t, walking) {
+  const sway = walking ? Math.sin(t * 11) * 0.12 : Math.sin(t * 2) * 0.04;
+  ctx.save(); ctx.translate(x + facing * 16, y - 6); ctx.rotate(facing * (0.25 + sway));
+  rrect(ctx, -1.8, -62, 3.6, 56, 1.8); fillStroke(ctx, '#b07a48', '#7d5230', 1);
+  ctx.beginPath(); ctx.moveTo(-5, -8); ctx.lineTo(5, -8); ctx.lineTo(9, 4); ctx.lineTo(-9, 4); ctx.closePath();
+  fillStroke(ctx, '#e3c06a', '#a8863a', 1.2);
+  ctx.restore();
+}
+/** A stack of empty plates (crumbs on top), e.g. what Dusty is carrying. */
+export function drawPlateStack(ctx, x, y, n) {
+  for (let i = 0; i < Math.min(n, 4); i++) { ellipse(ctx, x, y - i * 3, 9, 3.4); fillStroke(ctx, '#fff', '#e3cbd4', 1); }
+  ctx.fillStyle = '#d9b49a';
+  for (const [dx, dy] of [[-3, 0], [2, 1], [4, -1]]) { circle(ctx, x + dx, y - Math.min(n, 4) * 3 + 3 + dy, 1); ctx.fill(); }
+}
 // Chef Biscuit runs the kitchen (not playable).
 export const KITCHEN_CHEF = { id: 'biscuit', name: 'Chef Biscuit', fur: '#f1dcb8', light: '#fff8ec', dark: '#b8925e', pattern: 'socks',
   acc: '#ffffff', eye: '#4a7fc9', patch: '#fff', accessory: 'chef', size: 1.18, seed: 0.6 };
@@ -539,9 +557,9 @@ export function drawPass(ctx, zone, type, ready, canTake, t, flash, lockedLevel 
 /** Tiny badge above the player: only the foods actually carried. Never flipped. */
 /** The waiter's silver tray. Empty: tucked under the arm, behind the body (draw before the cat).
  *  Carrying food: held up on one paw beside the head with a little plate of each food (draw after the cat). */
-export function drawWaiterTray(ctx, x, y, facing, look, inv, t, walking, held) {
+export function drawWaiterTray(ctx, x, y, facing, look, inv, t, walking, held, dirty = 0) {
   const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
-  if (held !== items.length > 0) return;
+  if (held !== (items.length > 0 || dirty > 0)) return;
   const s = look.size || 1, bob = walking ? -Math.abs(Math.sin(t * 11)) * 3 : Math.sin(t * 2.4) * 0.8;
   ctx.save();
   ctx.translate(x, y); ctx.scale(s, s);
@@ -559,9 +577,10 @@ export function drawWaiterTray(ctx, x, y, facing, look, inv, t, walking, held) {
   ellipse(ctx, tx, ty + 3, 23, 6.5); fillStroke(ctx, '#c7ccd6', '#8e97a6', 1.6); // tray rim
   ellipse(ctx, tx, ty + 1.5, 20, 5); fillStroke(ctx, '#eef1f6', null);           // tray top
   ellipse(ctx, tx - 7, ty, 7, 1.6); ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.fill(); // shine
-  const shown = items.slice(0, 3), gap = shown.length > 1 ? 26 / (shown.length - 1) : 0;
+  const shown = [...items.slice(0, 3), ...(dirty ? ['dirty'] : [])].slice(0, 4), gap = shown.length > 1 ? 26 / (shown.length - 1) : 0;
   shown.forEach((k, i) => {
     const px = tx - (shown.length > 1 ? 13 : 0) + i * gap;
+    if (k === 'dirty') { drawPlateStack(ctx, px, ty + 1, dirty); return; } // empty plates to take back
     ellipse(ctx, px, ty + 1, 8, 3); fillStroke(ctx, '#fff', '#f0d0dc', 1);
     drawFoodIcon(ctx, k, px, ty - 5, 0.5);
   });
@@ -569,8 +588,9 @@ export function drawWaiterTray(ctx, x, y, facing, look, inv, t, walking, held) {
   ctx.restore();
 }
 
-export function drawCarryBadge(ctx, x, y, inv) {
+export function drawCarryBadge(ctx, x, y, inv, dirty = 0) {
   const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
+  if (dirty) items.push('dirty');
   if (!items.length) return;
   const w = items.length * 34 + 6, h = 24, top = y - 114;
   x = Math.min(Math.max(x, w / 2 + 4), WORLD.W - w / 2 - 4); // keep the badge on screen near walls
@@ -578,8 +598,8 @@ export function drawCarryBadge(ctx, x, y, inv) {
   ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   items.forEach((k, i) => {
     const ix = x - w / 2 + 13 + i * 34;
-    drawFoodIcon(ctx, k, ix, top + 12, 0.55);
-    ctx.fillStyle = INK; ctx.fillText(inv.items[k], ix + 9, top + 13);
+    if (k === 'dirty') drawPlateStack(ctx, ix, top + 15, 2); else drawFoodIcon(ctx, k, ix, top + 12, 0.55);
+    ctx.fillStyle = INK; ctx.fillText(k === 'dirty' ? dirty : inv.items[k], ix + 9, top + 13);
   });
 }
 

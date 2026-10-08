@@ -3,7 +3,7 @@
 
 import {
   WORLD, LAYOUT, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
-  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS,
+  foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -18,7 +18,7 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass,
+  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
@@ -67,6 +67,8 @@ function onEvent(type, d) {
   switch (type) {
     case 'pickup': audio.play('pickup'); break;
     case 'plated': audio.play('plate'); break;
+    case 'cleared': audio.play('click'); break;
+    case 'plates': if (!d.cleaner) { audio.play('plate'); setTimeout(() => audio.play('coin'), 100); } break;
     case 'arrive': audio.play('arrive'); break;
     case 'wrongFood': audio.play('wrong'); break;
     case 'feed':
@@ -235,7 +237,7 @@ const ui = new UIManager({
   openUpgrades: () => {
     if (gm.state !== 'playing') return;
     gm.paused = true; // stops timers, movement and spawning
-    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
     ui.show('upgrades');
   },
   closeUpgrades: () => { gm.applyUpgrades(); gm.paused = false; ui.show(null); },
@@ -244,7 +246,7 @@ const ui = new UIManager({
     if (upgrades.buy(id)) {
       audio.play('buy');
       gm.applyUpgrades();
-      ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
+      ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
       ui.cardEffect(id, 'bought');
     } else {
       audio.play('wrong');
@@ -263,9 +265,24 @@ const ui = new UIManager({
     save.pets.push(id);
     persist();
     audio.play('buy');
-    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
     ui.cardEffect(id, 'bought');
     ui.banner(`${pet.icon} ${pet.name} moved into your café!`);
+    checkStickers();
+  },
+  hireStaff: btn => {
+    const id = btn.dataset.id, who = STAFF[id];
+    if (!who || save.staff.includes(id)) return;
+    if (save.level < who.level) { audio.play('wrong'); ui.banner(`${who.icon} Hire ${who.name} at café level ${who.level}`); return; }
+    if (save.coins < who.cost) { audio.play('wrong'); ui.cardEffect(id, 'poor'); ui.banner(`Need 🪙 ${who.cost - save.coins} more coins`); return; }
+    save.coins -= who.cost;
+    save.staff.push(id);
+    persist();
+    gm.updateStaff(); // starts work straight away
+    audio.play('buy');
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
+    ui.cardEffect(id, 'bought');
+    ui.banner(`${who.icon} ${who.name} joined the team!`);
     checkStickers();
   },
   togglePet: btn => { // owned pets can go home (no bonus) and come back for free
@@ -283,7 +300,7 @@ const ui = new UIManager({
       ui.banner(`${pet.icon} ${pet.name} is back in your café!`);
     } else return;
     persist();
-    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
   },
   toggleMusic: () => {
     save.settings.music = !save.settings.music; persist();
@@ -593,23 +610,29 @@ function render(time) {
   }
 
   const tables = sceneTables(scene).map(t => ({ table: t, y: t.y + 8 }));
-  // Served dishes sit on the table/bar while the cat eats, then an empty plate fades out.
-  const DISH_FADE = 1.5;
-  const dishes = npcs
-    .filter(n => n.state === 'eating' || (n.mood === 'happy' && n.leaveT < DISH_FADE))
-    .map(n => ({ dish: n, y: n.spot.plate.z }));
-  const actors = [...npcs, { chef: true, y: chefDepth(p, npcs, tables) }, ...tables, ...dishes].sort((a, b) => a.y - b.y);
+  // Served dishes sit on the table/bar while the cat eats; the empty plate stays until it is cleared.
+  const dishes = npcs.filter(n => n.state === 'eating').map(n => ({ dish: n, y: n.spot.plate.z }));
+  const leftovers = [...gm.dirty].map(s => ({ leftover: s, y: s.plate.z }));
+  const staff = gm.cleaner ? [{ cleaner: gm.cleaner, y: gm.cleaner.body.y }] : [];
+  const actors = [...npcs, { chef: true, y: chefDepth(p, npcs, tables) }, ...tables, ...dishes, ...leftovers, ...staff].sort((a, b) => a.y - b.y);
   for (const a of actors) {
     if (a.dish) {
-      const n = a.dish, pl = n.spot.plate, eating = n.state === 'eating';
-      drawDish(ctx, pl.x, pl.y, n.request, eating ? Math.min(1, n.eatT / EAT_TIME) : 0, eating ? 1 : 1 - n.leaveT / DISH_FADE);
+      const n = a.dish, pl = n.spot.plate;
+      drawDish(ctx, pl.x, pl.y, n.request, Math.min(1, n.eatT / EAT_TIME));
+    } else if (a.leftover) {
+      drawDish(ctx, a.leftover.plate.x, a.leftover.plate.y, null, 0); // empty plate with crumbs
+    } else if (a.cleaner) {
+      const b = a.cleaner.body, walking = b.state === 'walk';
+      drawCat(ctx, b.x, b.y, CLEANER_LOOK, { state: b.state, t: time + 0.7, facing: b.facing });
+      drawBroom(ctx, b.x, b.y, b.facing, time, walking);
+      if (a.cleaner.carrying) drawPlateStack(ctx, b.x - b.facing * 16, b.y - 46, a.cleaner.carrying);
     } else if (a.table) {
       drawTable(ctx, a.table, scene, time);
     } else if (a.chef) {
       const look = playerOutfit(), walking = p.state === 'walk';
-      drawWaiterTray(ctx, p.x, p.y, p.facing, look, inv, time, walking, false); // empty: tucked behind
+      drawWaiterTray(ctx, p.x, p.y, p.facing, look, inv, time, walking, false, gm.dirtyCarried); // empty: tucked behind
       drawCat(ctx, p.x, p.y, look, { state: p.state, t: time, facing: p.facing, squash: p.squash });
-      drawWaiterTray(ctx, p.x, p.y, p.facing, look, inv, time, walking, true);  // carrying: held up
+      drawWaiterTray(ctx, p.x, p.y, p.facing, look, inv, time, walking, true, gm.dirtyCarried);  // carrying: held up
     } else {
       const shake = a.state === 'waiting' && a.frac < 0.3 && !reduceMotion.matches ? Math.sin(time * 40) * 1.2 : 0;
       const anim = speaking.has(a) ? 'talk' : a.anim;
@@ -629,7 +652,7 @@ function render(time) {
     else if (n.mood === 'sad') drawMissBadge(ctx, n.x, top - 6, time);
     else if (n.mood === 'happy' || n.state === 'eating') drawHeart(ctx, n.x, top + Math.sin(time * 6) * 3, 16);
   }
-  if (gm.state === 'playing') drawCarryBadge(ctx, p.x, p.y, inv);
+  if (gm.state === 'playing') drawCarryBadge(ctx, p.x, p.y, inv, gm.dirtyCarried);
   drawFx(ctx, gm.fx, 'over');
   drawFirstGameHint(time);
 

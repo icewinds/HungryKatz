@@ -18,7 +18,7 @@ import { Kitchen } from '../js/kitchen.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus, levelSpawnPace,
-  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN,
+  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING,
 } from '../js/config.js';
 
 let passed = 0;
@@ -105,6 +105,39 @@ test('kitchen: milk comes from the fridge (chef must be there), cupcakes from th
   assert.equal(k.fridge.t, 0, 'milk does not pour until the chef reaches the fridge');
   for (let i = 0; i < 60 * 20; i++) k.update(1 / 60);
   assert.deepEqual(k.ready, { milk: 1, cupcake: 1, fish: 1 });
+});
+
+test('clearing: a happy customer leaves an empty plate; the seat stays empty until it goes back to the counter', () => {
+  const { gm, save } = setup(MAX5);
+  const spot = LAYOUT.spots[0];
+  const npc = arrive(gm, { spot, request: 'milk' });
+  gm.inventory.fill('milk');
+  place(gm, npc.x, npc.y); tick(gm, 1 / 60);
+  park(gm);
+  for (let i = 0; i < 60 * 3; i++) gm.update(1 / 60);
+  assert.ok(gm.dirty.has(spot), 'their plate stays on the table');
+  for (let i = 0; i < 40; i++) assert.notEqual(gm.spawner.randomFreeSpot(gm.npcs, gm.spots.filter(s => !gm.dirty.has(s))), spot);
+  const coins = save.coins;
+  place(gm, spot.x, spot.y + 10); tick(gm, 1 / 60);
+  assert.equal(gm.dirtyCarried, 1);
+  assert.ok(!gm.dirty.has(spot), 'the waiter picked it up');
+  place(gm, LAYOUT.pads.milk.x, LAYOUT.pads.milk.y - 20); tick(gm, 1 / 60);
+  assert.equal(gm.dirtyCarried, 0);
+  assert.equal(save.coins, coins + CLEARING.coinPerPlate, 'a coin for each plate returned');
+});
+
+test('cleaner: once hired, Dusty clears every empty plate and hands them in', () => {
+  assert.equal(setup(MAX5).gm.cleaner, null, 'no cleaner until hired');
+  const { gm } = setup({ ...MAX5, staff: ['cleaner'] });
+  assert.ok(gm.cleaner);
+  gm.dirty.add(LAYOUT.spots[0]); gm.dirty.add(LAYOUT.spots[5]);
+  park(gm);
+  const events = [];
+  gm.onEvent = (type, d) => events.push([type, d]);
+  for (let i = 0; i < 60 * 30 && (gm.dirty.size || gm.cleaner.carrying); i++) gm.update(1 / 60);
+  assert.equal(gm.dirty.size, 0);
+  assert.equal(gm.cleaner.carrying, 0);
+  assert.ok(events.some(([type, d]) => type === 'plates' && d.cleaner && d.n === 2));
 });
 
 test('kitchen: no overcooking, cancelled orders, more stoves as the café grows', () => {

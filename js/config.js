@@ -143,6 +143,19 @@ export const PETS = {
 };
 export const PET_BONUS = { goldfishCoins: 1, puppyPatience: 2, parrotTips: 0.1 };
 
+// Clearing tables: happy customers leave their empty plate behind, and that seat can't be used until
+// someone takes the plate back to the counter. Staff can be hired in the Upgrades screen.
+export const CLEARING = {
+  coinPerPlate: 1,               // the waiter earns this for each plate returned
+  cleanerSpeed: 130,
+  cleanerStack: 4,               // plates Dusty carries before heading to the counter
+  cleanerHome: { x: 470, y: 700 },
+  dropOff: { x: 270, y: 730 },   // where Dusty hands plates in
+};
+export const STAFF = {
+  cleaner: { icon: '🧹', name: 'Dusty the cleaner', cost: 500, level: 5, desc: 'Clears empty plates from the tables for you.' },
+};
+
 // Wardrobe for your waiter cat (Choose cat screen). Hats reuse cat accessories; aprons recolour the apron.
 export const OUTFITS = {
   hats: [

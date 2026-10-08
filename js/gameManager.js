@@ -1,11 +1,12 @@
 // Game Manager: all gameplay state and rules. No DOM access, so it runs in Node tests.
 // UI/audio react through onEvent(type, data):
-//   pickup, plated, arrive, feed, wrongFood, missed, levelUp, gameOver
+//   pickup, plated, arrive, feed, wrongFood, missed, cleared, plates, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF,
 } from './config.js';
 import { Kitchen } from './kitchen.js';
+import { Cleaner } from './cleaner.js';
 import { Player } from './player.js';
 import { NPC } from './npc.js';
 import { NpcSpawner } from './npcSpawner.js';
@@ -24,6 +25,9 @@ export class GameManager {
     this.stations = FOODS.map(f => new FoodStation(f.id, LAYOUT.pads[f.id]));
     this.spawner = new NpcSpawner(undefined, LAYOUT.spots, rng);
     this.kitchen = new Kitchen(KITCHEN.stovesFor(save.level ?? 1));
+    this.dirty = new Set();   // seats with an empty plate left on them
+    this.dirtyCarried = 0;    // empty plates in the waiter's paws
+    this.cleaner = null;      // Dusty, once hired
     this.npcs = [];
     this.fx = [];
     this.state = 'menu';
@@ -55,6 +59,9 @@ export class GameManager {
     this.queue = [];      // further tapped stops, in order
     this.spawner.reset();
     this.kitchen.reset(KITCHEN.stovesFor(this.level));
+    this.dirty = new Set();
+    this.dirtyCarried = 0;
+    this.updateStaff(true);
     this.applyUpgrades();
     this.combo = 0;                 // serves in a row (see COMBO)
     this.lastServeAt = -Infinity;
@@ -62,6 +69,13 @@ export class GameManager {
   }
 
   hasPet(id) { return this.save.pets?.includes(id); }
+
+  /** Hired staff join the café (`fresh`: start of a run, so they begin at their post). */
+  updateStaff(fresh = false) {
+    const hired = this.save.staff?.includes('cleaner');
+    if (!hired) this.cleaner = null;
+    else if (fresh || !this.cleaner) this.cleaner = new Cleaner();
+  }
 
   applyUpgrades() {
     this.inventory.setMax(this.upgrades.value('carry'));
@@ -117,6 +131,7 @@ export class GameManager {
     for (const s of this.stations) {
       s.update(dt);
       if (!s.contains(p.x, p.y, this.upgrades.value('reach'))) continue;
+      if (this.dirtyCarried) this.returnPlates(); // any counter spot takes empty plates back
       if (!foods.includes(s.type)) {
         if (s.hintCd <= 0) {
           s.hintCd = 2;
@@ -139,7 +154,7 @@ export class GameManager {
     }
 
     const diff = this.difficulty;
-    const tuning = { spots: this.spots, maxBonus: levelCrowdBonus(this.level) + diff.maxNpcs, intervalMult: diff.interval * levelSpawnPace(this.level) };
+    const tuning = { spots: this.spots.filter(s => !this.dirty.has(s)), maxBonus: levelCrowdBonus(this.level) + diff.maxNpcs, intervalMult: diff.interval * levelSpawnPace(this.level) };
     for (const spawn of this.spawner.update(dt, this.runTime, this.npcs, foods, tuning)) this.spawnNpc(spawn);
 
     for (const npc of this.npcs) {
@@ -150,13 +165,23 @@ export class GameManager {
         this.onEvent('arrive', { npc });
       }
       else if (ev === 'expired') this.missNpc(npc);
-      else if (ev === 'fedDone') npc.leave('happy');
+      else if (ev === 'fedDone') { npc.leave('happy'); this.dirty.add(npc.spot); } // their empty plate stays behind
     }
     this.npcs = this.npcs.filter(n => n.state !== 'gone');
 
     const reach = FEED_RADIUS + this.upgrades.value('reach'); // Quick Paws serves from further away
     for (const npc of this.npcs) {
       if (npc.canBeFed() && Math.hypot(p.x - npc.x, p.y - npc.y) < reach) this.tryFeed(npc);
+    }
+
+    // empty plates: the waiter picks them up from vacated seats (as many as they can carry)
+    for (const s of this.dirty) {
+      if (this.dirtyCarried >= this.inventory.max) break;
+      if (Math.hypot(p.x - s.x, p.y - s.y) < reach) { this.dirty.delete(s); this.dirtyCarried++; this.onEvent('cleared', { spot: s }); }
+    }
+    if (this.cleaner) {
+      const n = this.cleaner.update(dt, this.dirty, this.blockers);
+      if (n) this.onEvent('plates', { n, cleaner: true });
     }
 
     this.updateFx(dt);
@@ -246,6 +271,17 @@ export class GameManager {
     return true;
   }
 
+  /** The waiter hands their empty plates in at the counter: a coin each, and the score goes up too. */
+  returnPlates() {
+    const n = this.dirtyCarried, r = n * CLEARING.coinPerPlate;
+    this.dirtyCarried = 0;
+    this.save.coins += r;
+    this.save.totalEarned += r;
+    this.score += r;
+    this.text(this.player.x, this.player.y - 150, `+${r} tidy!`, '#24865b', 20);
+    this.onEvent('plates', { n });
+  }
+
   missNpc(npc) {
     npc.leave('sad');
     this.kitchen.cancel(npc);
@@ -267,6 +303,8 @@ export class GameManager {
     this.npcs = [];
     this.inventory.clear();
     this.kitchen.reset(KITCHEN.stovesFor(this.level));
+    this.dirty = new Set();
+    this.dirtyCarried = 0;
     this.player.stop();
     this.persist();
     this.onEvent('gameOver', { score, fed, rank, scores: this.highScores.list() });
@@ -282,6 +320,8 @@ export class GameManager {
     this.fx = [];
     this.inventory.clear();
     this.kitchen.reset(KITCHEN.stovesFor(this.level));
+    this.dirty = new Set();
+    this.dirtyCarried = 0;
     this.player.stop();
     this.persist();
   }

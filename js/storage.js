@@ -14,6 +14,7 @@ export const DEFAULT_SAVE = () => ({
   ownedCats: [],      // cats bought with coins
   pets: [],           // café pets bought and at the café (PETS ids)
   petsAway: [],       // bought pets sent home (no bonus; can come back free)
+  staff: [],          // hired staff (STAFF ids)
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
   stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false }, // lifetime, for stickers
   stickers: [],       // earned sticker ids (achievements.js)
@@ -53,6 +54,7 @@ function sanitize(data) {
       ownedCats: Array.isArray(data.ownedCats) ? data.ownedCats.filter(s => typeof s === 'string') : [],
       pets: Array.isArray(data.pets) ? data.pets.filter(s => typeof s === 'string') : [],
       petsAway: Array.isArray(data.petsAway) ? data.petsAway.filter(s => typeof s === 'string') : [],
+      staff: Array.isArray(data.staff) ? data.staff.filter(s => typeof s === 'string') : [],
       stats: { ...d.stats, ...(data.stats && typeof data.stats === 'object' ? data.stats : {}) },
       stickers: Array.isArray(data.stickers) ? data.stickers.filter(x => typeof x === 'string') : [],
       outfit: (o => (data.waiter ? o : { ...o, hat: o.hat === 'chef' ? 'none' : o.hat }))( // old default chef hat -> waiter

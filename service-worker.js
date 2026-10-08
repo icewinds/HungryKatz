@@ -1,6 +1,6 @@
 // Offline support: precache the app shell, then network-first with cache fallback.
 // BUMP CACHE when you deploy so players get the new files.
-const CACHE = 'hungrykatz-v62';
+const CACHE = 'hungrykatz-v63';
 const ASSETS = [
   './',
   './index.html',
@@ -29,6 +29,7 @@ const ASSETS = [
   './js/achievements.js',
   './js/icons.js',
   './js/kitchen.js',
+  './js/cleaner.js',
   './assets/fonts/fredoka-latin.woff2',
   './assets/fonts/lilita-one-latin.woff2',
   './assets/fonts/fredoka-latin-ext.woff2',
