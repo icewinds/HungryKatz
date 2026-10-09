@@ -280,7 +280,7 @@ export class UIManager {
   renderFriends(rows, portrait) {
     $('friend-list').replaceChildren(...rows.map(r => {
       const card = document.createElement('div');
-      card.className = 'friend' + (r.best ? ' best' : '') + (r.met ? '' : ' unmet');
+      card.className = 'friend' + (r.best ? ' bestie' : '') + (r.met ? '' : ' unmet');
       const pic = Object.assign(document.createElement('canvas'), { width: 120, height: 120 });
       pic.setAttribute('aria-hidden', 'true');
       portrait(pic, r.look, r.met);

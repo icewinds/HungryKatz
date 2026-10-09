@@ -540,6 +540,7 @@ function resize() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const w = window.innerWidth, h = window.innerHeight;
   Object.assign(view, { w, h, dpr });
+  view.dirty = true; // resizing clears the canvas: draw it again even while paused
   canvas.width = Math.round(w * dpr);
   canvas.height = Math.round(h * dpr);
   // Playing: fit the important rows on screen (the HUD cards float over the café's corners).
@@ -932,7 +933,7 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); // clamp big gaps (tab switches)
   last = now;
   gm.update(dt);
-  render(now / 1000);
+  if (!(gm.state === 'playing' && gm.paused) || view.dirty) { render(now / 1000); view.dirty = false; } // paused: keep the last frame
   drawMenuCat(now / 1000);
   const inv = gm.inventory;
   ui.updateHud({

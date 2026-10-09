@@ -1,0 +1,486 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-09T07:00:47.380Z",
+  "title": "Design System: HungryKatz",
+  "extensions": {
+    "colorMeta": {
+      "strawberry-felt": {
+        "role": "primary",
+        "displayName": "Strawberry Felt",
+        "canonical": "#ec5f89",
+        "tonalRamp": [
+          "#4a1f2e",
+          "#753046",
+          "#a0415e",
+          "#cc5277",
+          "#f187a7",
+          "#f6afc4",
+          "#fad7e2",
+          "#fdeff3"
+        ]
+      },
+      "berry-ink": {
+        "role": "primary",
+        "displayName": "Berry Ink",
+        "canonical": "#c43d5c",
+        "tonalRamp": [
+          "#401722",
+          "#632132",
+          "#862b41",
+          "#aa3550",
+          "#d36e85",
+          "#e29eae",
+          "#f0cfd6",
+          "#f9ecef"
+        ]
+      },
+      "berry-lip": {
+        "role": "primary",
+        "displayName": "Berry Lip",
+        "canonical": "#9c2f49",
+        "tonalRamp": [
+          "#36131e",
+          "#511b29",
+          "#6c2235",
+          "#882940",
+          "#b56377",
+          "#ce97a4",
+          "#e6cbd2",
+          "#f5eaed"
+        ]
+      },
+      "strawberry-lip": {
+        "role": "primary",
+        "displayName": "Strawberry Lip",
+        "canonical": "#c94a72",
+        "tonalRamp": [
+          "#411a28",
+          "#65273c",
+          "#8a344f",
+          "#ae4063",
+          "#d77795",
+          "#e4a5b9",
+          "#f2d2dc",
+          "#faedf1"
+        ]
+      },
+      "marmalade": {
+        "role": "secondary",
+        "displayName": "Marmalade",
+        "canonical": "#f6a53b",
+        "tonalRamp": [
+          "#4d311a",
+          "#7a5023",
+          "#a76f2c",
+          "#d48e34",
+          "#f8bc6c",
+          "#fbd29d",
+          "#fde9ce",
+          "#fef6eb"
+        ]
+      },
+      "mint-ink": {
+        "role": "secondary",
+        "displayName": "Mint Ink",
+        "canonical": "#24865b",
+        "tonalRamp": [
+          "#182922",
+          "#1b4231",
+          "#1e5b40",
+          "#227350",
+          "#5ba484",
+          "#92c3ad",
+          "#c8e1d6",
+          "#e9f3ef"
+        ]
+      },
+      "mint-wash": {
+        "role": "secondary",
+        "displayName": "Mint Wash",
+        "canonical": "#d6f4e8",
+        "tonalRamp": [
+          "#454545",
+          "#6b7371",
+          "#92a29c",
+          "#b9d1c7",
+          "#e0f7ee",
+          "#ebfaf4",
+          "#f5fcf9",
+          "#fbfefd"
+        ]
+      },
+      "honey-ink": {
+        "role": "tertiary",
+        "displayName": "Honey Ink",
+        "canonical": "#7f6100",
+        "tonalRamp": [
+          "#2f200b",
+          "#443108",
+          "#5a4305",
+          "#6f5402",
+          "#9f8940",
+          "#bfb080",
+          "#dfd8bf",
+          "#f2efe6"
+        ]
+      },
+      "butter": {
+        "role": "tertiary",
+        "displayName": "Butter",
+        "canonical": "#fff1c2",
+        "tonalRamp": [
+          "#4f443c",
+          "#7e7260",
+          "#ada083",
+          "#dccea7",
+          "#fff5d1",
+          "#fff8e1",
+          "#fffcf0",
+          "#fffef9"
+        ]
+      },
+      "cocoa-ink": {
+        "role": "neutral",
+        "displayName": "Cocoa Ink",
+        "canonical": "#5a3d4a",
+        "tonalRamp": [
+          "#26171e",
+          "#34212a",
+          "#422b35",
+          "#503541",
+          "#836e77",
+          "#ad9ea5",
+          "#d6cfd2",
+          "#efeced"
+        ]
+      },
+      "cocoa-soft": {
+        "role": "neutral",
+        "displayName": "Cocoa Soft",
+        "canonical": "#76626c",
+        "tonalRamp": [
+          "#2d2026",
+          "#403239",
+          "#54434b",
+          "#67555e",
+          "#988991",
+          "#bbb1b6",
+          "#ddd8da",
+          "#f1eff0"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#fffaf1",
+        "tonalRamp": [
+          "#4f4648",
+          "#7e7675",
+          "#ada6a2",
+          "#dcd6cf",
+          "#fffbf5",
+          "#fffdf8",
+          "#fffefc",
+          "#fffffe"
+        ]
+      },
+      "card-paper": {
+        "role": "neutral",
+        "displayName": "Card Paper",
+        "canonical": "#fffdf8",
+        "tonalRamp": [
+          "#4f4749",
+          "#7e7778",
+          "#ada8a6",
+          "#dcd9d5",
+          "#fffefa",
+          "#fffefc",
+          "#fffffd",
+          "#fffffe"
+        ]
+      },
+      "card-edge": {
+        "role": "neutral",
+        "displayName": "Card Edge",
+        "canonical": "#f0e0c8",
+        "tonalRamp": [
+          "#4b403d",
+          "#776a62",
+          "#a39587",
+          "#cfc0ac",
+          "#f4e8d6",
+          "#f8f0e4",
+          "#fbf7f1",
+          "#fefcfa"
+        ]
+      },
+      "cream-felt": {
+        "role": "neutral",
+        "displayName": "Cream Felt",
+        "canonical": "#fff6e6",
+        "tonalRamp": [
+          "#4f4545",
+          "#7e7470",
+          "#ada39b",
+          "#dcd3c6",
+          "#fff8ec",
+          "#fffbf3",
+          "#fffdf9",
+          "#fffefd"
+        ]
+      },
+      "cream-felt-edge": {
+        "role": "neutral",
+        "displayName": "Cream Felt Edge",
+        "canonical": "#e6cfaa",
+        "tonalRamp": [
+          "#493b36",
+          "#726355",
+          "#9d8a74",
+          "#c7b193",
+          "#ecdbbf",
+          "#f3e7d5",
+          "#f9f3ea",
+          "#fdfaf7"
+        ]
+      },
+      "biscuit-tan": {
+        "role": "neutral",
+        "displayName": "Biscuit Tan",
+        "canonical": "#ecd3b4",
+        "tonalRamp": [
+          "#4a3c38",
+          "#756459",
+          "#a08d7a",
+          "#ccb59b",
+          "#f1dec7",
+          "#f6e9da",
+          "#faf4ec",
+          "#fdfbf8"
+        ]
+      },
+      "toasted-tan": {
+        "role": "neutral",
+        "displayName": "Toasted Tan",
+        "canonical": "#c9a37a",
+        "tonalRamp": [
+          "#41302a",
+          "#654f3f",
+          "#8a6d55",
+          "#ae8c6a",
+          "#d7ba9b",
+          "#e4d1bd",
+          "#f2e8de",
+          "#faf6f2"
+        ]
+      },
+      "page-oat": {
+        "role": "neutral",
+        "displayName": "Page Oat",
+        "canonical": "#fbefdf",
+        "tonalRamp": [
+          "#4e4343",
+          "#7c716d",
+          "#aa9f96",
+          "#d8cdc0",
+          "#fcf3e7",
+          "#fdf7ef",
+          "#fefbf7",
+          "#fffdfc"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The two-line felt logo only."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Screen titles, in Berry Ink."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Names on cards and rows."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Descriptions and hints."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Small captions on cards and stickers."
+      }
+    },
+    "shadows": [
+      {
+        "name": "paper-float",
+        "value": "0 10px 28px rgba(120, 80, 50, 0.18), inset 0 0 0 5px #fffaf1, inset 0 0 0 7px rgba(201, 163, 122, 0.35)",
+        "purpose": "Paper panels floating over the café, with a faint inner seam."
+      },
+      {
+        "name": "felt-lip-berry",
+        "value": "0 4px 0 #9c2f49, 0 8px 14px rgba(120, 80, 50, 0.16)",
+        "purpose": "The pressed-felt edge under small pink buttons."
+      },
+      {
+        "name": "felt-lip-strawberry",
+        "value": "0 4px 0 #c94a72, 0 8px 14px rgba(120, 80, 50, 0.16)",
+        "purpose": "The edge under Play and Resume."
+      },
+      {
+        "name": "felt-lip-mint",
+        "value": "0 4px 0 #19643f, 0 8px 14px rgba(120, 80, 50, 0.16)",
+        "purpose": "The edge under green buttons."
+      },
+      {
+        "name": "cream-lip",
+        "value": "0 3px 0 #e6cfaa",
+        "purpose": "The edge under cream and pastel felt buttons."
+      }
+    ],
+    "motion": [
+      {
+        "name": "pop",
+        "value": "cubic-bezier(.34, 1.56, .64, 1) 0.4s",
+        "purpose": "Panels and rewards popping into place: playful, a small overshoot."
+      },
+      {
+        "name": "press",
+        "value": "transform 0.1s",
+        "purpose": "Buttons pressing down 3px onto their lip."
+      },
+      {
+        "name": "banner-calm",
+        "value": "opacity fade 2.4s linear",
+        "purpose": "Reduced-motion replacement for the banner pop: messages still show."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "portrait",
+        "value": "(orientation: portrait)",
+        "purpose": "Shows the Turn your phone sideways card."
+      },
+      {
+        "name": "narrow-menu",
+        "value": "max-width: 1000px",
+        "purpose": "Hides the challenge count in the home button row."
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Small pink felt button for confirm actions (Let's play!, Save, Quit).",
+      "html": "<button class=\"ds-btn-primary\">Let's play!</button>",
+      "css": ".ds-btn-primary { font-family: 'Lilita One', 'Fredoka', ui-rounded, sans-serif; font-weight: 400; border: none; border-radius: 9px; min-height: 48px; padding: 12px 22px; font-size: 19px; cursor: pointer; outline-offset: -6px; transition: transform .1s; color: #fff; background: #c43d5c; box-shadow: 0 4px 0 #9c2f49, 0 8px 14px rgba(120,80,50,.16); outline: 2px dashed rgba(255,255,255,.55); } .ds-btn-primary:active { transform: translateY(3px); box-shadow: 0 1px 0 #9c2f49; } .ds-btn-primary:focus-visible { outline: 3px solid #c43d5c; outline-offset: 3px; }"
+    },
+    {
+      "name": "Play Button",
+      "kind": "button",
+      "refersTo": "button-play",
+      "description": "The big strawberry felt Play / Resume button (24px and up).",
+      "html": "<button class=\"ds-btn-play\">▶ Play</button>",
+      "css": ".ds-btn-play { font-family: 'Lilita One', 'Fredoka', ui-rounded, sans-serif; font-weight: 400; border: none; border-radius: 9px; min-height: 48px; padding: 12px 22px; font-size: 19px; cursor: pointer; outline-offset: -6px; transition: transform .1s; font-size: 30px; padding: 14px 40px; color: #fff; background: #ec5f89; box-shadow: 0 4px 0 #c94a72, 0 8px 14px rgba(120,80,50,.16); outline: 2px dashed rgba(255,255,255,.55); } .ds-btn-play:active { transform: translateY(3px); box-shadow: 0 1px 0 #c94a72; } .ds-btn-play:focus-visible { outline: 3px solid #c43d5c; outline-offset: 3px; }"
+    },
+    {
+      "name": "Felt Button",
+      "kind": "button",
+      "refersTo": "button-felt",
+      "description": "Cream felt secondary button with a cocoa stitch; the home row tints each one a pastel.",
+      "html": "<button class=\"ds-btn-felt\">How to play</button>",
+      "css": ".ds-btn-felt { font-family: 'Lilita One', 'Fredoka', ui-rounded, sans-serif; font-weight: 400; border: none; border-radius: 9px; min-height: 48px; padding: 12px 22px; font-size: 19px; cursor: pointer; outline-offset: -6px; transition: transform .1s; font-size: 17px; color: #5a3d4a; background: #fff6e6; border: 2px solid #e6cfaa; box-shadow: 0 3px 0 #e6cfaa; outline: 2px dashed rgba(90,61,74,.28); } .ds-btn-felt:active { transform: translateY(3px); box-shadow: none; } .ds-btn-felt:focus-visible { outline: 3px solid #c43d5c; outline-offset: 3px; }"
+    },
+    {
+      "name": "Mint Button",
+      "kind": "button",
+      "refersTo": "button-mint",
+      "description": "Green felt button for buying, upgrading and sharing.",
+      "html": "<button class=\"ds-btn-mint\">Buy · 120</button>",
+      "css": ".ds-btn-mint { font-family: 'Lilita One', 'Fredoka', ui-rounded, sans-serif; font-weight: 400; border: none; border-radius: 9px; min-height: 48px; padding: 12px 22px; font-size: 19px; cursor: pointer; outline-offset: -6px; transition: transform .1s; font-size: 16px; color: #fff; background: #24865b; box-shadow: 0 4px 0 #19643f, 0 8px 14px rgba(120,80,50,.16); outline: 2px dashed rgba(255,255,255,.55); } .ds-btn-mint:active { transform: translateY(3px); box-shadow: 0 1px 0 #19643f; } .ds-btn-mint:focus-visible { outline: 3px solid #c43d5c; outline-offset: 3px; }"
+    },
+    {
+      "name": "Paper Panel",
+      "kind": "card",
+      "refersTo": "panel",
+      "description": "The paper card every screen is laid on, over the live café.",
+      "html": "<div class=\"ds-panel\"><h2 class=\"ds-panel-title\">Café book</h2><p class=\"ds-panel-hint\">Serve a dish 10, 50 and 100 times for a bronze, silver and gold star.</p></div>",
+      "css": ".ds-panel { width: 320px; padding: 16px 22px; background: #fffaf1; border: 3px solid #ecd3b4; border-radius: 14px; box-shadow: 0 10px 28px rgba(120,80,50,.18), inset 0 0 0 5px #fffaf1, inset 0 0 0 7px rgba(201,163,122,.35); text-align: center; font-family: 'Lilita One', 'Fredoka', ui-rounded, sans-serif; } .ds-panel-title { margin: 0 0 10px; font-weight: 400; font-size: 26px; color: #c43d5c; } .ds-panel-hint { margin: 0; font-size: 13px; color: #76626c; }"
+    },
+    {
+      "name": "Shop Row",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A row or shop card inside a panel; turns mint once done or shown.",
+      "html": "<div class=\"ds-row\"><b>Cat tree</b><small>A tall scratching tower with a lookout cat on top.</small></div>",
+      "css": ".ds-row { display: flex; flex-direction: column; gap: 4px; width: 180px; padding: 8px 12px; background: #fffdf8; border: 2px solid #f0e0c8; border-radius: 8px; font-family: 'Lilita One', 'Fredoka', ui-rounded, sans-serif; color: #5a3d4a; } .ds-row b { font-weight: 400; font-size: 16px; } .ds-row small { font-size: 12.5px; color: #76626c; }"
+    },
+    {
+      "name": "Tabs",
+      "kind": "nav",
+      "refersTo": "tabs",
+      "description": "Equal-width tabs on a soft track; the selected one is a raised white pill.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\"><button class=\"ds-tab\" aria-selected=\"true\">Stickers</button><button class=\"ds-tab\" aria-selected=\"false\">Recipes</button><button class=\"ds-tab\" aria-selected=\"false\">Friends</button></div>",
+      "css": ".ds-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding: 4px; width: 360px; background: #f6eef1; border-radius: 9px; } .ds-tab { min-height: 44px; border: none; border-radius: 7px; background: transparent; color: #76626c; font: 400 15px 'Lilita One', 'Fredoka', ui-rounded, sans-serif; cursor: pointer; } .ds-tab[aria-selected=true] { background: #fff; color: #5a3d4a; box-shadow: 0 2px 6px rgba(90,61,74,.12); } .ds-tab:focus-visible { outline: 3px solid #c43d5c; outline-offset: 2px; }"
+    },
+    {
+      "name": "Coin Chip",
+      "kind": "chip",
+      "refersTo": "chip-count",
+      "description": "Butter chip with honey ink for coin amounts and counts.",
+      "html": "<span class=\"ds-chip\">50 coins</span>",
+      "css": ".ds-chip { display: inline-block; padding: 1px 8px; border-radius: 6px; background: #fff1c2; color: #7f6100; font: 400 14px 'Lilita One', 'Fredoka', ui-rounded, sans-serif; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Felt Cat Lounge",
+    "overview": "HungryKatz looks like a café sewn from felt and paper by hand. Every surface has a material: cream paper panels with a faint grain, felt buttons with a stitched seam just inside the edge and a darker lip underneath, a paw-print wallpaper around the frame. The café itself is the stage. The home screen is the live café seen through a cream frame, and menus sit over it as paper cards, never as opaque pages.\n\nDensity is low and the type is big because the players are children holding a phone sideways with both thumbs. One typeface does all the talking, warm and chunky, in strawberry pink, marmalade orange and cocoa brown on oat and cream. The cats are drawn fluffy (cheek tufts, chest ruff, a puffed tail tip), and the décor (cat trees, cushion beds, lanterns, plants) keeps the room cosy rather than busy.\n\nThings should feel soft and squishy: a tap presses a button down onto its lip, panels pop gently into place, and nothing is sharp, glossy or glassy.",
+    "keyCharacteristics": [
+      "The live café is always the backdrop; UI is paper and felt laid over it.",
+      "One typeface (Lilita One, weight 400 only), with size and colour for hierarchy.",
+      "Felt buttons: stitched inner seam, coloured lip below, press-down on tap.",
+      "Warm pastels on oat, with berry ink for anything that must be read small.",
+      "Landscape only: café in the middle, small HUD cards floating over its corners."
+    ],
+    "rules": [
+      {
+        "name": "The Readable Pink Rule",
+        "body": "Small text never sits on Strawberry Felt. Lilita One has no bold, so \"bold\" 19px is still regular small text that needs 4.5:1: use Berry Ink (5:1) below 24px.",
+        "section": "colors"
+      },
+      {
+        "name": "The Pastel Button Rule",
+        "body": "The home screen's bottom row gives each button its own pastel (butter, cream, peach, pink, mint) with a matching darker edge. Text on them is always Cocoa Ink.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Voice Rule",
+        "body": "Lilita One everywhere: in-game text, buttons, the canvas world and the photo captions. Fredoka is only a fallback for missing glyphs, such as accented letters in a player's typed name.",
+        "section": "typography"
+      },
+      {
+        "name": "The Press-Down Rule",
+        "body": "A tappable thing has a lip under it, and tapping moves it down onto the lip (about 3px). If it has no lip, it isn't a button.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do show the live café behind every menu; menus are paper laid over it.",
+      "Do use Berry Ink (#c43d5c) for any pink text or pink button under 24px.",
+      "Do give every button a lip and a press-down, and keep tap targets at 44px or more.",
+      "Do keep the 3px Berry Ink focus ring visible on every control.",
+      "Do draw icons in the game's own canvas icon set, not as OS emoji.",
+      "Do give reduced-motion players a calm fade for messages instead of removing them."
+    ],
+    "donts": [
+      "Don't use bold weights for hierarchy; Lilita One has none.",
+      "Don't add glass, blur or glows; depth is felt and paper.",
+      "Don't put white text on Strawberry Felt below 24px.",
+      "Don't add side columns to the café view; the HUD floats over the corners.",
+      "Don't reuse generic class names like `.best` for two different things (it once restyled the best-friend card as the high score pill)."
+    ]
+  }
+}

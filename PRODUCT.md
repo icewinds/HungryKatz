@@ -20,24 +20,27 @@ A hand-made, family game: built for one child, grown feature by feature from her
 
 ## Operating Context
 
-- Played mostly in portrait on phones, installed to the home screen or in a mobile browser. Desktop works too.
+- Played in landscape on phones, held with both hands, installed to the home screen or in a mobile browser. Held upright, a "turn your phone sideways" card shows. Desktop works too.
 - Sessions are short: one run, a game over (or none in Relaxed mode), then upgrades, outfits and stickers.
 - Shared by link (Share buttons, OG preview) from https://hungrykatz.solutioncloud.tech/.
 
 ## Capabilities and Constraints
 
-- **Stack:** vanilla ES modules, Canvas 2D world (540×960, scaled to "contain"), HTML overlays for HUD and screens, no build step. Hosted on GitHub Pages.
+- **Stack:** vanilla ES modules, a landscape Canvas 2D world (1120×720, scaled to fit the rows that matter), HTML overlays for the HUD corner cards and screens, no build step. Hosted on GitHub Pages; the Play Store build wraps the PWA.
 - **Hard rule: works offline on phones.** Installable PWA with a service worker; `CACHE` is bumped on every deploy.
 - **Security:** a strict CSP (`default-src 'self'`, no inline styles), self-hosted font, and DOM APIs for dynamic text.
 - **Saves:** localStorage only (`hungrykatz.save.v1`), sanitised on load.
 - **Features:**
   - Levels with food unlocks and a café that grows from shabby to fancy.
-  - Difficulty (Relaxed, Easy, Normal, Hard) and four scenes.
+  - Difficulty (Relaxed, Easy, Normal, Hard) and five scenes (Cat Lounge is the default for new cafés).
   - Character select, plus an outfit wardrobe.
   - A kitchen: Chef Biscuit cooks each order (a full tray at a time) and the player is the waiter collecting plates from the counter.
+  - Clearing tables: happy cats leave plates; Dusty the cleaner can be hired from café level 5.
   - Upgrades (incl. Faster Chef) and café pets (send home or bring back).
-  - Combos, VIPs and weekend specials.
-  - Daily bonus, sticker book, seasonal decorations, high scores with names, and tap-queue movement.
+  - Combos, VIPs, weekend specials, and named regulars who become best friends and bring gifts.
+  - Decorate your café: bought decorations (cat tree, cat bed, shelves, plants, lanterns, wallpaper) that show in the café and on the home screen.
+  - Daily bonus and three daily challenges; the Café book (tiered stickers, recipe stars, friends); seasonal decorations; high scores with names; tap-queue movement.
+  - Photo mode: save or share a framed picture of the café.
 - **Debug:** tools exist only behind `?debug`.
 - **Open decisions (not yet committed either way):**
   - Ads or in-app purchases. There are none today.
