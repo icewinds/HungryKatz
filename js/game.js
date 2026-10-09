@@ -4,7 +4,7 @@
 import {
   WORLD, LAYOUT, KITCHEN, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
-  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -22,7 +22,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag, setCatScale, catSize,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
+import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawDecorPreview, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
 canvasIcons.text = fillRichText;
@@ -65,6 +65,16 @@ function challenge(kind, amount = 1, food = null) {
   ui.banners(done.map(c => `🎯 Challenge done: ${challengeText(c)}! +${c.reward} 🪙`));
   persist();
   checkStickers();
+}
+
+function renderDecor() {
+  ui.renderDecor(DECOR, save.decor, save.coins, (canvas, id) => drawDecorPreview(canvas, id, scene));
+}
+/** Save, redraw the café behind the menu and refresh the shop after buying or moving a decoration. */
+function decorChanged() {
+  persist();
+  refreshScene();
+  renderDecor();
 }
 
 function maybeShowDaily() {
@@ -190,6 +200,25 @@ const ui = new UIManager({
   },
   bookTab: btn => showTabs(BOOK_TABS, btn.dataset.tab),
   closeStickers: () => ui.show('menu'),
+  openDecor: () => { renderDecor(); ui.show('decor'); },
+  closeDecor: () => ui.show('menu'),
+  buyDecor: btn => {
+    const d = DECOR.find(x => x.id === btn.dataset.id);
+    if (!d || save.decor.owned.includes(d.id)) return;
+    if (save.coins < d.cost) { audio.play('wrong'); ui.banner(`Need 🪙 ${d.cost - save.coins} more coins`); return; }
+    save.coins -= d.cost;
+    save.decor.owned.push(d.id);
+    decorChanged();
+    audio.play('buy');
+    ui.banner(`🏠 ${d.name} added to your café!`);
+    checkStickers();
+  },
+  toggleDecor: btn => {
+    const id = btn.dataset.id, h = save.decor.hidden;
+    save.decor.hidden = h.includes(id) ? h.filter(x => x !== id) : [...h, id];
+    decorChanged();
+    audio.play('click');
+  },
   openChallenges: () => { showChallenges(); ui.show('challenges'); },
   closeChallenges: () => ui.show('menu'),
   pickOutfit: btn => {
@@ -485,10 +514,11 @@ document.getElementById('go-name-input').addEventListener('input', () => ui.name
 // Seasonal decorations by date; preview with ?season=winter|halloween|valentine|none
 const seasonParam = new URLSearchParams(location.search).get('season');
 const season = seasonParam ? (seasonParam === 'none' ? null : seasonParam) : seasonFor();
-let scene = makeScene(save.settings.scene, gm.level, season);
+const shownDecor = () => save.decor.owned.filter(id => !save.decor.hidden.includes(id));
+let scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
 /** Re-read theme/level and redraw the static café (after level up or a scene change). */
 function refreshScene() {
-  scene = makeScene(save.settings.scene, gm.level, season);
+  scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
   if (bg.width > 1) buildBackground();
 }
 

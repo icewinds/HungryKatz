@@ -186,6 +186,17 @@ export const CLEARING = {
   cleanerHome: { x: 1070, y: 495 },
   dropOff: { x: 560, y: 515 },   // where Dusty hands plates in
 };
+// Decorate your café: decorations bought with coins, each with its own spot in the café (drawn by scene.js).
+// Bought ones can be shown or hidden in the Decorate screen.
+export const DECOR = [
+  { id: 'plants', name: 'Hanging plants', cost: 80, desc: 'Little pots of trailing leaves by the windows.' },
+  { id: 'lanterns', name: 'Paper lanterns', cost: 120, desc: 'Warm glowing lanterns along the ceiling.' },
+  { id: 'shelf', name: 'Napping shelf', cost: 180, desc: 'A wall shelf with a sleepy ginger cat.' },
+  { id: 'bigPlant', name: 'Leafy plant', cost: 220, desc: 'A big leafy plant by the counter.' },
+  { id: 'catBed', name: 'Cosy cat bed', cost: 300, desc: 'A squishy cushion bed with a cat curled up asleep.' },
+  { id: 'catTree', name: 'Cat tree', cost: 450, desc: 'A tall scratching tower with a lookout cat on top.' },
+  { id: 'pawPaper', name: 'Paw wallpaper', cost: 600, desc: 'Little paw prints all over the walls.' },
+];
 export const STAFF = {
   cleaner: { icon: '🧹', name: 'Dusty the cleaner', cost: 500, level: 5, desc: 'Clears empty plates from the tables for you.' },
 };

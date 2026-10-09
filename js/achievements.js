@@ -2,7 +2,7 @@
 // save.stats = { served, vips, specials, tips, bestCombo, gnome, byFood }, save.stickers = [earned ids].
 // `tier` (bronze / silver / gold) marks stickers that come in a series.
 
-import { REGULARS, FRIENDSHIP, FOODS, RECIPE_TIERS } from './config.js';
+import { REGULARS, FRIENDSHIP, FOODS, RECIPE_TIERS, DECOR } from './config.js';
 
 export const STICKERS = [
   { id: 'first', icon: '🍼', name: 'First customer', desc: 'Serve your very first cat.', done: s => s.stats.served >= 1 },
@@ -24,6 +24,7 @@ export const STICKERS = [
   { id: 'friendsAll', icon: '🥳', name: 'Everybody\'s friend', desc: 'Become best friends with every regular.', tier: 'gold', done: s => s.bestFriends >= REGULARS.length },
   { id: 'recipesGold', icon: '📖', name: 'Master menu', desc: 'Earn a gold star for every dish.', tier: 'gold', done: s => s.goldRecipes >= FOODS.length },
   { id: 'challenges10', icon: '🎯', name: 'Go-getter', desc: 'Finish 10 daily challenges.', tier: 'silver', done: s => (s.stats.challenges ?? 0) >= 10 },
+  { id: 'decorAll', icon: '🏠', name: 'Interior designer', desc: 'Buy every decoration in Decorate.', tier: 'gold', done: s => (s.decorOwned ?? 0) >= DECOR.length },
   { id: 'ghost', icon: '🎖️', name: 'Secret agent', desc: 'Discover the secret cat.', done: s => s.ghost },
 ];
 
@@ -32,6 +33,7 @@ export function awardStickers(save, bestScore) {
   const snap = {
     stats: save.stats, level: save.level, best: bestScore,
     pets: save.pets.length, streak: save.daily?.streak ?? 0, ghost: save.ownedCats.includes('ghost'),
+    decorOwned: save.decor?.owned.length ?? 0,
     bestFriends: Object.values(save.friends ?? {}).filter(v => v >= FRIENDSHIP.max).length,
     goldRecipes: FOODS.filter(f => (save.stats.byFood?.[f.id] ?? 0) >= RECIPE_TIERS.at(-1)).length,
   };

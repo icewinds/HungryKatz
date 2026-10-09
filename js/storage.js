@@ -14,7 +14,8 @@ export const DEFAULT_SAVE = () => ({
   ownedCats: [],      // cats bought with coins
   pets: [],           // café pets bought and at the café (PETS ids)
   petsAway: [],       // bought pets sent home (no bonus; can come back free)
-  staff: [],          // hired staff (STAFF ids)
+  staff: [],
+  decor: { owned: [], hidden: [] }, // Decorate: bought decoration ids, and the ones put away          // hired staff (STAFF ids)
   challenges: { day: null, list: [] }, // today's daily challenges (see daily.js)
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
   stats: { served: 0, vips: 0, specials: 0, tips: 0, bestCombo: 0, gnome: false, byFood: {} }, // lifetime, for stickers + recipe book
@@ -23,7 +24,7 @@ export const DEFAULT_SAVE = () => ({
   outfit: { hat: 'none', apron: 'classic' }, // what the waiter cat wears
   waiter: true,       // saves from before the kitchen rework still wear the old default chef hat
   ownedOutfits: [],   // bought hats/aprons ids
-  settings: { music: true, sfx: true, debug: false, difficulty: 'normal', scene: 'strawberry' },
+  settings: { music: true, sfx: true, debug: false, difficulty: 'normal', scene: 'lounge' },
 });
 
 function read() {
@@ -57,6 +58,7 @@ function sanitize(data) {
       pets: Array.isArray(data.pets) ? data.pets.filter(s => typeof s === 'string') : [],
       petsAway: Array.isArray(data.petsAway) ? data.petsAway.filter(s => typeof s === 'string') : [],
       staff: Array.isArray(data.staff) ? data.staff.filter(s => typeof s === 'string') : [],
+      decor: Object.fromEntries(['owned', 'hidden'].map(k => [k, Array.isArray(data.decor?.[k]) ? data.decor[k].filter(s => typeof s === 'string') : []])),
       stats: { ...d.stats, ...(data.stats && typeof data.stats === 'object' ? data.stats : {}) },
       friends: Object.fromEntries(Object.entries(data.friends && typeof data.friends === 'object' ? data.friends : {})
         .filter(([, v]) => Number.isFinite(v)).map(([k, v]) => [k, Math.max(0, Math.floor(v))])),

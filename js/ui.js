@@ -228,6 +228,30 @@ export class UIManager {
     }));
   }
 
+  /** Decorate shop: a preview of each decoration with its price, or a show / put away toggle once bought. */
+  renderDecor(items, { owned, hidden }, coins, preview) {
+    $('decor-coins').textContent = coins;
+    $('decor-list').replaceChildren(...items.map(d => {
+      const have = owned.includes(d.id), shown = have && !hidden.includes(d.id);
+      const card = document.createElement('div');
+      card.className = 'decor-card' + (shown ? ' shown' : '');
+      card.dataset.id = d.id;
+      const pic = Object.assign(document.createElement('canvas'), { width: 320, height: 220 });
+      pic.setAttribute('aria-hidden', 'true');
+      preview(pic, d.id);
+      const name = document.createElement('b'); name.textContent = d.name;
+      const desc = document.createElement('small'); desc.textContent = d.desc;
+      const btn = document.createElement('button');
+      btn.className = 'btn buy' + (!have && coins < d.cost ? ' poor' : '') + (shown ? ' on' : '');
+      btn.dataset.action = have ? 'toggleDecor' : 'buyDecor';
+      btn.dataset.id = d.id;
+      btn.textContent = have ? (shown ? '✔ In the café' : 'Put it out') : `🪙 ${d.cost}`;
+      if (have) btn.setAttribute('aria-pressed', shown);
+      card.append(pic, name, desc, btn);
+      return card;
+    }));
+  }
+
   /** Recipe book: one row per dish with serves, three stars (bronze/silver/gold) and the next goal. */
   renderRecipes(rows, tiers) {
     $('recipe-list').replaceChildren(...rows.map(r => {

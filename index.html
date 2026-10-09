@@ -82,6 +82,7 @@
         <button class="btn secondary" data-action="openHelp">❓ How to play</button>
         <button class="btn secondary" data-action="openCharacters">🐱 Choose cat</button>
         <button class="btn secondary" data-action="openStickers">📖 Café book</button>
+        <button class="btn secondary" data-action="openDecor">🏠 Decorate</button>
         <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
         <button class="btn secondary" data-action="share">📤 Share</button>
         <button id="btn-install" class="btn mint hidden" data-action="install">📲 Install</button>
@@ -156,6 +157,7 @@
         <ul class="help-tips">
           <li><span class="tip-ico" aria-hidden="true">🏠</span><span>Your café starts <b>shabby</b>. Level up to fix it up, add <b>more tables</b> and welcome more cats.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🍣</span><span>Level up your café to unlock <b>new foods</b>: cat food, fish, sushi and cupcakes.</span></li>
+          <li><span class="tip-ico" aria-hidden="true">🏠</span><span><b>Decorate</b> your café with cat trees, cosy beds, plants and lanterns.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🐶</span><span>Adopt <b>café pets</b> in Upgrades for handy bonuses.</span></li>
           <li><span class="tip-ico" aria-hidden="true">⚙️</span><span>Pick a <b>difficulty</b> and a <b>scene</b> in Settings.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🌸</span><span>Little chefs can pick <b>Relaxed</b> in Settings: nobody leaves sad.</span></li>
@@ -177,6 +179,17 @@
       </div>
       <p class="hint"><a href="privacy.html">Privacy policy</a> · no ads, no tracking, saves stay on your device</p>
       <button class="btn" data-action="closeHelp">Let's play!</button>
+    </div>
+  </section>
+
+  <!-- Decorate your café -->
+  <section id="screen-decor" class="screen">
+    <div class="panel wide">
+      <button class="close-x" data-action="closeDecor" aria-label="Back">✕</button>
+      <h2>Decorate your café</h2>
+      <p class="coins-big">🪙 <b id="decor-coins">0</b></p>
+      <div id="decor-list" class="decor-grid"></div>
+      <p class="hint">Bought decorations can be put away and brought back any time.</p>
     </div>
   </section>
 
@@ -249,6 +262,7 @@
       <div>
       <h3>Scene</h3>
       <div class="scene-grid" role="group" aria-label="Café scene">
+        <button class="scene-chip" data-action="setScene" data-value="lounge"><span class="swatch sw-lounge" aria-hidden="true"></span>Cat Lounge</button>
         <button class="scene-chip" data-action="setScene" data-value="strawberry"><span class="swatch sw-strawberry" aria-hidden="true"></span>Strawberry Café</button>
         <button class="scene-chip" data-action="setScene" data-value="matcha"><span class="swatch sw-matcha" aria-hidden="true"></span>Matcha Garden</button>
         <button class="scene-chip" data-action="setScene" data-value="seaside"><span class="swatch sw-seaside" aria-hidden="true"></span>Seaside Diner</button>

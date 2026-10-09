@@ -44,6 +44,17 @@ export const THEMES = {
     wood: '#cfae86', woodDark: '#9e7c58',
     bunting: ['#ff9f8a', '#ffe3a3', '#7fc4ef', '#ffffff'],
   },
+  lounge: {
+    name: 'Cat Lounge', swatch: ['#f4e6d0', '#e9a46a'],
+    wall: '#f4e6d0', stripe: '#efdcc0', wainscot: '#e2c49c', trim: '#c99d6e',
+    floor: '#ecd5b3', plank: '#dcc099', rug: '#f6c9a8',
+    bar: '#d9b07e', barFront: '#b98a58', barHi: '#efd2a8',
+    counter: '#f3e3cb', counterEdge: '#dcc3a0', counterFront: '#e3c9a3', tile: '#d6e8cc', tileLine: '#b5d3aa',
+    cushion: '#f2b48f', cushionEdge: '#de956c', cloth: '#fffaf1', clothRim: '#ead6b8',
+    door: '#a9c79a', mat: '#f2c9a0', matEdge: '#dca679', frame: '#c69c6d', clockRim: '#c69c6d',
+    wood: '#cfa271', woodDark: '#9c744a',
+    bunting: ['#f2a07b', '#a9c79a', '#f6d07a', '#f4b6c2'],
+  },
   moonlight: {
     name: 'Moonlight Bistro', swatch: ['#3d3566', '#b39ddb'],
     wall: '#3d3566', stripe: '#443b70', wainscot: '#4b4278', trim: '#8f7fd1',
@@ -75,7 +86,7 @@ function palette(themeId, stage) {
 }
 
 /** Everything the scenery needs for a theme + restaurant level. */
-export const makeScene = (themeId, level, season = null) => ({ theme: THEMES[themeId] ? themeId : 'strawberry', level, season, stage: decorStage(level), pal: palette(themeId, decorStage(level)) });
+export const makeScene = (themeId, level, season = null, decor = []) => ({ theme: THEMES[themeId] ? themeId : 'strawberry', level, season, decor: new Set(decor), stage: decorStage(level), pal: palette(themeId, decorStage(level)) });
 
 /** Seasonal decorations by date: Halloween (Oct), winter (1 Dec - 6 Jan), Valentine's (1-14 Feb). */
 export function seasonFor(d = new Date()) {
@@ -111,8 +122,10 @@ export function drawBackground(ctx, sc) {
   ctx.fillStyle = p.wainscot; ctx.fillRect(0, 128, W, 44);
   ctx.fillStyle = p.trim; ctx.fillRect(0, 126, W, 3); ctx.fillRect(0, 169, W, 3);
   if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(0, 131, W, 2); ctx.fillRect(0, 166, W, 2); } // gold trim
+  drawDecor(ctx, sc, 'paper');
   if (st === 0) shabbyWall(ctx, p);
   if (st >= 2) bunting(ctx, p);
+  drawDecor(ctx, sc, 'wall');
 
   // window bar
   const b = LAYOUT.windowBar;
@@ -159,6 +172,7 @@ export function drawBackground(ctx, sc) {
 
   if (st <= 1) { cardboardBoxes(ctx); oldBroom(ctx); } // cleared away once the café gets cosy
 
+  drawDecor(ctx, sc, 'floor');
   kitchen(ctx, sc);
 }
 
@@ -344,6 +358,109 @@ function pantry(ctx, x, y, st) {
   ctx.fillStyle = '#c9b48e'; ctx.font = `400 9px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('FLOUR', x + 37, y + 58);
   rrect(ctx, x + 130, y + 52, 22, 18, 3); fillStroke(ctx, '#f6a07c', '#c97a5a', 1.2);            // pot plant
   ctx.fillStyle = '#7fd1a1'; for (const [dx, dy] of [[-6, -6], [6, -7], [0, -12]]) { circle(ctx, x + 141 + dx, y + 50 + dy, 6); ctx.fill(); }
+}
+
+// ---------------------------------------------------------------- decorations (bought in Decorate)
+const DOL = 'rgba(90,61,74,0.8)';
+/** A cat curled up asleep, (x, y) = bottom centre: tail wrapped round the front, eyes shut. */
+function napCat(ctx, x, y, fur, patch) {
+  ctx.save(); ctx.translate(x, y);
+  ellipse(ctx, 0, -11, 24, 12); fillStroke(ctx, fur, DOL, 2);
+  ctx.save(); ellipse(ctx, 0, -11, 24, 12); ctx.clip(); ellipse(ctx, -8, -16, 10, 7); ctx.fillStyle = patch; ctx.fill(); ctx.restore();
+  for (const [a, b, c] of [[[6, -22], [9, -36], [16, -26]], [[16, -26], [24, -34], [25, -21]]]) { tri(ctx, a, b, c); fillStroke(ctx, fur, DOL, 2); }
+  circle(ctx, 16, -17, 11); fillStroke(ctx, fur, DOL, 2);
+  ctx.strokeStyle = INK; ctx.lineWidth = 1.4; ctx.lineCap = 'round';
+  for (const ex of [12, 20]) { ctx.beginPath(); ctx.arc(ex, -17, 2.6, 0.2, Math.PI - 0.2); ctx.stroke(); } // closed eyes
+  ctx.beginPath(); ctx.moveTo(-22, -4); ctx.quadraticCurveTo(0, 4, 18, -5);                             // tail round the front
+  ctx.strokeStyle = DOL; ctx.lineWidth = 10; ctx.stroke(); ctx.strokeStyle = fur; ctx.lineWidth = 6.5; ctx.stroke();
+  ctx.fillStyle = 'rgba(90,61,74,0.45)'; ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('z', 30, -36); ctx.fillText('z', 37, -45);
+  ctx.restore();
+}
+const pot = (ctx, x, y, w, h) => { ctx.beginPath(); ctx.moveTo(x - w / 2, y); ctx.lineTo(x + w / 2, y); ctx.lineTo(x + w * 0.38, y + h); ctx.lineTo(x - w * 0.38, y + h); ctx.closePath(); fillStroke(ctx, '#e9967a', '#b8705a', 1.6); };
+const leaf = (ctx, x, y, rx, ry, a, col = '#86c78f') => { ctx.save(); ctx.translate(x, y); ctx.rotate(a); ellipse(ctx, 0, 0, rx, ry); fillStroke(ctx, col, '#5f9e6a', 1.4); ctx.restore(); };
+
+/** Hanging pot of trailing leaves, hung from the ceiling at x. */
+function hangingPlant(ctx, x, y) {
+  ctx.strokeStyle = '#b8936a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 40); ctx.stroke();
+  for (const [dx, len] of [[-9, 34], [-2, 46], [7, 30]]) for (let k = 0; k < len; k += 9) leaf(ctx, x + dx + Math.sin(k / 9) * 2, y + 52 + k, 3.5, 5.5, 0.4 * Math.sign(dx || 1));
+  pot(ctx, x, y + 40, 26, 16);
+  for (const a of [-0.9, -0.3, 0.3, 0.9]) leaf(ctx, x + a * 10, y + 38, 4.5, 8, a);
+}
+/** A round paper lantern with a warm glow, hung from the ceiling at x. */
+function lantern(ctx, x, y) {
+  ctx.strokeStyle = 'rgba(90,61,74,0.4)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 10); ctx.stroke();
+  circle(ctx, x, y + 25, 22); ctx.fillStyle = 'rgba(255,214,140,0.25)'; ctx.fill();
+  ellipse(ctx, x, y + 25, 13, 15); fillStroke(ctx, '#ffcf8a', '#e0a050', 1.5);
+  ctx.strokeStyle = 'rgba(224,160,80,0.6)'; ctx.lineWidth = 1;
+  for (const k of [-6, 0, 6]) { ctx.beginPath(); ctx.ellipse(x, y + 25, Math.abs(k) ? 9 : 4, 15, 0, 0, Math.PI * 2); ctx.stroke(); }
+  for (const cy of [y + 10, y + 38]) { rrect(ctx, x - 6, cy, 12, 3, 1.5); fillStroke(ctx, '#c0453a', null); }
+}
+/** Wall shelf (top at y) with a ginger cat napping on it and a little succulent. */
+function nappingShelf(ctx, x, y) {
+  for (const bx of [x - 30, x + 26]) { ctx.fillStyle = '#9c744a'; ctx.beginPath(); ctx.moveTo(bx, y + 8); ctx.lineTo(bx + 4, y + 8); ctx.lineTo(bx + 4, y + 22); ctx.closePath(); ctx.fill(); }
+  rrect(ctx, x - 44, y, 88, 9, 3); fillStroke(ctx, '#cfa271', '#9c744a', 1.6);
+  napCat(ctx, x - 8, y, '#f6b26b', '#fff3e4');
+  pot(ctx, x + 32, y - 14, 16, 14);
+  for (const a of [-0.6, 0, 0.6]) leaf(ctx, x + 32 + a * 6, y - 18, 3.5, 6, a, '#9fd39a');
+}
+/** A big leafy plant in a pot, standing on the floor at (x, y). */
+function bigPlant(ctx, x, y) {
+  ellipse(ctx, x, y + 2, 24, 6); ctx.fillStyle = SHADOW; ctx.fill();
+  for (const [dx, dy, rx, ry, a] of [[-26, -70, 11, 26, -0.9], [26, -72, 11, 26, 0.9], [-14, -92, 10, 26, -0.4], [14, -94, 10, 26, 0.4], [0, -104, 10, 24, 0], [-30, -46, 9, 20, -1.3], [30, -48, 9, 20, 1.3]])
+    leaf(ctx, x + dx, y + dy, rx, ry, a, '#7fc48f');
+  pot(ctx, x, y - 34, 40, 34);
+  rrect(ctx, x - 21, y - 38, 42, 7, 3); fillStroke(ctx, '#d9846a', '#b8705a', 1.4);
+}
+/** A round cushion bed with a grey cat curled up asleep in it, on the floor at (x, y). */
+function catBed(ctx, x, y) {
+  ellipse(ctx, x, y + 2, 48, 9); ctx.fillStyle = SHADOW; ctx.fill();
+  ellipse(ctx, x, y - 8, 46, 17); fillStroke(ctx, '#f2b48f', '#de956c', 2);
+  ellipse(ctx, x, y - 10, 33, 11); fillStroke(ctx, '#fbe2cf', null);
+  napCat(ctx, x - 4, y - 4, '#a9aab8', '#d8d9e2');
+}
+/** A cat tree on the floor at (x, y): carpeted base, cube house, sisal post, two perches and a lookout cat. */
+function catTree(ctx, x, y) {
+  const carpet = (px, py, w, h) => { rrect(ctx, px, py, w, h, 5); fillStroke(ctx, '#d8c4b2', '#a89383', 1.6); };
+  ellipse(ctx, x, y + 2, 42, 7); ctx.fillStyle = SHADOW; ctx.fill();
+  rrect(ctx, x + 12, y - 172, 13, 164, 3); fillStroke(ctx, '#e6cf9f', '#b8a070', 1.4);           // sisal post
+  ctx.strokeStyle = 'rgba(160,130,80,0.45)'; ctx.lineWidth = 1;
+  for (let py = y - 168; py < y - 10; py += 5) { ctx.beginPath(); ctx.moveTo(x + 12, py); ctx.lineTo(x + 25, py + 2); ctx.stroke(); }
+  carpet(x - 38, y - 12, 76, 14);                                                                  // base
+  rrect(ctx, x - 34, y - 62, 46, 50, 8); fillStroke(ctx, '#e2cdb6', '#a89383', 1.6);              // cube house
+  circle(ctx, x - 11, y - 36, 13); fillStroke(ctx, '#6b5548', null);
+  carpet(x - 6, y - 104, 50, 10);                                                                  // middle perch
+  carpet(x - 16, y - 180, 64, 12);                                                                 // top perch
+  drawCat(ctx, x + 14, y - 180, { fur: '#fff6ec', light: '#ffffff', dark: '#5a4a42', pattern: 'spots', acc: '#f4a259', eye: '#6b8f4a', patch: '#f4a259', size: 0.72, seed: 0.2 }, { t: 0, mood: 'happy' });
+}
+/** Paw prints all over the wall, above the wainscot. */
+function pawPaper(ctx) {
+  ctx.fillStyle = 'rgba(90,61,74,0.07)';
+  for (let r = 0, py = 18; py < 122; py += 34, r++) for (let px = (r % 2) * 35 + 12; px < WORLD.W; px += 70) {
+    ellipse(ctx, px, py + 4, 6, 5); ctx.fill();
+    for (const [dx, dy] of [[-6, -4], [-2, -7], [2, -7], [6, -4]]) { circle(ctx, px + dx, py + dy, 2); ctx.fill(); }
+  }
+}
+// Each decoration: which background layer it is drawn in, where it goes, and how to frame it in the shop.
+const DECOR_ART = {
+  plants: { layer: 'wall', spots: [[420, 0], [782, 0]], draw: hangingPlant, prev: [80, 4, 1.3] },
+  lanterns: { layer: 'wall', spots: [[30, 30], [385, 30], [690, 30], [1100, 30]], draw: lantern, prev: [80, 6, 1.9] },
+  shelf: { layer: 'wall', spots: [[1070, 112]], draw: nappingShelf, prev: [84, 72, 1.25] },
+  bigPlant: { layer: 'floor', spots: [[42, 520]], draw: bigPlant, prev: [80, 104, 0.85] },
+  catBed: { layer: 'floor', spots: [[1058, 300]], draw: catBed, prev: [80, 92, 1.3] },
+  catTree: { layer: 'floor', spots: [[44, 330]], draw: catTree, prev: [86, 104, 0.5] },
+  pawPaper: { layer: 'paper', spots: [[0, 0]], draw: pawPaper, prev: [0, 0, 1] },
+};
+function drawDecor(ctx, sc, layer) {
+  for (const [id, a] of Object.entries(DECOR_ART)) if (a.layer === layer && sc.decor?.has(id)) for (const [x, y] of a.spots) a.draw(ctx, x, y, sc);
+}
+/** Shop preview of one decoration on a little bit of wall and floor (canvas drawn at 2x). */
+export function drawDecorPreview(canvas, id, sc) {
+  const c = canvas.getContext('2d'), a = DECOR_ART[id], w = canvas.width / 2, h = canvas.height / 2, [px, py, s] = a.prev;
+  c.setTransform(2, 0, 0, 2, 0, 0);
+  c.fillStyle = sc.pal.wall; c.fillRect(0, 0, w, h);
+  c.fillStyle = sc.pal.floor; c.fillRect(0, a.layer === 'floor' ? h * 0.55 : h * 0.86, w, h);
+  c.translate(px, py); c.scale(s, s);
+  a.draw(c, 0, 0, sc);
 }
 
 // ---------------------------------------------------------------- tables (drawn per frame for depth)
@@ -620,7 +737,7 @@ export function drawPets(ctx, pets, t) {
     ctx.beginPath(); ctx.moveTo(x - 3, y - 1); ctx.lineTo(x - 3, y + 2); ctx.moveTo(x + 2, y - 1); ctx.lineTo(x + 2, y + 2); ctx.stroke();
   }
   if (pets.includes('puppy')) {
-    const x = WORLD.W - 52, y = 304, wag = Math.sin(t * 10) * 0.6;
+    const x = 900, y = 286, wag = Math.sin(t * 10) * 0.6;
     ellipse(ctx, x, y + 2, 22, 5); ctx.fillStyle = SHADOW; ctx.fill();
     ctx.save(); ctx.translate(x + 16, y - 10); ctx.rotate(-0.6 + wag);                                // wagging tail
     rrect(ctx, -2, -12, 4, 12, 2); fillStroke(ctx, '#c98b55', null); ctx.restore();

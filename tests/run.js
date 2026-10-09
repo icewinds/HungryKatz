@@ -774,4 +774,15 @@ test('daily challenges: three different kinds a day, progress pays once, new day
   assert.notEqual(todaysChallenges(save, ['milk'], day(2), () => 0.99), list, 'a new day re-rolls');
 });
 
+test('decorate: decorations are saved, cleaned up and drawn only when shown', () => {
+  const s = DEFAULT_SAVE();
+  assert.deepEqual(s.decor, { owned: [], hidden: [] });
+  s.decor = { owned: ['catTree', 7, 'plants'], hidden: 'oops' };
+  const back = Storage.fromCode(Storage.toCode(s));
+  assert.deepEqual(back.decor, { owned: ['catTree', 'plants'], hidden: [] });
+  const sc = makeScene('lounge', 3, null, ['catTree']);
+  assert.ok(sc.decor.has('catTree') && !sc.decor.has('plants'));
+  assert.equal(makeScene('strawberry', 1).decor.size, 0);
+});
+
 console.log(`${passed} passed`);

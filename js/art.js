@@ -106,6 +106,16 @@ export function dressUp(look, outfit, OUTFITS) {
  * Only this sprite is flipped by o.facing; callers draw overlays separately
  * so icons and text never mirror.
  */
+/** A thick, fluffy tail along a curve (a, control c, tip b), with a round puff at the tip. */
+function fluffyTail(ctx, look, ol, a, c, b) {
+  const path = () => { ctx.beginPath(); ctx.moveTo(...a); ctx.quadraticCurveTo(...c, ...b); };
+  const fur = look.tail ?? look.fur;
+  path(); ctx.strokeStyle = ol; ctx.lineWidth = 12; ctx.stroke();
+  circle(ctx, b[0], b[1], 8); ctx.fillStyle = ol; ctx.fill();
+  path(); ctx.strokeStyle = fur; ctx.lineWidth = 8; ctx.stroke();
+  circle(ctx, b[0], b[1], 6); ctx.fillStyle = fur; ctx.fill();
+}
+
 /** Cats on the café floor are drawn this much bigger than in menus and portraits (set around the café render). */
 let catScale = 1;
 export const setCatScale = s => { catScale = s; };
@@ -138,10 +148,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   // tail
   // walking: quick small wag; sitting/waiting: big slow sway with a little flick, whole tail bending
   const sway = walk ? Math.sin(t * 9) * 6 : Math.sin(t * 2.2) * 13 + Math.sin(t * 5.3) * 2;
-  ctx.beginPath(); ctx.moveTo(-14, -16);
-  ctx.quadraticCurveTo(-34 + sway * 0.4, -18, -30 + sway, -44 + Math.abs(sway) * 0.3);
-  ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
-  ctx.strokeStyle = look.tail ?? look.fur; ctx.lineWidth = 5; ctx.stroke();
+  fluffyTail(ctx, look, ol, [-14, -16], [-34 + sway * 0.4, -18], [-30 + sway, -44 + Math.abs(sway) * 0.3]);
 
   // far legs, body, near legs
   leg(ctx, -10 - swing, look.dark, ol, look);
@@ -158,6 +165,9 @@ export function drawCat(ctx, x, y, look, o = {}) {
     for (const px of [0, 8]) { rrect(ctx, px, -22, 7, 7, 1.5); fillStroke(ctx, '#2c2f27', '#1f211c', 1); }
     rrect(ctx, -3, -31, 20, 3, 1); fillStroke(ctx, '#2c2f27', null);
   }
+  ctx.beginPath(); ctx.moveTo(-4, -36); // fluffy chest ruff peeking out under the chin
+  for (let i = 0; i <= 4; i++) ctx.lineTo(-4 + i * 5, i % 2 ? -21 : -25);
+  ctx.lineTo(18, -36); ctx.closePath(); fillStroke(ctx, look.light, null);
   leg(ctx, -5 + swing, look.fur, ol, look, true);
   leg(ctx, 11 - swing, look.fur, ol, look, true);
 
@@ -173,6 +183,11 @@ export function drawCat(ctx, x, y, look, o = {}) {
     const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3;
     const k = p => [cx + (p[0] - cx) * 0.5, cy + (p[1] - cy) * 0.5];
     tri(ctx, k(a), k(b), k(c)); fillStroke(ctx, '#ffb3c6', null);
+  }
+  for (const d of [-1, 1]) { // fluffy cheek tufts (the head covers their inner half)
+    ctx.beginPath(); ctx.moveTo(hx + d * 12, hy + 1); ctx.lineTo(hx + d * 23, hy + 4); ctx.lineTo(hx + d * 16, hy + 8);
+    ctx.lineTo(hx + d * 21, hy + 12); ctx.lineTo(hx + d * 10, hy + 14); ctx.closePath();
+    fillStroke(ctx, look.fur, ol, 2);
   }
   ellipse(ctx, hx, hy, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); headPattern(ctx, look, hx, hy); ctx.restore();
@@ -246,10 +261,7 @@ function drawCatBack(ctx, look, { t, state, sad }) {
 
   // tail: from the bottom middle, swishing slowly side to side while waiting (in front: we're behind the cat)
   const swish = Math.sin(t * 2.2) * 15 + Math.sin(t * 5.3) * 2; // big slow swing + a little flick
-  ctx.beginPath(); ctx.moveTo(0, -5);
-  ctx.quadraticCurveTo(swish * 0.5, 9, swish * 1.25, -12 + Math.abs(swish) * 0.25);
-  ctx.strokeStyle = ol; ctx.lineWidth = 9; ctx.stroke();
-  ctx.strokeStyle = look.tail ?? look.fur; ctx.lineWidth = 5; ctx.stroke();
+  fluffyTail(ctx, look, ol, [0, -5], [swish * 0.5, 9], [swish * 1.25, -12 + Math.abs(swish) * 0.25]);
 
   // head: dips while eating, turns toward its friend while chatting
   const hx = talk ? 3 + Math.sin(t * 7) : 0;
