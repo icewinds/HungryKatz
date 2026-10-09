@@ -500,7 +500,7 @@ const view = { w: 0, h: 0, dpr: 1, scale: 1, ox: 0, oy: 0 };
 
 // World rows that must always be on screen: from the top of the windows to just below the stove top
 // where the chef cooks (the oven fronts underneath may run off the bottom on wide phones).
-const VIEW_ROWS = { top: 8, bottom: KITCHEN.stoveTop + 25 };
+const VIEW_ROWS = { top: 30, bottom: KITCHEN.stoveTop + 14 };
 const hudInsets = { left: 92, right: 92 }; // last measured side rails (defaults until first shown)
 function measureHud() {
   const bar = document.querySelector('#hud .hud-bar'), tray = document.getElementById('tray-items');

@@ -311,7 +311,7 @@ function kitchen(ctx, sc) {
   rrect(ctx, ox - 26, y + 36, 52, uh, 7); fillStroke(ctx, '#ece6e8', '#c9bfc4', 3);
   for (const dx of [-12, 0, 12]) { circle(ctx, ox + dx, y + 46, 3.5); fillStroke(ctx, '#d8cfd3', '#a89aa1', 1); } // dials
   rrect(ctx, ox - 20, y + 58, 40, 4, 2); fillStroke(ctx, st >= 3 ? '#e3b94f' : '#a89aa1', null);                  // handle
-  for (const x0 of [40, WORLD.W - 220]) pantry(ctx, x0, y + 34, st);
+  for (const x0 of [20, WORLD.W - 190]) pantry(ctx, x0, y + 34, st);
   // oven cabinets along the bottom (the stove top above them is drawn live, in front of the chef)
   rrect(ctx, -6, cab, W + 12, H - cab + 6, 4); fillStroke(ctx, p.counter, p.counterEdge, 2);
   for (const sx of KITCHEN.stovesFor(sc.level)) {
@@ -330,8 +330,8 @@ function kitchen(ctx, sc) {
 /** Kitchen shelves at the far ends: jars, a sack of flour and a pot plant. */
 function pantry(ctx, x, y, st) {
   for (const sy of [y + 26, y + 70]) {
-    rrect(ctx, x, sy, 180, 7, 2); fillStroke(ctx, '#d9a878', '#b8865a', 1.5);
-    for (const bx of [x + 14, x + 164]) { ctx.fillStyle = '#b8865a'; ctx.fillRect(bx, sy + 7, 3, 8); }
+    rrect(ctx, x, sy, 170, 7, 2); fillStroke(ctx, '#d9a878', '#b8865a', 1.5);
+    for (const bx of [x + 14, x + 154]) { ctx.fillStyle = '#b8865a'; ctx.fillRect(bx, sy + 7, 3, 8); }
   }
   const jars = ['#ffd3df', '#d6f4e8', '#fff1c2', '#dbe9ff', '#eadcff'];
   for (const [i, c] of jars.entries()) {
@@ -384,10 +384,10 @@ export const sceneTables = sc => tablesForLevel(sc.level);
 
 // ---------------------------------------------------------------- live wall: sky, clock, lights
 /** Tap area (world coords) of the top-left window-sill plant: 5 taps = secret Ghost cat. */
-export const EGG_POT = { x: 122, y: 76, w: 56, h: 48 }; // the first window's sill
+export const EGG_POT = { x: 102, y: 76, w: 56, h: 48 }; // the first window's sill
 /** Seaside Diner only: a garden gnome on the right window sill who screams when tapped. */
-export const GNOME_SPOT = { x: 1046, y: 70, w: 50, h: 52 }; // the last window's sill
-export const gnome = { x: 1071, y: 116, screamAt: -1e9 }; // screamAt = render time (s) of the last tap
+export const GNOME_SPOT = { x: 926, y: 70, w: 50, h: 52 }; // the last window's sill
+export const gnome = { x: 951, y: 116, screamAt: -1e9 }; // screamAt = render time (s) of the last tap
 
 function drawGnome(ctx, t) {
   const since = t - gnome.screamAt, scream = since >= 0 && since < 0.8;
@@ -414,8 +414,8 @@ function drawGnome(ctx, t) {
   tri(ctx, [-7.5, -22], [7.5, -22], [2, -42]); fillStroke(ctx, '#e8504f', '#c43d3d', 1.2); // hat
   ctx.restore();
 }
-const WINDOWS = [{ x: 120, y: 22, w: 240, h: 96 }, { x: 520, y: 22, w: 240, h: 96 }, { x: 920, y: 22, w: 240, h: 96 }];
-const CLOCK_X = 440; // between the first two windows
+const WINDOWS = [{ x: 100, y: 22, w: 220, h: 96 }, { x: 450, y: 22, w: 220, h: 96 }, { x: 800, y: 22, w: 220, h: 96 }];
+const CLOCK_X = 385; // between the first two windows
 // Clouds live in one strip spanning both windows, so they drift from pane to pane.
 const CLOUDS = [
   { x: 0, y: 52, s: 1, v: 9 }, { x: 150, y: 78, s: 0.75, v: 6 }, { x: 290, y: 44, s: 1.15, v: 8 },

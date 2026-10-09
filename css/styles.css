@@ -740,7 +740,7 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 #screen-menu #install-hint { display: none; }
 
 /* ---------- Landscape: score rail on the left, carry rail on the right ---------- */
-:root { --rail: 84px; }
+:root { --rail: 76px; }
 #hud {
   top: 0; bottom: 0; right: auto;
   width: calc(env(safe-area-inset-left) + var(--rail)); max-width: none; margin: 0;
