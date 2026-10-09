@@ -77,7 +77,7 @@ export function drawPlateStack(ctx, x, y, n) {
 }
 // Chef Biscuit runs the kitchen (not playable).
 export const KITCHEN_CHEF = { id: 'biscuit', name: 'Chef Biscuit', fur: '#f1dcb8', light: '#fff8ec', dark: '#b8925e', pattern: 'socks',
-  acc: '#ffffff', eye: '#4a7fc9', patch: '#fff', accessory: 'chef', size: 1.18, seed: 0.6 };
+  acc: '#ffffff', eye: '#4a7fc9', patch: '#fff', accessory: 'chef', size: 0.92, seed: 0.6 };
 export const PLAYER_LOOKS = [
   { id: 'mango', name: 'Mango', fur: '#f4a259', light: '#fff1dc', dark: '#c0702c', pattern: 'stripes', acc: '#ff8fab', eye: '#3b2a33', patch: '#fff', ...WAITER },
   { id: 'smokey', name: 'Smokey', fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes', acc: '#7fb3ff', eye: '#d4a017', patch: '#fff', ...WAITER },
@@ -106,9 +106,14 @@ export function dressUp(look, outfit, OUTFITS) {
  * Only this sprite is flipped by o.facing; callers draw overlays separately
  * so icons and text never mirror.
  */
+/** Cats on the café floor are drawn this much bigger than in menus and portraits (set around the café render). */
+let catScale = 1;
+export const setCatScale = s => { catScale = s; };
+export const catSize = look => (look.size || 1) * catScale;
+
 export function drawCat(ctx, x, y, look, o = {}) {
   const { state = 'idle', t = 0, facing = 1, squash = 0, mood = null, yawn = 0 } = o; // yawn 0..1: eyes shut, mouth wide
-  const s = look.size || 1;
+  const s = catSize(look);
   const walk = state === 'walk', eat = state === 'eat', talk = state === 'talk';
   const happy = eat || mood === 'happy', sad = mood === 'sad';
   const bob = walk ? -Math.abs(Math.sin(t * 11)) * 4 : Math.sin(t * 2.4) * 0.8;
@@ -560,7 +565,7 @@ export function drawPass(ctx, zone, type, ready, canTake, t, flash, lockedLevel 
 export function drawWaiterTray(ctx, x, y, facing, look, inv, t, walking, held, dirty = 0) {
   const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
   if (held !== (items.length > 0 || dirty > 0)) return;
-  const s = look.size || 1, bob = walking ? -Math.abs(Math.sin(t * 11)) * 3 : Math.sin(t * 2.4) * 0.8;
+  const s = catSize(look), bob = walking ? -Math.abs(Math.sin(t * 11)) * 3 : Math.sin(t * 2.4) * 0.8;
   ctx.save();
   ctx.translate(x, y); ctx.scale(s, s);
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
@@ -600,7 +605,7 @@ export function drawCarryBadge(ctx, x, y, inv, dirty = 0) {
   const items = Object.keys(inv.items).filter(k => inv.items[k] > 0);
   if (dirty) items.push('dirty');
   if (!items.length) return;
-  const w = items.length * 34 + 6, h = 24, top = y - 114;
+  const w = items.length * 34 + 6, h = 24, top = y - 114 * catScale;
   x = Math.min(Math.max(x, w / 2 + 4), WORLD.W - w / 2 - 4); // keep the badge on screen near walls
   rrect(ctx, x - w / 2, top, w, h, 12); fillStroke(ctx, 'rgba(255,255,255,0.95)', '#f6d3dd', 1.5);
   ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
@@ -618,7 +623,7 @@ export function drawRequest(ctx, npc, t) {
   const sc = easeOutBack(k) * (urgent ? 1 + Math.sin(t * 14) * 0.07 : 1);
   if (sc <= 0) return;
   ctx.save();
-  ctx.translate(npc.x, npc.y - 104 * (npc.look.size || 1));
+  ctx.translate(npc.x, npc.y - 104 * catSize(npc.look));
   ctx.scale(sc, sc);
   const two = npc.requests?.length > 1;          // weekend special: two dishes
   const R = two ? 25 : 19, ring = R + 2;

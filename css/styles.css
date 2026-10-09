@@ -739,31 +739,30 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 #screen-menu .challenge-count { padding: 0 5px; font-size: 0.8em; }
 #screen-menu #install-hint { display: none; }
 
-/* ---------- Landscape: score rail on the left, carry rail on the right ---------- */
-:root { --rail: 76px; }
+/* ---------- In-game HUD: small cards over the café's corners ----------
+   Score card bottom-left (over the pantry), pause top-right, Upgrade bottom-right. What the waiter carries
+   shows on the tray and the badge above them, so there's no inventory column. */
 #hud {
-  top: 0; bottom: 0; right: auto;
-  width: calc(env(safe-area-inset-left) + var(--rail)); max-width: none; margin: 0;
-  padding: calc(env(safe-area-inset-top) + 8px) 6px 8px calc(env(safe-area-inset-left) + 6px);
-  display: flex; flex-direction: column; gap: 8px;
+  top: auto; right: auto; bottom: 0; left: 0; max-width: none; margin: 0;
+  padding: 0 0 calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 8px);
+  display: flex; flex-direction: column-reverse; align-items: flex-start; gap: 4px;
 }
-.hud-bar { flex-direction: column; gap: 10px; padding: 10px 4px; }
+.hud-bar { gap: 10px; padding: 4px 12px 4px 8px; }
 .hud-bar .spacer { display: none; }
-.hud-bar .stat.coins { flex-direction: column; gap: 3px; }
 .hud-bar .stat b { font-size: 17px; }
-.score { align-items: center; }
-.hud-bar [data-action="pause"] { position: fixed; top: calc(env(safe-area-inset-top) + 8px); right: calc(env(safe-area-inset-right) + (var(--rail) - 40px) / 2); box-shadow: var(--shadow); }
-.paws { display: grid; grid-template-columns: repeat(2, 16px); justify-content: center; gap: 4px; margin: 0; }
+.lvl { width: 34px; height: 34px; }
+.lvl b { width: 27px; height: 27px; font-size: 14px; }
+.hud-bar [data-action="pause"] { position: fixed; top: calc(env(safe-area-inset-top) + 8px); right: calc(env(safe-area-inset-right) + 8px); box-shadow: var(--shadow); }
+.paws { gap: 3px; margin: 0 0 0 6px; }
+.paw svg { width: 14px; height: 14px; }
 #tray {
-  top: 0; bottom: 0; left: auto;
-  width: calc(env(safe-area-inset-right) + var(--rail)); max-width: none; margin: 0;
-  flex-direction: column; gap: 8px;
-  padding: calc(env(safe-area-inset-top) + 58px) calc(env(safe-area-inset-right) + 6px) calc(env(safe-area-inset-bottom) + 8px) 6px;
+  top: auto; left: auto; right: 0; bottom: 0; max-width: none; margin: 0;
+  padding: 0 calc(env(safe-area-inset-right) + 8px) calc(env(safe-area-inset-bottom) + 8px) 0;
+  pointer-events: none;
 }
-#tray { pointer-events: none; } /* full-height rail: let taps through to the pause button above it */
 #tray > * { pointer-events: auto; }
-.tray-items { flex-direction: column; justify-content: center; gap: 6px; padding: 8px 4px; }
-.btn-upgrade { min-height: 52px; padding: 6px 2px; font-size: 15px; }
+#tray .tray-items { display: none; }
+.btn-upgrade { min-height: 46px; padding: 8px 16px; font-size: 17px; }
 
 /* Held upright: ask for landscape */
 .rotate { display: none; position: fixed; inset: 0; z-index: 100; place-items: center; padding: 16px; background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }

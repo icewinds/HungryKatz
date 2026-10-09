@@ -152,10 +152,10 @@ export function drawBackground(ctx, sc) {
     }
   }
 
-  // doorway + welcome mat on the left wall (the door itself swings open live: drawDoor)
-  rrect(ctx, -6, DOOR.hy - DOOR.H, 18, DOOR.W + DOOR.H, 6); fillStroke(ctx, DAYLIGHT, null);
-  rrect(ctx, 8, 298, 42, 64, 12); fillStroke(ctx, p.mat, p.matEdge, 2);
-  if (st === 0) { ctx.strokeStyle = p.matEdge; ctx.lineWidth = 1.5; for (let y = 304; y < 360; y += 8) { ctx.beginPath(); ctx.moveTo(8, y); ctx.lineTo(3, y + 3); ctx.stroke(); } }
+  // welcome mat in front of the front door (the door itself opens live: drawDoor)
+  const dm = FRONT_DOOR;
+  rrect(ctx, dm.x - 38, dm.sill + 6, 76, 20, 8); fillStroke(ctx, p.mat, p.matEdge, 2);
+  if (st === 0) { ctx.strokeStyle = p.matEdge; ctx.lineWidth = 1.5; for (let x = dm.x - 34; x < dm.x + 36; x += 8) { ctx.beginPath(); ctx.moveTo(x, dm.sill + 26); ctx.lineTo(x - 2, dm.sill + 30); ctx.stroke(); } }
 
   if (st <= 1) { cardboardBoxes(ctx); oldBroom(ctx); } // cleared away once the café gets cosy
 
@@ -305,12 +305,12 @@ function kitchen(ctx, sc) {
   for (let r = 0, ty = y + 26; ty < cab; ty += 20, r++) for (let tx = (r % 2) * 20; tx < W; tx += 40) ctx.fillRect(tx, ty, 20, 20);
   // fridge (milk) on the left, oven (cupcakes) on the right: their doors and glow are drawn live
   const fx = KITCHEN.fridge.x, ox = KITCHEN.oven.x, uh = cab - y - 30;
-  rrect(ctx, fx - 26, y + 36, 52, uh, 7); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
-  ctx.strokeStyle = '#b9dff0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fx - 26, y + 66); ctx.lineTo(fx + 26, y + 66); ctx.stroke();
-  for (const hy of [y + 46, y + 78]) { rrect(ctx, fx + 18, hy, 4, 12, 2); fillStroke(ctx, '#9cc3ea', null); }
-  rrect(ctx, ox - 26, y + 36, 52, uh, 7); fillStroke(ctx, '#ece6e8', '#c9bfc4', 3);
-  for (const dx of [-12, 0, 12]) { circle(ctx, ox + dx, y + 46, 3.5); fillStroke(ctx, '#d8cfd3', '#a89aa1', 1); } // dials
-  rrect(ctx, ox - 20, y + 58, 40, 4, 2); fillStroke(ctx, st >= 3 ? '#e3b94f' : '#a89aa1', null);                  // handle
+  rrect(ctx, fx - 26, y + 30, 52, uh, 7); fillStroke(ctx, '#e4f4fb', '#b9dff0', 3);
+  ctx.strokeStyle = '#b9dff0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(fx - 26, y + 58); ctx.lineTo(fx + 26, y + 58); ctx.stroke();
+  for (const hy of [y + 38, y + 66]) { rrect(ctx, fx + 18, hy, 4, 12, 2); fillStroke(ctx, '#9cc3ea', null); }
+  rrect(ctx, ox - 26, y + 30, 52, uh, 7); fillStroke(ctx, '#ece6e8', '#c9bfc4', 3);
+  for (const dx of [-12, 0, 12]) { circle(ctx, ox + dx, y + 40, 3.5); fillStroke(ctx, '#d8cfd3', '#a89aa1', 1); } // dials
+  rrect(ctx, ox - 20, y + 48, 40, 4, 2); fillStroke(ctx, st >= 3 ? '#e3b94f' : '#a89aa1', null);                  // handle
   for (const x0 of [20, WORLD.W - 190]) pantry(ctx, x0, y + 34, st);
   // oven cabinets along the bottom (the stove top above them is drawn live, in front of the chef)
   rrect(ctx, -6, cab, W + 12, H - cab + 6, 4); fillStroke(ctx, p.counter, p.counterEdge, 2);
@@ -329,7 +329,7 @@ function kitchen(ctx, sc) {
 
 /** Kitchen shelves at the far ends: jars, a sack of flour and a pot plant. */
 function pantry(ctx, x, y, st) {
-  for (const sy of [y + 26, y + 70]) {
+  for (const sy of [y + 26]) {
     rrect(ctx, x, sy, 170, 7, 2); fillStroke(ctx, '#d9a878', '#b8865a', 1.5);
     for (const bx of [x + 14, x + 154]) { ctx.fillStyle = '#b8865a'; ctx.fillRect(bx, sy + 7, 3, 8); }
   }
@@ -349,6 +349,11 @@ function pantry(ctx, x, y, st) {
 // ---------------------------------------------------------------- tables (drawn per frame for depth)
 /** Round table: bare wobbly wood when shabby, tablecloth when tidy, flowers when cosy, gold + candle when fancy. */
 export function drawTable(ctx, t, sc, time = 0) {
+  ctx.save(); ctx.translate(t.x, t.y); ctx.scale(1.1, 1.1); ctx.translate(-t.x, -t.y); // a touch bigger, like the cats
+  drawTableTop(ctx, t, sc, time);
+  ctx.restore();
+}
+function drawTableTop(ctx, t, sc, time) {
   const p = sc.pal, st = sc.stage;
   ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill();
   ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, p.woodDark, null);
@@ -384,7 +389,7 @@ export const sceneTables = sc => tablesForLevel(sc.level);
 
 // ---------------------------------------------------------------- live wall: sky, clock, lights
 /** Tap area (world coords) of the top-left window-sill plant: 5 taps = secret Ghost cat. */
-export const EGG_POT = { x: 102, y: 76, w: 56, h: 48 }; // the first window's sill
+export const EGG_POT = { x: 62, y: 76, w: 56, h: 48 }; // the first window's sill
 /** Seaside Diner only: a garden gnome on the right window sill who screams when tapped. */
 export const GNOME_SPOT = { x: 926, y: 70, w: 50, h: 52 }; // the last window's sill
 export const gnome = { x: 951, y: 116, screamAt: -1e9 }; // screamAt = render time (s) of the last tap
@@ -414,8 +419,8 @@ function drawGnome(ctx, t) {
   tri(ctx, [-7.5, -22], [7.5, -22], [2, -42]); fillStroke(ctx, '#e8504f', '#c43d3d', 1.2); // hat
   ctx.restore();
 }
-const WINDOWS = [{ x: 100, y: 22, w: 220, h: 96 }, { x: 450, y: 22, w: 220, h: 96 }, { x: 800, y: 22, w: 220, h: 96 }];
-const CLOCK_X = 385; // between the first two windows
+const WINDOWS = [{ x: 60, y: 22, w: 210, h: 96 }, { x: 450, y: 22, w: 220, h: 96 }, { x: 800, y: 22, w: 220, h: 96 }];
+const CLOCK_X = 735; // between the last two windows (the front door is between the first two)
 // Clouds live in one strip spanning both windows, so they drift from pane to pane.
 const CLOUDS = [
   { x: 0, y: 52, s: 1, v: 9 }, { x: 150, y: 78, s: 0.75, v: 6 }, { x: 290, y: 44, s: 1.15, v: 8 },
@@ -637,45 +642,25 @@ export function drawPets(ctx, pets, t) {
 
 // ---------------------------------------------------------------- the front door
 const DAYLIGHT = '#fff3d6';
-// Door leaf: hinged on the floor at (hx, hy), W wide along the wall, H tall. Shut, it lies flush in the
-// wall and (seen from this angle) covers the strip hy-H .. hy+W, the same footprint the open leaf swings from.
-const DOOR = { hx: 6, hy: 282, W: 96, H: 104 };
-/** The front door on the left wall, swung open by `open` (0 shut .. 1 wide open), hinged at the back
- *  jamb so it opens toward the wall and cats walk in front of it. Daylight spills in while open. */
+// The front door sits in the back wall, left of the bar: cats step out of the doorway and walk down into the café.
+export const FRONT_DOOR = { x: 325, w: 64, top: 70, sill: 172 };
+/** The front door, opened by `open` (0 shut .. 1 wide open): the leaf turns away from us against the left
+ *  jamb, the garden shows through and daylight spills onto the floor. */
 export function drawDoor(ctx, sc, open) {
-  const p = sc.pal;
-  if (open > 0.01) { // warm light on the floor through the doorway
-    const g = ctx.createLinearGradient(12, 0, 12 + 110 * open, 0);
+  const p = sc.pal, { x, w, top, sill } = FRONT_DOOR, l = x - w / 2, h = sill - top;
+  rrect(ctx, l, top, w, h, 6); ctx.fillStyle = DAYLIGHT; ctx.fill();                      // daylight outside
+  ctx.fillStyle = '#bfe3a8'; ctx.fillRect(l + 2, sill - 24, w - 4, 24);                    // a glimpse of the garden
+  if (open > 0.01) { // warm light on the floor in front of the door
+    const g = ctx.createLinearGradient(0, sill, 0, sill + 90 * open);
     g.addColorStop(0, `rgba(255, 236, 190, ${0.55 * open})`); g.addColorStop(1, 'rgba(255, 236, 190, 0)');
-    ctx.beginPath(); ctx.moveTo(12, 284); ctx.lineTo(12 + 110 * open, 268); ctx.lineTo(12 + 110 * open, 400); ctx.lineTo(12, 378); ctx.closePath();
+    ctx.beginPath(); ctx.moveTo(l, sill); ctx.lineTo(l + w, sill); ctx.lineTo(l + w + 30 * open, sill + 90 * open); ctx.lineTo(l - 30 * open, sill + 90 * open); ctx.closePath();
     ctx.fillStyle = g; ctx.fill();
   }
-  if (open < 0.25) { // shut: the door lies flush in the wall, fading as it swings away
-    ctx.save(); ctx.globalAlpha = 1 - open * 4;
-    const top = DOOR.hy - DOOR.H, len = DOOR.W + DOOR.H;
-    rrect(ctx, -6, top, 18, len, 6); fillStroke(ctx, p.door, 'rgba(90,61,74,0.25)', 1.5);
-    rrect(ctx, -2, top + 12, 9, len * 0.42, 3); fillStroke(ctx, 'rgba(255,255,255,0.3)', null);       // panels
-    rrect(ctx, -2, top + len * 0.52, 9, len * 0.42, 3); fillStroke(ctx, 'rgba(255,255,255,0.3)', null);
-    // knob on the room side, at handle height near the opening edge, sticking out into the café
-    drawKnob(ctx, 12, DOOR.hy + DOOR.W - KNOB_IN - DOOR.H * KNOB_UP, 1, 0);
-    ctx.restore();
-  }
-  if (open <= 0.01) return;
-  // The door leaf stands upright: its bottom edge swings across the floor around the hinge,
-  // and its face (96 wide, 104 tall) turns toward us. Map leaf coords (u along, v up) to the floor.
-  const a = open * 1.35, { W, H, hx, hy } = DOOR;
-  ctx.save();
-  ctx.transform(Math.sin(a), Math.cos(a), 0, -1, hx, hy);
-  rrect(ctx, 0, 0, W, H, 5); fillStroke(ctx, p.door, 'rgba(90,61,74,0.35)', 1.5);
-  rrect(ctx, 8, 12, 30, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1); // panels
-  rrect(ctx, 46, 12, 30, H - 24, 4); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1);
-  rrect(ctx, W - 4, 0, 4, H, 2); fillStroke(ctx, 'rgba(90,61,74,0.18)', null);                          // edge
-  ctx.restore();
-  // knob on the face we see, near the opening edge; it sticks out toward us (drawn round, not skewed)
-  ctx.save(); ctx.globalAlpha = Math.min(1, open * 4);
-  const u = W - KNOB_IN;
-  drawKnob(ctx, hx + Math.sin(a) * u, hy + Math.cos(a) * u - H * KNOB_UP, -Math.cos(a), Math.sin(a));
-  ctx.restore();
+  const lw = w * (1 - 0.8 * open);                                                         // the leaf, seen narrower as it opens
+  rrect(ctx, l, top, lw, h, 5); fillStroke(ctx, p.door, 'rgba(90,61,74,0.35)', 1.5);
+  if (lw > 26) for (const py of [top + 10, top + h * 0.53]) { rrect(ctx, l + 7, py, lw - 14, h * 0.37, 3); fillStroke(ctx, 'rgba(255,255,255,0.3)', 'rgba(90,61,74,0.15)', 1); }
+  if (open < 0.5) drawKnob(ctx, l + lw - 9, top + h * 0.55, 0.3, 0.3);
+  rrect(ctx, l - 4, top - 4, w + 8, h + 4, 8); ctx.strokeStyle = p.frame; ctx.lineWidth = 5; ctx.stroke(); // frame
 }
 
 const KNOB_IN = 10, KNOB_UP = 0.45; // knob sits 10px in from the opening edge, just under half height
@@ -705,18 +690,18 @@ export function drawKitchen(ctx, sc, kitchen, t) {
   ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const fr = kitchen.fridge, fx = KITCHEN.fridge.x;
   if (fr.food) { // fridge open: lit shelves with milk, door swung toward the chef
-    rrect(ctx, fx - 22, y + 40, 44, 66, 4); fillStroke(ctx, '#fffbe6', '#e8dcb0', 1.5);
-    for (const [bx, by] of [[-10, 58], [4, 58], [-4, 90], [10, 90]]) drawFoodIcon(ctx, 'milk', fx + bx, y + by, 0.55);
-    ctx.beginPath(); ctx.moveTo(fx + 26, y + 36); ctx.lineTo(fx + 44, y + 44); ctx.lineTo(fx + 44, y + 112); ctx.lineTo(fx + 26, y + 120); ctx.closePath();
+    rrect(ctx, fx - 22, y + 34, 44, 60, 4); fillStroke(ctx, '#fffbe6', '#e8dcb0', 1.5);
+    for (const [bx, by] of [[-10, 50], [4, 50], [-4, 78], [10, 78]]) drawFoodIcon(ctx, 'milk', fx + bx, y + by, 0.55);
+    ctx.beginPath(); ctx.moveTo(fx + 26, y + 30); ctx.lineTo(fx + 44, y + 36); ctx.lineTo(fx + 44, y + 100); ctx.lineTo(fx + 26, y + 106); ctx.closePath();
     fillStroke(ctx, '#e4f4fb', '#b9dff0', 2);
-    ring(fx, y + 116, fr.t / fr.need, fr.n);
+    ring(fx, y + 94, fr.t / fr.need, fr.n);
   }
   const ov = kitchen.oven, ox = KITCHEN.oven.x;
-  rrect(ctx, ox - 20, y + 68, 40, 34, 4); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                   // oven window
+  rrect(ctx, ox - 20, y + 56, 40, 30, 4); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                   // oven window
   if (ov.food) { // baking: warm glow and the cupcakes rising
-    ctx.globalAlpha = 0.75 + Math.sin(t * 4) * 0.15; rrect(ctx, ox - 18, y + 70, 36, 30, 3); ctx.fillStyle = '#ffb347'; ctx.fill(); ctx.globalAlpha = 1;
-    drawFoodIcon(ctx, ov.food, ox, y + 88 - Math.min(1, ov.t / ov.need) * 3, 0.62);
-    ring(ox, y + 116, ov.t / ov.need, ov.n);
+    ctx.globalAlpha = 0.75 + Math.sin(t * 4) * 0.15; rrect(ctx, ox - 18, y + 58, 36, 26, 3); ctx.fillStyle = '#ffb347'; ctx.fill(); ctx.globalAlpha = 1;
+    drawFoodIcon(ctx, ov.food, ox, y + 74 - Math.min(1, ov.t / ov.need) * 3, 0.62);
+    ring(ox, y + 94, ov.t / ov.need, ov.n);
   }
   const toCounter = c.mode === 'plate' || (c.carrying && c.mode === 'walk');
   drawCat(ctx, c.x, c.y, KITCHEN_CHEF, {

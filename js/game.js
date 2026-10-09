@@ -19,7 +19,7 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus, todaysChallenges, progressChallenges } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag,
+  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag, setCatScale, catSize,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
@@ -500,13 +500,7 @@ const view = { w: 0, h: 0, dpr: 1, scale: 1, ox: 0, oy: 0 };
 
 // World rows that must always be on screen: from the top of the windows to just below the stove top
 // where the chef cooks (the oven fronts underneath may run off the bottom on wide phones).
-const VIEW_ROWS = { top: 30, bottom: KITCHEN.stoveTop + 14 };
-const hudInsets = { left: 92, right: 92 }; // last measured side rails (defaults until first shown)
-function measureHud() {
-  const bar = document.querySelector('#hud .hud-bar'), tray = document.getElementById('tray-items');
-  if (bar?.offsetWidth) hudInsets.left = bar.getBoundingClientRect().right + 6;
-  if (tray?.offsetWidth) hudInsets.right = innerWidth - tray.getBoundingClientRect().left + 6;
-}
+const VIEW_ROWS = { top: 40, bottom: KITCHEN.stoveTop + 12 };
 
 function resize() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -514,13 +508,12 @@ function resize() {
   Object.assign(view, { w, h, dpr });
   canvas.width = Math.round(w * dpr);
   canvas.height = Math.round(h * dpr);
-  // Playing: fit the café between the score rail (left) and the carry rail (right), keeping the important
-  // rows on screen top to bottom. Menus: the café fills the screen behind them, windows at the top.
-  measureHud();
+  // Playing: fit the important rows on screen (the HUD cards float over the café's corners).
+  // Menus: the café fills the screen behind them, windows at the top.
   const playing = !document.getElementById('hud').classList.contains('hidden');
-  const left = playing ? hudInsets.left : 0, band = Math.max(1, w - (playing ? hudInsets.right : 0) - left), rows = VIEW_ROWS.bottom - VIEW_ROWS.top;
-  view.scale = playing ? Math.min(band / WORLD.W, h / rows) : Math.max(w / WORLD.W, h / rows);
-  view.ox = left + (band - WORLD.W * view.scale) / 2;
+  const rows = VIEW_ROWS.bottom - VIEW_ROWS.top;
+  view.scale = playing ? Math.min(w / WORLD.W, h / rows) : Math.max(w / WORLD.W, h / rows);
+  view.ox = (w - WORLD.W * view.scale) / 2;
   view.oy = -VIEW_ROWS.top * view.scale + (playing ? (h - rows * view.scale) / 2 : 0);
   buildBackground();
 }
@@ -631,7 +624,9 @@ for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) canvas.addEvent
 document.addEventListener('pointerdown', () => { audio.unlock(); audio.startMusic(); }, { once: true });
 
 // ---------------------------------------------------------------- render
+const CAFE_CAT_SCALE = 1.15; // cats on the café floor, bigger than menu portraits
 function render(time) {
+  setCatScale(CAFE_CAT_SCALE);
   const { dpr, scale, ox, oy, w, h } = view;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.fillStyle = scene.pal.counterFront; ctx.fillRect(0, 0, w, h);          // letterbox: kitchen counter
@@ -706,7 +701,7 @@ function render(time) {
 
   // overlays: drawn after all cats, never flipped
   for (const n of npcs) {
-    const top = n.y - 96 * n.look.size;
+    const top = n.y - 96 * catSize(n.look);
     if (speaking.has(n)) drawChatBubble(ctx, n.x, n.y, n.facing, Math.floor(time / 1.8) + n.id, time);
     if (n.regular && n.state !== 'leaving') drawNameTag(ctx, n.x, n.y + 4, REGULARS.find(r => r.id === n.regular).name);
     if (n.state === 'waiting') drawRequest(ctx, n, time);
@@ -716,6 +711,7 @@ function render(time) {
   if (gm.state === 'playing') drawCarryBadge(ctx, p.x, p.y, inv, gm.dirtyCarried);
   drawFx(ctx, gm.fx, 'over');
   drawFirstGameHint(time);
+  setCatScale(1);
 
   ctx.restore();
   if (debug.on) drawDebug();

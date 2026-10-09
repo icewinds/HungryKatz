@@ -1,7 +1,7 @@
-// Central tuning knobs. All positions are in WORLD units: a fixed 1120x755
+// Central tuning knobs. All positions are in WORLD units: a fixed 1120x720
 // landscape world that game.js scales to fit any screen.
 
-export const WORLD = { W: 1120, H: 755 };
+export const WORLD = { W: 1120, H: 720 };
 
 // The menu. Food i unlocks at restaurant level 1 + i * FOOD_UNLOCK_EVERY
 // (milk L1, cat food L3, fish L5, ...). `bonus` = extra coins per serve.
@@ -21,13 +21,13 @@ export const foodsForLevel = level => FOODS.filter(f => foodUnlockLevel(f.id) <=
 // kitchen counter with one pickup pad per food (bottom). Door on the left wall.
 // The café starts small and gains a table at the levels listed below.
 const BAR_Y = 258;                       // feet of cats sitting at the window bar
-const KITCHEN_Y = 565;                  // top of the kitchen counter
+const KITCHEN_Y = 545;                  // top of the kitchen counter
 export const TABLES = [
-  { x: 560, y: 430, level: 1 },          // the first, slightly wobbly table
-  { x: 340, y: 400, level: 3 },
-  { x: 780, y: 400, level: 5 },
-  { x: 140, y: 440, level: 7 },
-  { x: 985, y: 440, level: 9 },
+  { x: 560, y: 415, level: 1 },          // the first, slightly wobbly table
+  { x: 330, y: 388, level: 3 },
+  { x: 790, y: 388, level: 5 },
+  { x: 130, y: 420, level: 7 },
+  { x: 990, y: 420, level: 9 },
 ];
 const SEAT_DX = 66;                      // side seats sit either side of each table
 const SEAT_BACK = -34, SEAT_FRONT = 30;  // seat behind the table (faces us) and in front (back to us)
@@ -35,10 +35,10 @@ const blockerOf = t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 });
 
 export const LAYOUT = {
   walk: { minX: 26, maxX: 1094, minY: 248, maxY: KITCHEN_Y - 28 }, // where the player may stand (up to the kitchen counter)
-  playerStart: { x: 560, y: 520 },
-  entry: { x: -70, y: 330 },  // NPCs spawn here, off-screen left
-  door: { x: 40, y: 330 },    // first waypoint just inside the door
-  exit: { x: -80, y: 330 },   // NPCs are removed after reaching this
+  playerStart: { x: 560, y: 500 },
+  entry: { x: 325, y: 178 },  // NPCs step out of the front door in the back wall (scene.js FRONT_DOOR)
+  door: { x: 325, y: 240 },   // first waypoint, just in front of the door
+  exit: { x: 325, y: 178 },   // NPCs are removed after walking back through it
   windowBar: { x: 380, y: 168, w: 360, h: 54 },
   tables: TABLES,
   kitchenY: KITCHEN_Y,        // top of the counter where the chef puts ready plates
@@ -183,8 +183,8 @@ export const CLEARING = {
   coinPerPlate: 1,               // the waiter earns this for each plate returned
   cleanerSpeed: 130,
   cleanerStack: 4,               // plates Dusty carries before heading to the counter
-  cleanerHome: { x: 1070, y: 515 },
-  dropOff: { x: 560, y: 535 },   // where Dusty hands plates in
+  cleanerHome: { x: 1070, y: 495 },
+  dropOff: { x: 560, y: 515 },   // where Dusty hands plates in
 };
 export const STAFF = {
   cleaner: { icon: '🧹', name: 'Dusty the cleaner', cost: 500, level: 5, desc: 'Clears empty plates from the tables for you.' },
@@ -218,12 +218,12 @@ export const MAX_MISSED = 10;
 export const FOOD_SOURCE = { milk: 'fridge', cupcake: 'oven' }; // everything else cooks on a stove
 export const COOK_TIME = { milk: 1.0, catfood: 1.8, fish: 2.4, sushi: 2.8, cupcake: 3.4 };
 export const KITCHEN = {
-  passY: KITCHEN_Y + 66,     // chef's feet while putting plates on the counter (back to us)
-  stoveY: KITCHEN_Y + 132,   // chef's feet while cooking (facing us, behind the stove top)
-  stoveTop: KITCHEN_Y + 120, // top edge of the stove counter
-  home: { x: 560, y: KITCHEN_Y + 132 },
-  fridge: { x: 230, stand: { x: 280, y: KITCHEN_Y + 96 } },  // left of the milk spot on the counter
-  oven: { x: 890, stand: { x: 840, y: KITCHEN_Y + 96 } },    // right of the cupcakes
+  passY: KITCHEN_Y + 60,     // chef's feet while putting plates on the counter (back to us)
+  stoveY: KITCHEN_Y + 105,   // chef's feet while cooking (facing us, behind the stove top)
+  stoveTop: KITCHEN_Y + 93,  // top edge of the stove counter
+  home: { x: 560, y: KITCHEN_Y + 105 },
+  fridge: { x: 245, stand: { x: 290, y: KITCHEN_Y + 82 } },  // left of the milk spot on the counter
+  oven: { x: 890, stand: { x: 840, y: KITCHEN_Y + 82 } },    // right of the cupcakes
   chefSpeed: 260,  // world px per second
   plateTime: 0.3,  // seconds to set plates down
   /** Stove x positions: 2 stoves, 3 once the café is cosy (L5), 4 when it is fancy (L9). */
