@@ -637,8 +637,25 @@ function eggTap() {
   ui.banners(first ? ['🎖️ Secret cat unlocked: Ghost!', `🎖️ ${ghostLine()}`] : [`🎖️ ${ghostLine()}`]);
   checkStickers();
 }
+// Keyboard play: arrow keys or WASD steer the waiter (the same direct steering as dragging on the café).
+const STEER = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0], w: [0, -1], s: [0, 1], a: [-1, 0], d: [1, 0] };
+const held = new Set();
+const steering = () => gm.state === 'playing' && !gm.paused && !document.querySelector('.screen.active');
+addEventListener('keyup', e => {
+  if (!held.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key) || held.size) return;
+  if (gm.state === 'playing') { gm.player.stop(); gm.target = null; }
+});
+addEventListener('blur', () => held.clear());
+function steer() {
+  if (!held.size || !steering()) return;
+  let dx = 0, dy = 0;
+  for (const k of held) { dx += STEER[k][0]; dy += STEER[k][1]; }
+  if (dx || dy) { const len = Math.hypot(dx, dy); gm.tap(gm.player.x + dx / len * 60, gm.player.y + dy / len * 60, false); }
+}
 document.addEventListener('keydown', e => {
   if (e.target.closest?.('input, textarea')) return;
+  const sk = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+  if (STEER[sk] && steering()) { e.preventDefault(); held.add(sk); return; }
   const open = document.querySelector('.screen.active');
   if (e.key === 'Escape') {
     if (!open) { if (gm.state === 'playing') ui.handlers.pause(); return; }
@@ -928,12 +945,15 @@ function drawCatPortrait(canvas, look) {
 }
 
 // ---------------------------------------------------------------- loop
-let last = performance.now();
+let last = performance.now(), lastRender = 0;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); // clamp big gaps (tab switches)
   last = now;
+  steer();
   gm.update(dt);
-  if (!(gm.state === 'playing' && gm.paused) || view.dirty) { render(now / 1000); view.dirty = false; } // paused: keep the last frame
+  // paused: keep the last frame. Behind a menu screen (help, settings...) the café only needs ~15fps.
+  const behindMenu = ui.current && ui.current !== 'menu' && gm.state !== 'playing';
+  if ((!(gm.state === 'playing' && gm.paused) && !(behindMenu && now - lastRender < 66)) || view.dirty) { render(now / 1000); view.dirty = false; lastRender = now; }
   drawMenuCat(now / 1000);
   const inv = gm.inventory;
   ui.updateHud({

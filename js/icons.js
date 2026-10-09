@@ -168,6 +168,11 @@ export const ICONS = {
     flame(); fillStroke(ctx, '#ff8a2a', '#d9550a', LW);
     ctx.save(); ctx.translate(0, 7); ctx.scale(0.5, 0.55); flame(); ctx.fillStyle = '#ffd34d'; ctx.fill(); ctx.restore();
   },
+  keyboard(ctx) {
+    rrect(ctx, -21, -12, 42, 26, 5); fillStroke(ctx, '#fff7f9', OL, LW);
+    for (let r = 0; r < 2; r++) for (let k = 0; k < 5; k++) { rrect(ctx, -16 + k * 6.6, -7 + r * 6.5, 5, 4.5, 1); fillStroke(ctx, '#ffd3df', null); }
+    rrect(ctx, -10, 6, 20, 4, 1.5); fillStroke(ctx, '#ec5f89', null); // space bar
+  },
   camera(ctx) {
     rrect(ctx, -19, -9, 38, 26, 6); fillStroke(ctx, '#ff8fab', OL, LW);
     rrect(ctx, -9, -15, 14, 8, 3); fillStroke(ctx, '#ff6b8a', OL, 1.8);
@@ -365,7 +370,7 @@ const EMOJI = {
   '🐶': 'puppy', '💰': 'bag', '💖': 'heart', '✨': 'sparkles', '🔗': 'link', '❓': 'help', '⚙': 'gear', '📲': 'install', '👆': 'tap',
   '🍣': 'sushi', '🧁': 'cupcake', '👒': 'sunhat', '🧹': 'broom', '🧙': 'gnome', '🐟': 'goldfish', '🦜': 'parrot', '🧑‍🍳': 'chefhat',
   '🧶': 'beanie', '🥳': 'partyhat', '🎨': 'beret', '🎩': 'tophat', '🩷': 'apronPink', '🟢': 'apronMint', '🔵': 'apronSky', '🟡': 'apronSunny',
-  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '📷': 'camera', '🎯': 'target', '🤍': 'heartEmpty',
+  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '📷': 'camera', '⌨': 'keyboard', '🎯': 'target', '🤍': 'heartEmpty',
 };
 const EMOJI_RE = /\p{Extended_Pictographic}️?(?:‍\p{Extended_Pictographic}️?)*/gu;
 export const iconFor = emoji => EMOJI[emoji.replace(/️/g, '')];

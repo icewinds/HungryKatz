@@ -35,6 +35,7 @@ export class UIManager {
   /** One paw per allowed miss; missed ones turn red. */
   setMissed(n, max) {
     const box = $('hud-paws');
+    box.setAttribute('aria-label', n ? `${n} of ${max} cats missed` : 'No cats missed yet');
     if (box.children.length !== max) {
       const paw = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="10" r="2.6"/><circle cx="9.5" cy="5.5" r="2.6"/><circle cx="14.5" cy="5.5" r="2.6"/><circle cx="18.5" cy="10" r="2.6"/><ellipse cx="12" cy="16" rx="5.6" ry="4.6"/></svg>';
       box.innerHTML = `<span class="paw">${paw}</span>`.repeat(max);

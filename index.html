@@ -47,7 +47,7 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1.5"/><rect x="14" y="5" width="4" height="14" rx="1.5"/></svg>
       </button>
     </div>
-    <div class="paws bumpable" id="hud-paws" aria-label="Missed customers"></div>
+    <div class="paws bumpable" id="hud-paws" role="img" aria-label="No cats missed yet"></div>
   </div>
 
   <!-- Bottom tray: carried food + upgrade (thumb zone) -->
@@ -79,10 +79,10 @@
         <p class="tagline">Run the cutest café in town!</p>
       </div>
       <div class="menu-grid">
-        <button class="btn secondary wide" data-action="openChallenges">🎯 Challenges <span id="challenge-count" class="challenge-count">0/3</span></button>
-        <button class="btn secondary" data-action="openHelp">❓ How to play</button>
-        <button class="btn secondary" data-action="openCharacters">🐱 Choose cat</button>
-        <button class="btn secondary" data-action="openStickers">📖 Café book</button>
+        <button class="btn secondary wide" data-action="openChallenges">🎯 <span class="lbl-long">Challenges</span><span class="lbl-short">Today</span> <span id="challenge-count" class="challenge-count">0/3</span></button>
+        <button class="btn secondary" data-action="openHelp">❓ <span class="lbl-long">How to play</span><span class="lbl-short">Help</span></button>
+        <button class="btn secondary" data-action="openCharacters">🐱 <span class="lbl-long">Choose cat</span><span class="lbl-short">Cats</span></button>
+        <button class="btn secondary" data-action="openStickers">📖 <span class="lbl-long">Café book</span><span class="lbl-short">Book</span></button>
         <button class="btn secondary" data-action="openDecor">🏠 Decorate</button>
         <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
         <button class="btn secondary" data-action="share">📤 Share</button>
@@ -169,6 +169,7 @@
         <ul class="help-tips">
           <li><span class="tip-ico" aria-hidden="true">🏅</span><span>Collect <b>stickers</b> and buy <b>hats and aprons</b> in Choose cat.</span></li>
           <li><span class="tip-ico" aria-hidden="true">💖</span><span>Named <b>regulars</b> come back for their favourite dish. Make them best friends for a gift (see the <b>Café book</b>).</span></li>
+          <li><span class="tip-ico" aria-hidden="true">⌨️</span><span>On a keyboard, steer your cat with the <b>arrow keys</b> or <b>WASD</b>; Space pauses.</span></li>
           <li><span class="tip-ico" aria-hidden="true">📷</span><span>Tap the <b>camera</b> on the home screen (or Photo when paused) to take a picture of your café.</span></li>
           <li><span class="tip-ico" aria-hidden="true">😺</span><span>Buy new <b>waiter cats</b>, or unlock the rarest ones with a high score.</span></li>
         </ul>
@@ -376,7 +377,7 @@
     </div>
   </section>
 
-  <div id="banner"></div>
+  <div id="banner" role="status" aria-live="polite"></div>
   <div id="miss-flash" aria-hidden="true"></div>
 
   <!-- Debug (enable in Settings or with ?debug) -->

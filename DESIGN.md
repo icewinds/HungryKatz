@@ -198,6 +198,8 @@ Warm bakery pastels: strawberry and marmalade for joy, cocoa for words, oat and 
 
 **The Readable When Inactive Rule.** An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more.
 
+**The Exempt Colours.** A few values sit outside this palette on purpose and are not drift: the developer panel (only with `?debug`), `#000` inside CSS masks (it is a mask value, not a colour), the red miss-flash and the soft shadows under the ledge and logo (effects), and speech colours drawn on the canvas for characters (Ghost, the screaming gnome, chatting cats).
+
 **The Content Palette.** Some colours belong to things, not to the interface: the logo's felt shading, the home row pastels, the bronze/silver/gold sticker tiers, the coin, the wooden ledge and each café scene's signature colours. They are documented so they stay consistent, but they never carry interface meaning on their own.
 
 **The Pastel Button Rule.** The home screen's bottom row gives each button its own pastel (butter, cream, peach, pink, mint) with a matching darker edge. Text on them is always Cocoa Ink.
