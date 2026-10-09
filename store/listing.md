@@ -20,15 +20,19 @@ WHAT'S ON THE MENU
 • Watch your shabby little café grow into a fancy one, with more tables, a rug, flowers and candles
 • Combos for quick service, VIP cats in crowns and two-dish weekend specials
 • Upgrades: carry more, walk faster, cook faster, earn bigger tips
-• Café pets: a goldfish, a parrot and a sleepy puppy
-• Collect 15 stickers and buy hats and aprons for your waiter
+• Decorate your café: cat trees, cosy cat beds, a napping shelf, plants, lanterns and paw-print wallpaper
+• Named regular customers who become your best friends (and bring gifts)
+• Café pets, and Dusty the cleaner to clear the tables for you
+• Collect 22 stickers, earn recipe stars, and buy hats and aprons for your waiter
+• Take photos of your café to save or share
 • Unlock new cats, plus a secret one if you can find it
-• Four café scenes, seasonal decorations, and a gnome who screams. Really.
+• Five café scenes, seasonal decorations, and a gnome who screams. Really.
 
 MADE FOR KIDS AND GROWN-UPS
 • Relaxed mode: nobody leaves sad and there is no game over, perfect for little ones
 • Easy, Normal and Hard for everyone else
-• Daily bonus for coming back
+• Daily bonus and three new challenges every day
+• Played in landscape, with both hands
 
 KIND TO YOU
 • No ads, no in-app purchases, no accounts
@@ -62,4 +66,5 @@ HungryKatz was made with love for a little girl, and shared so everyone can enjo
 ## Graphics (in this folder)
 - `icon-512.png`: app icon (512×512)
 - `feature-graphic.png`: 1024×500 banner
-- `screenshot-1-menu.png` and the others: phone screenshots, 1080×1920
+- `screenshot-1-home.png` … `screenshot-6-photo.png`: landscape phone screenshots, 1920×1080 (home, busy café, Decorate, Café book, wardrobe, photo mode). Upload them in this order.
+- Regenerate all of these with `node tools/store-shots.mjs` (dev server running).

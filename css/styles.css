@@ -839,3 +839,4 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 @keyframes photo-flash { 0% { opacity: 0.95; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { #photo-flash.go { animation: none; } }
 .menu-grid.photo-actions > .btn:nth-child(n) { grid-column: auto; justify-self: stretch; min-width: 0; } /* three across, even with an odd count */
+#screen-menu .menu-grid > #btn-install { position: absolute; top: 18px; right: 76px; width: auto; min-height: 40px; padding: 6px 14px; font-size: 15px; } /* beside the camera, not squeezing the button row */

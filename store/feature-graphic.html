@@ -11,13 +11,14 @@
   <script type="module">
     import { makeScene, drawBackground, drawWallLive } from '../js/scene.js';
     import { drawCat, drawWaiterTray, playerLook, dressUp, KITCHEN_CHEF } from '../js/art.js';
-    import { OUTFITS } from '../js/config.js';
+    import { OUTFITS, DECOR, WORLD } from '../js/config.js';
 
     await document.fonts.load('96px "Lilita One"');
+    document.body.style.cssText = 'margin: 0; padding: 0; overflow: hidden;'; // edge to edge in the capture
     const c = document.getElementById('fg'), ctx = c.getContext('2d');
-    const sc = makeScene('strawberry', 9), k = 1024 / 540;
+    const sc = makeScene('lounge', 9, null, DECOR.map(d => d.id)), k = 1024 / WORLD.W; // the whole width of the café
 
-    // the café wall, windows (midday sky) and window bar
+    // the decorated Cat Lounge: wall, windows (midday sky), window bar and floor
     ctx.save(); ctx.scale(k, k); ctx.translate(0, -8);
     drawBackground(ctx, sc);
     drawWallLive(ctx, 2, sc, new Date(2026, 5, 1, 12, 0));

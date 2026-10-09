@@ -1,7 +1,7 @@
 // Google Play store graphics, captured from the real game with headless Chrome (no extra packages).
 //   1. npm start   (dev server on http://localhost:8080)
 //   2. node tools/store-shots.mjs
-// Writes store/screenshot-*.png (1080x1920 phone shots), store/feature-graphic.png (1024x500)
+// Writes store/screenshot-*.png (1920x1080 landscape phone shots), store/feature-graphic.png (1024x500)
 // and store/icon-512.png. Set CHROME=path/to/chrome if Chrome is installed somewhere else.
 
 import { spawn } from 'node:child_process';
@@ -13,6 +13,7 @@ const CHROME = process.env.CHROME || 'C:/Program Files/Google/Chrome/Application
 const BASE = 'http://localhost:8080/';
 const OUT = new URL('../store/', import.meta.url);
 const PORT = 9333;
+const [W, H, DSF] = [768, 432, 2.5]; // a 16:9 landscape phone, captured at 1920x1080
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'hk-shots-'));
@@ -45,43 +46,48 @@ const run = async js => {
   if (r.exceptionDetails) throw new Error(r.exceptionDetails.exception?.description ?? r.exceptionDetails.text);
   return r.result.value;
 };
-const open = async (url, w, h, dsf) => {
-  await cdp('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dsf, mobile: w < 600 });
+const open = async (url, w = W, h = H, dsf = DSF) => {
+  await cdp('Emulation.setDeviceMetricsOverride', { width: w, height: h, deviceScaleFactor: dsf, mobile: w !== 1024 });
   await cdp('Page.navigate', { url });
   for (let i = 0; i < 50; i++) { await sleep(150); if (await run('return document.readyState') === 'complete') break; }
   await sleep(1200);
-  await run("const b = document.getElementById('banner'); if (b) b.style.display = 'none'; return 1"); // no pop-up messages in the shots
+  await run("const b = document.getElementById('banner'); if (b) b.style.display = 'none'; document.getElementById('btn-install')?.classList.add('hidden'); return 1"); // no pop-up messages or install button in the shots
 };
 const save = async name => {
   const { data } = await cdp('Page.captureScreenshot', { format: 'png' });
   fs.writeFileSync(new URL(name, OUT), Buffer.from(data, 'base64'));
   console.log('wrote store/' + name);
 };
+const tap = action => `document.querySelector('[data-action="${action}"]').click(); await new Promise(r => setTimeout(r, 700));`;
 
 await cdp('Page.enable');
 await cdp('Runtime.enable');
 
-// A well-played café: level 9, a few cats and stickers, today's bonus already claimed, no seasonal decor.
+// A well-played, fully decorated Cat Lounge: level 9, Dusty hired, pets, regulars, stickers,
+// today's bonus already claimed, no seasonal decorations.
 const today = new Date(), day = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 const SAVE = {
   coins: 1240, level: 9, totalEarned: 99999, highScores: [{ score: 1860, name: '' }], character: 'mango',
-  ownedCats: ['smokey', 'mochi', 'lilac'], pets: ['goldfish', 'parrot'], stickers: ['first', 'serve100', 'combo5', 'vip', 'tidy', 'fancy', 'cupcake', 'gnome'],
-  stats: { served: 240, vips: 6, specials: 3, tips: 30, bestCombo: 7, gnome: true }, daily: { last: day, streak: 4 },
+  ownedCats: ['smokey', 'mochi', 'lilac'], pets: ['goldfish', 'parrot', 'puppy'], staff: ['cleaner'],
+  decor: { owned: ['plants', 'lanterns', 'shelf', 'bigPlant', 'catBed', 'catTree', 'pawPaper'], hidden: [] },
+  friends: { whiskers: 5, pip: 3, captain: 2, biscotti: 1 },
+  stickers: ['first', 'serve100', 'combo5', 'vip', 'tidy', 'fancy', 'cupcake', 'gnome', 'friend', 'photo', 'decorAll'],
+  stats: { served: 240, vips: 6, specials: 3, tips: 30, bestCombo: 7, gnome: true, photos: 2, byFood: { milk: 120, catfood: 60, fish: 55, sushi: 30, cupcake: 12 } },
+  daily: { last: day, streak: 4 },
   outfit: { hat: 'none', apron: 'classic' }, ownedOutfits: ['party', 'mint'], waiter: true,
-  settings: { music: false, sfx: false, debug: false, difficulty: 'normal', scene: 'strawberry' },
+  settings: { music: false, sfx: false, debug: false, difficulty: 'normal', scene: 'lounge' },
 };
-await open(BASE, 360, 640, 3);
+await open(BASE);
 await run(`localStorage.setItem('hungrykatz.save.v1', ${JSON.stringify(JSON.stringify(SAVE))}); return 1`);
 
-// 1. main menu
-await open(BASE + '?season=none', 360, 640, 3);
-await save('screenshot-1-menu.png');
+// 1. home screen: the decorated café behind the menu
+await open(BASE + '?season=none');
+await save('screenshot-1-home.png');
 
 // 2. a busy café: customers seated, the chef cooking, plates on the counter, the waiter carrying a tray
-await open(BASE + '?debug&season=none', 360, 640, 3);
+await open(BASE + '?debug&season=none');
 await run(`
-  const click = async a => { document.querySelector('[data-action="' + a + '"]').click(); await new Promise(r => setTimeout(r, 700)); };
-  await click('play');
+  ${tap('play')}
   document.querySelector('[data-action="startLevel"][data-level="9"]').click();
   await new Promise(r => setTimeout(r, 600));
   const g = window.hungryKatz.gm;
@@ -89,10 +95,10 @@ await run(`
   const want = ['milk', 'fish', 'cupcake', 'sushi', 'catfood', 'milk', 'fish', 'sushi', 'cupcake', 'catfood'];
   ['W1', 'W3', 'W4', 'T1a', 'T1b', 'T2c', 'T3b', 'T4a', 'T5c', 'T5b'].forEach((id, i) =>
     g.spawnNpc({ spot: g.spots.find(s => s.id === id), request: want[i], patience: 99, vip: i === 4 }));
-  for (let i = 0; i < 60 * 4.5; i++) g.update(1 / 60);       // everyone arrives, the kitchen gets busy
+  for (let i = 0; i < 60 * 6; i++) g.update(1 / 60);         // everyone walks in from the door, the kitchen gets busy
   g.kitchen.ready = { milk: 2, catfood: 3 };
   Object.assign(g.inventory.items, { fish: 1, sushi: 1, cupcake: 1 });
-  Object.assign(g.player, { x: 300, y: 690, facing: 1 }); g.player.stop();
+  Object.assign(g.player, { x: 700, y: 505, facing: 1 }); g.player.stop();
   g.paused = false;
   document.querySelector('.toggle-debug').click();                // debug drawing off
   document.querySelector('.toggle-debug').style.display = 'none';
@@ -103,16 +109,25 @@ await run(`
   return 1`);
 await save('screenshot-2-cafe.png');
 
-// 3. choose cat: the wardrobe
-await open(BASE + '?season=none', 360, 640, 3);
-await run(`document.querySelector('[data-action="openCharacters"]').click(); await new Promise(r => setTimeout(r, 600));
-  document.getElementById('tab-btn-wardrobe').click(); await new Promise(r => setTimeout(r, 500)); return 1`);
-await save('screenshot-3-wardrobe.png');
+// 3. decorate your café
+await open(BASE + '?season=none');
+await run(`${tap('openDecor')} return 1`);
+await save('screenshot-3-decorate.png');
 
-// 4. sticker book
-await open(BASE + '?season=none', 360, 640, 3);
-await run(`document.querySelector('[data-action="openStickers"]').click(); await new Promise(r => setTimeout(r, 900)); return 1`);
+// 4. café book: stickers
+await open(BASE + '?season=none');
+await run(`${tap('openStickers')} return 1`);
 await save('screenshot-4-stickers.png');
+
+// 5. choose cat: the wardrobe
+await open(BASE + '?season=none');
+await run(`${tap('openCharacters')} document.getElementById('tab-btn-wardrobe').click(); await new Promise(r => setTimeout(r, 500)); return 1`);
+await save('screenshot-5-wardrobe.png');
+
+// 6. photo mode
+await open(BASE + '?season=none');
+await run(`${tap('takePhoto')} await new Promise(r => setTimeout(r, 500)); return 1`);
+await save('screenshot-6-photo.png');
 
 // feature graphic + icon
 await open(BASE + 'store/feature-graphic.html', 1024, 500, 1);
