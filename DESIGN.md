@@ -19,6 +19,7 @@ colors:
   page-oat: "#fbefdf"
   mint-ink: "#24865b"
   mint-wash: "#d6f4e8"
+  mint-deep: "#1b6b48"
   honey-ink: "#7f6100"
   butter: "#fff1c2"
   inactive-wash: "#f1eaed"
@@ -196,7 +197,7 @@ Warm bakery pastels: strawberry and marmalade for joy, cocoa for words, oat and 
 ### Named Rules
 **The Readable Pink Rule.** Small text never sits on Strawberry Felt. Lilita One has no bold, so "bold" 19px is still regular small text that needs 4.5:1: use Berry Ink (5:1) below 24px.
 
-**The Readable When Inactive Rule.** An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more.
+**The Readable When Inactive Rule.** An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more. Locked level cards grey their surface and keep Cocoa Soft digits; earned tier stars carry a thin Cocoa outline so bronze, silver and gold all hold 3:1. Green text on the Mint Wash uses Mint Deep.
 
 **The Exempt Colours.** A few values sit outside this palette on purpose and are not drift: the developer panel (only with `?debug`), `#000` inside CSS masks (it is a mask value, not a colour), the red miss-flash and the soft shadows under the ledge and logo (effects), and speech colours drawn on the canvas for characters (Ghost, the screaming gnome, chatting cats).
 

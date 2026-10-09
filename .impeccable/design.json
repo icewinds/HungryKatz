@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-09T07:14:55.317Z",
+  "generatedAt": "2026-10-09T07:27:23.632Z",
   "title": "Design System: HungryKatz",
   "extensions": {
     "colorMeta": {
@@ -287,6 +287,21 @@
           "#fdf7ef",
           "#fefbf7",
           "#fffdfc"
+        ]
+      },
+      "mint-deep": {
+        "role": "neutral",
+        "displayName": "Mint Deep",
+        "canonical": "#1b6b48",
+        "tonalRamp": [
+          "#16221d",
+          "#173629",
+          "#194934",
+          "#1a5c3f",
+          "#549076",
+          "#8db5a4",
+          "#c6dad1",
+          "#e8f0ed"
         ]
       },
       "inactive-wash": {
@@ -978,7 +993,7 @@
       },
       {
         "name": "The Readable When Inactive Rule",
-        "body": "An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more.",
+        "body": "An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more. Locked level cards grey their surface and keep Cocoa Soft digits; earned tier stars carry a thin Cocoa outline so bronze, silver and gold all hold 3:1. Green text on the Mint Wash uses Mint Deep.",
         "section": "colors"
       },
       {

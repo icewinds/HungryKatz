@@ -55,6 +55,7 @@
   --coin: #ffc94d; --coin-edge: #e3a400; --coin-shine: #ffe08a;
   --ring-track: #f6e1e7;
   --butter: #fff1c2; --butter-edge: #e9cd72;
+  --mint-deep: #1b6b48;                         /* green text on the mint wash: 5.5:1 */
 }
 
 * { box-sizing: border-box; }
@@ -580,15 +581,17 @@ html, body {
   width: 40px; height: 40px;
   display: grid; place-items: center;
   border-radius: 50%;
-  background: var(--pink);
+  background: var(--pink-d); /* 19px digits are small text: the 5:1 pink */
   color: #fff;
   font-size: 19px; font-weight: 700;
 }
 .lv-info { display: flex; flex-direction: column; gap: 3px; }
 .lv-foods { display: flex; gap: 2px; }
 .lv-foods img { width: 22px; height: 22px; }
-.level-card.locked { opacity: 0.55; border-style: dashed; }
-.level-card.locked .lv-num { background: #d8cbd1; }
+/* locked: the surface greys, the ink stays readable (The Readable When Inactive Rule) */
+.level-card.locked { background: var(--inactive); border-style: dashed; color: var(--ink-soft); }
+.level-card.locked .lv-num { background: var(--paper); color: var(--ink-soft); box-shadow: inset 0 0 0 2px var(--empty); }
+.level-card.locked .lv-foods img { opacity: 0.5; }
 .pets-title { margin: 18px 0 10px; }
 
 /* Sticker book */
@@ -677,6 +680,7 @@ html, body {
 .star.on.bronze { color: #d08a52; }
 .star.on.silver { color: #9aa6b6; }
 .star.on.gold { color: #f2b80c; }
+.star.on { -webkit-text-stroke: 1px var(--ink-soft); } /* a cocoa outline keeps every tier at 3:1+ without dulling the colours */
 .friend-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .friend { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 10px; border-radius: 8px; background: var(--cream); border: 2px solid var(--line); }
 .friend canvas { width: 84px; height: 84px; }
@@ -695,8 +699,8 @@ html, body {
 .challenge-ico img, .challenge-ico .ico { width: 36px; height: 36px; }
 .challenge progress { width: 100%; height: 10px; margin-top: 4px; accent-color: var(--pink); }
 .challenge-pay { font-size: 15px; color: var(--gold-ink); white-space: nowrap; }
-.challenge.done { background: var(--mint-soft); background-color: var(--mint-soft); }
-.challenge.done .challenge-pay { color: var(--mint-ink); }
+.challenge.done { background-color: var(--mint-soft); }
+.challenge.done .challenge-pay { color: var(--mint-deep); }
 
 /* ---------- Felt café theme: paw-print wallpaper, paper panels, stitched felt buttons ---------- */
 .recipe, .friend { background-color: var(--card); border-color: var(--card-line); }
