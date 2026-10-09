@@ -803,7 +803,7 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 
 /* Pause: Resume on top, the rest side by side */
 .panel.pause { width: min(560px, 100%); }
-.panel.pause .stack { display: grid; grid-template-columns: repeat(3, 1fr); }
+.panel.pause .stack { display: grid; grid-template-columns: repeat(2, 1fr); }
 .panel.pause .stack .btn.big { grid-column: 1 / -1; }
 
 /* Game over: your result on the left, top 5 and buttons on the right */
@@ -822,3 +822,20 @@ html, body { background: #fbefdf url(../assets/ui/pattern.svg) 0 0 / 140px; }
 .decor-card .btn.buy.on { background: #24865b; }
 .decor-card .btn.buy[aria-pressed="false"] { background: #fff6e6; color: var(--ink); box-shadow: 0 3px 0 #e6cfaa; outline-color: var(--stitch); }
 @media (max-width: 1000px) { #screen-menu .challenge-count { display: none; } } /* seven buttons in a row: no room for the count on phones */
+
+/* Photo mode */
+#screen-menu .photo-btn {
+  position: absolute; top: 10px; right: 10px; z-index: 1;
+  width: 54px; height: 54px; display: grid; place-items: center; padding: 0;
+  border: 2px solid var(--tan); border-radius: 50%; background: var(--paper); box-shadow: 0 3px 0 var(--tan), var(--shadow);
+  font-size: 26px; cursor: pointer;
+}
+#screen-menu .photo-btn .ico { width: 32px; height: 32px; vertical-align: middle; }
+#screen-menu .photo-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--tan); }
+.photo-img { display: block; width: auto; max-width: 100%; max-height: calc(100vh - 170px); margin: 0 auto 12px; border-radius: 6px; box-shadow: 0 6px 18px rgba(90, 61, 74, 0.2); transform: rotate(-1deg); }
+.photo-actions { grid-template-columns: repeat(3, 1fr); }
+#photo-flash { position: fixed; inset: 0; z-index: 200; background: #fff; opacity: 0; pointer-events: none; }
+#photo-flash.go { animation: photo-flash 0.5s ease-out; }
+@keyframes photo-flash { 0% { opacity: 0.95; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #photo-flash.go { animation: none; } }
+.menu-grid.photo-actions > .btn:nth-child(n) { grid-column: auto; justify-self: stretch; min-width: 0; } /* three across, even with an odd count */

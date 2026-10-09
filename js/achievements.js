@@ -25,6 +25,7 @@ export const STICKERS = [
   { id: 'recipesGold', icon: '📖', name: 'Master menu', desc: 'Earn a gold star for every dish.', tier: 'gold', done: s => s.goldRecipes >= FOODS.length },
   { id: 'challenges10', icon: '🎯', name: 'Go-getter', desc: 'Finish 10 daily challenges.', tier: 'silver', done: s => (s.stats.challenges ?? 0) >= 10 },
   { id: 'decorAll', icon: '🏠', name: 'Interior designer', desc: 'Buy every decoration in Decorate.', tier: 'gold', done: s => (s.decorOwned ?? 0) >= DECOR.length },
+  { id: 'photo', icon: '📷', name: 'Say cheese!', desc: 'Take a photo of your café.', done: s => (s.stats.photos ?? 0) >= 1 },
   { id: 'ghost', icon: '🎖️', name: 'Secret agent', desc: 'Discover the secret cat.', done: s => s.ghost },
 ];
 

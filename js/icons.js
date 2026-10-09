@@ -168,6 +168,13 @@ export const ICONS = {
     flame(); fillStroke(ctx, '#ff8a2a', '#d9550a', LW);
     ctx.save(); ctx.translate(0, 7); ctx.scale(0.5, 0.55); flame(); ctx.fillStyle = '#ffd34d'; ctx.fill(); ctx.restore();
   },
+  camera(ctx) {
+    rrect(ctx, -19, -9, 38, 26, 6); fillStroke(ctx, '#ff8fab', OL, LW);
+    rrect(ctx, -9, -15, 14, 8, 3); fillStroke(ctx, '#ff6b8a', OL, 1.8);
+    circle(ctx, 0, 4, 9); fillStroke(ctx, '#fff7f9', OL, 1.8);
+    circle(ctx, 0, 4, 5); fillStroke(ctx, '#5aa9e6', null);
+    circle(ctx, 12, -3, 2.2); fillStroke(ctx, '#ffd34d', null);
+  },
   gift(ctx) {
     rrect(ctx, -15, -3, 30, 20, 3); fillStroke(ctx, '#ff8fab', OL, LW);
     rrect(ctx, -17, -10, 34, 8, 3); fillStroke(ctx, '#ff6b8a', OL, LW);
@@ -353,7 +360,7 @@ const EMOJI = {
   '🐶': 'puppy', '💰': 'bag', '💖': 'heart', '✨': 'sparkles', '🔗': 'link', '❓': 'help', '⚙': 'gear', '📲': 'install', '👆': 'tap',
   '🍣': 'sushi', '🧁': 'cupcake', '👒': 'sunhat', '🧹': 'broom', '🧙': 'gnome', '🐟': 'goldfish', '🦜': 'parrot', '🧑‍🍳': 'chefhat',
   '🧶': 'beanie', '🥳': 'partyhat', '🎨': 'beret', '🎩': 'tophat', '🩷': 'apronPink', '🟢': 'apronMint', '🔵': 'apronSky', '🟡': 'apronSunny',
-  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '🎯': 'target', '🤍': 'heartEmpty',
+  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '📷': 'camera', '🎯': 'target', '🤍': 'heartEmpty',
 };
 const EMOJI_RE = /\p{Extended_Pictographic}️?(?:‍\p{Extended_Pictographic}️?)*/gu;
 export const iconFor = emoji => EMOJI[emoji.replace(/️/g, '')];

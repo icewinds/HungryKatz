@@ -68,6 +68,7 @@
   <!-- Main menu -->
   <section id="screen-menu" class="screen">
     <div class="panel">
+      <button class="photo-btn" data-action="takePhoto" aria-label="Take a photo of your café">📷</button>
       <h1 class="logo"><span>Hungry</span><span class="katz">Katz</span></h1>
       <div class="menu-hero">
       <canvas id="menu-cat" width="210" height="268" role="button" tabindex="0" aria-label="Your waiter cat. Tap to make it yawn"></canvas>
@@ -168,6 +169,7 @@
         <ul class="help-tips">
           <li><span class="tip-ico" aria-hidden="true">🏅</span><span>Collect <b>stickers</b> and buy <b>hats and aprons</b> in Choose cat.</span></li>
           <li><span class="tip-ico" aria-hidden="true">💖</span><span>Named <b>regulars</b> come back for their favourite dish. Make them best friends for a gift (see the <b>Café book</b>).</span></li>
+          <li><span class="tip-ico" aria-hidden="true">📷</span><span>Tap the <b>camera</b> on the home screen (or Photo when paused) to take a picture of your café.</span></li>
           <li><span class="tip-ico" aria-hidden="true">😺</span><span>Buy new <b>waiter cats</b>, or unlock the rarest ones with a high score.</span></li>
         </ul>
         </div>
@@ -192,6 +194,20 @@
       <p class="hint">Bought decorations can be put away and brought back any time.</p>
     </div>
   </section>
+
+  <!-- Photo mode -->
+  <section id="screen-photo" class="screen">
+    <div class="panel wide">
+      <h2>Say cheese!</h2>
+      <img id="photo-img" class="photo-img" alt="A photo of your café">
+      <div class="menu-grid photo-actions">
+        <button class="btn" data-action="savePhoto">📥 Save</button>
+        <button class="btn mint" data-action="sharePhoto">📤 Share</button>
+        <button class="btn secondary" data-action="closePhoto">Back</button>
+      </div>
+    </div>
+  </section>
+  <div id="photo-flash" aria-hidden="true"></div>
 
   <!-- Daily challenges -->
   <section id="screen-challenges" class="screen">
@@ -295,6 +311,7 @@
         <button class="btn big" data-action="resume">▶ Resume</button>
         <button class="btn secondary toggle toggle-music" data-action="toggleMusic">🎵 Music</button>
         <button class="btn secondary toggle toggle-sfx" data-action="toggleSfx">🔊 Sound FX</button>
+        <button class="btn secondary" data-action="takePhoto">📷 Photo</button>
         <button class="btn secondary" data-action="askQuit">🏠 Quit to Menu</button>
       </div>
       <div id="quit-confirm" class="quit-confirm hidden" role="group" aria-labelledby="quit-q">

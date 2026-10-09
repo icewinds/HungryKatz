@@ -16,7 +16,7 @@ import { UIManager } from './ui.js';
 import { GameManager } from './gameManager.js';
 import { EAT_TIME } from './npc.js';
 import { CharacterManager } from './characters.js';
-import { DailyBonus, todaysChallenges, progressChallenges } from './daily.js';
+import { DailyBonus, todaysChallenges, progressChallenges, dayKey } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag, setCatScale, catSize,
@@ -200,6 +200,10 @@ const ui = new UIManager({
   },
   bookTab: btn => showTabs(BOOK_TABS, btn.dataset.tab),
   closeStickers: () => ui.show('menu'),
+  takePhoto: () => takePhoto(),
+  savePhoto: () => savePhoto(),
+  sharePhoto: () => sharePhoto(),
+  closePhoto: () => ui.show(photoFrom),
   openDecor: () => { renderDecor(); ui.show('decor'); },
   closeDecor: () => ui.show('menu'),
   buyDecor: btn => {
@@ -826,6 +830,54 @@ function updateDebugPanel(now) {
     `missed ${gm.missed}/${MAX_MISSED}  score ${gm.score}  coins ${save.coins}`,
     ...gm.npcs.map(n => `#${n.id} ${n.spot.id} ${n.state} wants ${n.request} ${n.timeLeft.toFixed(1)}/${n.patience}s`),
   ].join('\n');
+}
+
+// ---------------------------------------------------------------- photo mode
+let photo = null, photoFrom = 'menu';
+/** Snap the café as it is on screen (plus your cat, on the home screen) into a framed photo with a caption. */
+function takePhoto() {
+  photoFrom = ui.current ?? 'menu';
+  const dpr = view.dpr, pad = Math.round(canvas.width * 0.025), cap = Math.round(canvas.width * 0.06);
+  const out = document.createElement('canvas');
+  out.width = canvas.width + pad * 2; out.height = canvas.height + pad + cap;
+  const c = out.getContext('2d');
+  c.fillStyle = '#fffaf1'; c.fillRect(0, 0, out.width, out.height);
+  c.drawImage(canvas, pad, pad);
+  if (photoFrom === 'menu') { const r = menuCanvas.getBoundingClientRect(); c.drawImage(menuCanvas, pad + r.x * dpr, pad + r.y * dpr, r.width * dpr, r.height * dpr); }
+  const mid = pad + canvas.height + cap / 2;
+  c.textBaseline = 'middle'; c.textAlign = 'left'; c.font = `400 ${Math.round(cap * 0.5)}px ${FONT}`;
+  c.fillStyle = '#ec5f89'; c.fillText('Hungry', pad, mid);
+  c.fillStyle = '#f6a53b'; c.fillText('Katz', pad + c.measureText('Hungry ').width, mid);
+  c.textAlign = 'right'; c.font = `400 ${Math.round(cap * 0.32)}px ${FONT}`; c.fillStyle = '#76626c';
+  c.fillText(new Date().toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' }), out.width - pad, mid);
+  photo = out;
+  document.getElementById('photo-img').src = out.toDataURL('image/jpeg', 0.9);
+  const flash = document.getElementById('photo-flash');
+  flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
+  audio.play('click');
+  save.stats.photos = (save.stats.photos ?? 0) + 1;
+  persist();
+  ui.show('photo');
+  checkStickers();
+}
+const photoBlob = () => new Promise(done => photo.toBlob(done, 'image/jpeg', 0.92));
+const photoName = () => `hungrykatz-${dayKey()}.jpg`;
+async function savePhoto() {
+  const url = URL.createObjectURL(await photoBlob());
+  const a = Object.assign(document.createElement('a'), { href: url, download: photoName() });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+  ui.banner('📥 Photo saved!');
+}
+/** Share through the phone's share sheet; where that can't send pictures, save it instead. */
+async function sharePhoto() {
+  const file = new File([await photoBlob()], photoName(), { type: 'image/jpeg' });
+  try {
+    if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: 'My HungryKatz café' });
+    else await savePhoto();
+  } catch (e) {
+    if (e?.name !== 'AbortError') await savePhoto();
+  }
 }
 
 // ---------------------------------------------------------------- menu mascot
