@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-10-09T07:00:47.380Z",
+  "generatedAt": "2026-10-09T07:14:55.317Z",
   "title": "Design System: HungryKatz",
   "extensions": {
     "colorMeta": {
@@ -288,6 +288,531 @@
           "#fefbf7",
           "#fffdfc"
         ]
+      },
+      "inactive-wash": {
+        "role": "neutral",
+        "displayName": "Inactive Wash",
+        "canonical": "#f1eaed",
+        "tonalRamp": [
+          "#4b4247",
+          "#776f73",
+          "#a49c9f",
+          "#d0c8cc",
+          "#f5eff2",
+          "#f8f5f6",
+          "#fcfafb",
+          "#fefdfd"
+        ]
+      },
+      "empty-outline": {
+        "role": "neutral",
+        "displayName": "Empty Outline",
+        "canonical": "#9a8590",
+        "tonalRamp": [
+          "#36292f",
+          "#504149",
+          "#6b5a63",
+          "#86737d",
+          "#b3a4ac",
+          "#cdc2c8",
+          "#e6e1e3",
+          "#f5f3f4"
+        ]
+      },
+      "ring-track": {
+        "role": "neutral",
+        "displayName": "Ring Track",
+        "canonical": "#f6e1e7",
+        "tonalRamp": [
+          "#4d4045",
+          "#7a6b70",
+          "#a7969b",
+          "#d4c1c7",
+          "#f8e9ed",
+          "#fbf0f3",
+          "#fdf8f9",
+          "#fefcfd"
+        ]
+      },
+      "coin": {
+        "role": "tertiary",
+        "displayName": "Coin",
+        "canonical": "#ffc94d",
+        "tonalRamp": [
+          "#4f3a1f",
+          "#7e602b",
+          "#ad8637",
+          "#dcac44",
+          "#ffd77a",
+          "#ffe4a6",
+          "#fff2d3",
+          "#fffaed"
+        ]
+      },
+      "coin-edge": {
+        "role": "tertiary",
+        "displayName": "Coin Edge",
+        "canonical": "#e3a400",
+        "tonalRamp": [
+          "#48310b",
+          "#714f08",
+          "#9b6e05",
+          "#c48d02",
+          "#eabb40",
+          "#f1d280",
+          "#f8e8bf",
+          "#fcf6e6"
+        ]
+      },
+      "coin-shine": {
+        "role": "tertiary",
+        "displayName": "Coin Shine",
+        "canonical": "#ffe08a",
+        "tonalRamp": [
+          "#4f402e",
+          "#7e6a46",
+          "#ad955f",
+          "#dcc078",
+          "#ffe8a7",
+          "#fff0c5",
+          "#fff7e2",
+          "#fffcf3"
+        ]
+      },
+      "logo-strawberry": {
+        "role": "tertiary",
+        "displayName": "Logo Strawberry",
+        "canonical": "#f27aa0",
+        "tonalRamp": [
+          "#4c2633",
+          "#783c50",
+          "#a4536d",
+          "#d1698a",
+          "#f59bb8",
+          "#f9bdd0",
+          "#fcdee7",
+          "#fef2f6"
+        ]
+      },
+      "logo-strawberry-shade": {
+        "role": "tertiary",
+        "displayName": "Logo Strawberry Shade",
+        "canonical": "#cf5680",
+        "tonalRamp": [
+          "#431d2b",
+          "#682c42",
+          "#8e3b58",
+          "#b34b6f",
+          "#db80a0",
+          "#e7abc0",
+          "#f3d5df",
+          "#faeef2"
+        ]
+      },
+      "logo-strawberry-deep": {
+        "role": "tertiary",
+        "displayName": "Logo Strawberry Deep",
+        "canonical": "#b8456d",
+        "tonalRamp": [
+          "#3d1927",
+          "#5e2539",
+          "#7f304c",
+          "#9f3c5f",
+          "#ca7492",
+          "#dca2b6",
+          "#edd1db",
+          "#f8ecf0"
+        ]
+      },
+      "logo-marmalade-shade": {
+        "role": "tertiary",
+        "displayName": "Logo Marmalade Shade",
+        "canonical": "#d9822a",
+        "tonalRamp": [
+          "#452816",
+          "#6d401b",
+          "#945821",
+          "#bb7026",
+          "#e3a15f",
+          "#ecc195",
+          "#f6e0ca",
+          "#fbf3ea"
+        ]
+      },
+      "logo-marmalade-deep": {
+        "role": "tertiary",
+        "displayName": "Logo Marmalade Deep",
+        "canonical": "#b86a1e",
+        "tonalRamp": [
+          "#3d2213",
+          "#5e3516",
+          "#7f4819",
+          "#9f5c1c",
+          "#ca8f56",
+          "#dcb58f",
+          "#eddac7",
+          "#f8f0e9"
+        ]
+      },
+      "ledge-wood": {
+        "role": "tertiary",
+        "displayName": "Ledge Wood",
+        "canonical": "#d9a878",
+        "tonalRamp": [
+          "#453229",
+          "#6d513e",
+          "#947153",
+          "#bb9068",
+          "#e3be9a",
+          "#ecd4bc",
+          "#f6e9dd",
+          "#fbf6f2"
+        ]
+      },
+      "ledge-wood-edge": {
+        "role": "tertiary",
+        "displayName": "Ledge Wood Edge",
+        "canonical": "#b8865a",
+        "tonalRamp": [
+          "#3d2922",
+          "#5e4231",
+          "#7f5b40",
+          "#9f734f",
+          "#caa483",
+          "#dcc3ad",
+          "#ede1d6",
+          "#f8f3ef"
+        ]
+      },
+      "pastel-butter-edge": {
+        "role": "tertiary",
+        "displayName": "Pastel Butter Edge",
+        "canonical": "#e9cd72",
+        "tonalRamp": [
+          "#493b28",
+          "#74623c",
+          "#9e894f",
+          "#c9b063",
+          "#efda95",
+          "#f4e6b9",
+          "#faf3dc",
+          "#fdfaf1"
+        ]
+      },
+      "pastel-peach": {
+        "role": "tertiary",
+        "displayName": "Pastel Peach",
+        "canonical": "#ffe4cc",
+        "tonalRamp": [
+          "#4f413e",
+          "#7e6c64",
+          "#ad988a",
+          "#dcc3b0",
+          "#ffebd9",
+          "#fff2e6",
+          "#fff8f2",
+          "#fffcfa"
+        ]
+      },
+      "pastel-peach-edge": {
+        "role": "tertiary",
+        "displayName": "Pastel Peach Edge",
+        "canonical": "#f0b98a",
+        "tonalRamp": [
+          "#4b362e",
+          "#775946",
+          "#a37c5f",
+          "#cf9f78",
+          "#f4cba7",
+          "#f8dcc5",
+          "#fbeee2",
+          "#fef8f3"
+        ]
+      },
+      "pastel-pink": {
+        "role": "tertiary",
+        "displayName": "Pastel Pink",
+        "canonical": "#ffe3ec",
+        "tonalRamp": [
+          "#4f4046",
+          "#7e6c72",
+          "#ad979f",
+          "#dcc2cb",
+          "#ffeaf1",
+          "#fff1f6",
+          "#fff8fa",
+          "#fffcfd"
+        ]
+      },
+      "pastel-pink-edge": {
+        "role": "tertiary",
+        "displayName": "Pastel Pink Edge",
+        "canonical": "#f1a9c0",
+        "tonalRamp": [
+          "#4b323b",
+          "#77525f",
+          "#a47182",
+          "#d091a5",
+          "#f5bfd0",
+          "#f8d4e0",
+          "#fceaef",
+          "#fef6f9"
+        ]
+      },
+      "pastel-mint": {
+        "role": "tertiary",
+        "displayName": "Pastel Mint",
+        "canonical": "#dcf2e7",
+        "tonalRamp": [
+          "#464445",
+          "#6e7270",
+          "#96a19b",
+          "#becfc7",
+          "#e5f5ed",
+          "#eef9f3",
+          "#f6fcf9",
+          "#fcfefd"
+        ]
+      },
+      "pastel-mint-edge": {
+        "role": "tertiary",
+        "displayName": "Pastel Mint Edge",
+        "canonical": "#9fd6bd",
+        "tonalRamp": [
+          "#373d3b",
+          "#53665d",
+          "#6e8f80",
+          "#8ab7a3",
+          "#b7e0ce",
+          "#cfebde",
+          "#e7f5ef",
+          "#f5fbf8"
+        ]
+      },
+      "tier-bronze": {
+        "role": "tertiary",
+        "displayName": "Tier Bronze",
+        "canonical": "#e8b083",
+        "tonalRamp": [
+          "#49342c",
+          "#735543",
+          "#9e765a",
+          "#c89772",
+          "#eec4a2",
+          "#f4d8c1",
+          "#f9ebe0",
+          "#fdf7f3"
+        ]
+      },
+      "tier-bronze-ink": {
+        "role": "tertiary",
+        "displayName": "Tier Bronze Ink",
+        "canonical": "#d08a52",
+        "tonalRamp": [
+          "#432a20",
+          "#69442d",
+          "#8e5d3b",
+          "#b47748",
+          "#dca77d",
+          "#e8c5a9",
+          "#f3e2d4",
+          "#faf3ee"
+        ]
+      },
+      "tier-silver": {
+        "role": "tertiary",
+        "displayName": "Tier Silver",
+        "canonical": "#c3ccd8",
+        "tonalRamp": [
+          "#403b41",
+          "#636169",
+          "#868892",
+          "#a9afba",
+          "#d2d9e2",
+          "#e1e6ec",
+          "#f0f2f5",
+          "#f9fafb"
+        ]
+      },
+      "tier-silver-ink": {
+        "role": "tertiary",
+        "displayName": "Tier Silver Ink",
+        "canonical": "#9aa6b6",
+        "tonalRamp": [
+          "#363139",
+          "#50505a",
+          "#6b6f7c",
+          "#868f9d",
+          "#b3bcc8",
+          "#cdd3db",
+          "#e6e9ed",
+          "#f5f6f8"
+        ]
+      },
+      "tier-gold": {
+        "role": "tertiary",
+        "displayName": "Tier Gold",
+        "canonical": "#f2c94c",
+        "tonalRamp": [
+          "#4c3a1e",
+          "#78602a",
+          "#a48637",
+          "#d1ac43",
+          "#f5d779",
+          "#f9e4a6",
+          "#fcf2d2",
+          "#fefaed"
+        ]
+      },
+      "tier-gold-ink": {
+        "role": "tertiary",
+        "displayName": "Tier Gold Ink",
+        "canonical": "#f2b80c",
+        "tonalRamp": [
+          "#4c360e",
+          "#78580e",
+          "#a47b0d",
+          "#d19e0c",
+          "#f5ca49",
+          "#f9dc86",
+          "#fcedc2",
+          "#fef8e7"
+        ]
+      },
+      "scene-strawberry": {
+        "role": "tertiary",
+        "displayName": "Scene Strawberry",
+        "canonical": "#ff8fab",
+        "tonalRamp": [
+          "#4f2b36",
+          "#7e4655",
+          "#ad6074",
+          "#dc7b94",
+          "#ffabc0",
+          "#ffc7d5",
+          "#ffe3ea",
+          "#fff4f7"
+        ]
+      },
+      "scene-matcha": {
+        "role": "tertiary",
+        "displayName": "Scene Matcha",
+        "canonical": "#6cc788",
+        "tonalRamp": [
+          "#2a392d",
+          "#3c5f45",
+          "#4d855e",
+          "#5fab76",
+          "#91d5a6",
+          "#b6e3c4",
+          "#daf1e1",
+          "#f0f9f3"
+        ]
+      },
+      "scene-matcha-wall": {
+        "role": "tertiary",
+        "displayName": "Scene Matcha Wall",
+        "canonical": "#e4f2df",
+        "tonalRamp": [
+          "#484443",
+          "#72726d",
+          "#9ba196",
+          "#c5cfc0",
+          "#ebf5e7",
+          "#f2f9ef",
+          "#f8fcf7",
+          "#fcfefc"
+        ]
+      },
+      "scene-seaside": {
+        "role": "tertiary",
+        "displayName": "Scene Seaside",
+        "canonical": "#ff9f8a",
+        "tonalRamp": [
+          "#4f2f2e",
+          "#7e4d46",
+          "#ad6b5f",
+          "#dc8978",
+          "#ffb7a7",
+          "#ffcfc5",
+          "#ffe7e2",
+          "#fff5f3"
+        ]
+      },
+      "scene-seaside-wall": {
+        "role": "tertiary",
+        "displayName": "Scene Seaside Wall",
+        "canonical": "#dcefff",
+        "tonalRamp": [
+          "#46434b",
+          "#6e717b",
+          "#969fab",
+          "#becddb",
+          "#e5f3ff",
+          "#eef7ff",
+          "#f6fbff",
+          "#fcfdff"
+        ]
+      },
+      "scene-lounge": {
+        "role": "tertiary",
+        "displayName": "Scene Lounge",
+        "canonical": "#e9a46a",
+        "tonalRamp": [
+          "#493126",
+          "#744f38",
+          "#9e6e4a",
+          "#c98d5c",
+          "#efbb8f",
+          "#f4d2b5",
+          "#fae8da",
+          "#fdf6f0"
+        ]
+      },
+      "scene-moonlight": {
+        "role": "tertiary",
+        "displayName": "Scene Moonlight",
+        "canonical": "#b39ddb",
+        "tonalRamp": [
+          "#3c2f42",
+          "#5c4c6b",
+          "#7b6a94",
+          "#9b87bc",
+          "#c6b6e4",
+          "#d9ceed",
+          "#ece7f6",
+          "#f7f5fb"
+        ]
+      },
+      "scene-moonlight-wall": {
+        "role": "tertiary",
+        "displayName": "Scene Moonlight Wall",
+        "canonical": "#3d3566",
+        "tonalRamp": [
+          "#1e1525",
+          "#261d36",
+          "#2f2648",
+          "#372f59",
+          "#6e688c",
+          "#9e9ab3",
+          "#cfcdd9",
+          "#ecebf0"
+        ]
+      },
+      "scene-moonlight-floor": {
+        "role": "tertiary",
+        "displayName": "Scene Moonlight Floor",
+        "canonical": "#5b4b60",
+        "tonalRamp": [
+          "#261a23",
+          "#342733",
+          "#423444",
+          "#504154",
+          "#847888",
+          "#ada5b0",
+          "#d6d2d7",
+          "#efedef"
+        ]
       }
     },
     "typographyMeta": {
@@ -452,6 +977,11 @@
         "section": "colors"
       },
       {
+        "name": "The Readable When Inactive Rule",
+        "body": "An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more.",
+        "section": "colors"
+      },
+      {
         "name": "The Pastel Button Rule",
         "body": "The home screen's bottom row gives each button its own pastel (butter, cream, peach, pink, mint) with a matching darker edge. Text on them is always Cocoa Ink.",
         "section": "colors"
@@ -476,6 +1006,8 @@
       "Do give reduced-motion players a calm fade for messages instead of removing them."
     ],
     "donts": [
+      "Don't grey out text to show an inactive state; grey the surface and keep the ink readable.",
+      "Don't add a font size or corner radius that is not on the scales above.",
       "Don't use bold weights for hierarchy; Lilita One has none.",
       "Don't add glass, blur or glows; depth is felt and paper.",
       "Don't put white text on Strawberry Felt below 24px.",

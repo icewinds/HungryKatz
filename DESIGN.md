@@ -21,19 +21,70 @@ colors:
   mint-wash: "#d6f4e8"
   honey-ink: "#7f6100"
   butter: "#fff1c2"
+  inactive-wash: "#f1eaed"
+  empty-outline: "#9a8590"
+  ring-track: "#f6e1e7"
+  coin: "#ffc94d"
+  coin-edge: "#e3a400"
+  coin-shine: "#ffe08a"
+  logo-strawberry: "#f27aa0"
+  logo-strawberry-shade: "#cf5680"
+  logo-strawberry-deep: "#b8456d"
+  logo-marmalade-shade: "#d9822a"
+  logo-marmalade-deep: "#b86a1e"
+  ledge-wood: "#d9a878"
+  ledge-wood-edge: "#b8865a"
+  pastel-butter-edge: "#e9cd72"
+  pastel-peach: "#ffe4cc"
+  pastel-peach-edge: "#f0b98a"
+  pastel-pink: "#ffe3ec"
+  pastel-pink-edge: "#f1a9c0"
+  pastel-mint: "#dcf2e7"
+  pastel-mint-edge: "#9fd6bd"
+  tier-bronze: "#e8b083"
+  tier-bronze-ink: "#d08a52"
+  tier-silver: "#c3ccd8"
+  tier-silver-ink: "#9aa6b6"
+  tier-gold: "#f2c94c"
+  tier-gold-ink: "#f2b80c"
+  scene-strawberry: "#ff8fab"
+  scene-matcha: "#6cc788"
+  scene-matcha-wall: "#e4f2df"
+  scene-seaside: "#ff9f8a"
+  scene-seaside-wall: "#dcefff"
+  scene-lounge: "#e9a46a"
+  scene-moonlight: "#b39ddb"
+  scene-moonlight-wall: "#3d3566"
+  scene-moonlight-floor: "#5b4b60"
 typography:
   display:
     fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
     fontSize: "clamp(38px, 12.5vh, 110px)"
     fontWeight: 400
     lineHeight: 0.92
+  play:
+    fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
+    fontSize: "clamp(24px, 7.5vh, 48px)"
+    fontWeight: 400
+  hero:
+    fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
+    fontSize: "30px"
+    fontWeight: 400
   headline:
     fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
     fontSize: "26px"
     fontWeight: 400
+  large:
+    fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
+    fontSize: "24px"
+    fontWeight: 400
+  button:
+    fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
+    fontSize: "19px"
+    fontWeight: 400
   title:
     fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
-    fontSize: "16px"
+    fontSize: "17px"
     fontWeight: 400
   body:
     fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
@@ -42,14 +93,20 @@ typography:
     lineHeight: 1.3
   label:
     fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
-    fontSize: "12.5px"
+    fontSize: "13px"
+    fontWeight: 400
+  micro:
+    fontFamily: "Lilita One, Fredoka, ui-rounded, sans-serif"
+    fontSize: "12px"
     fontWeight: 400
 rounded:
+  xs: "3px"
   sm: "6px"
   md: "8px"
   lg: "9px"
   panel: "14px"
   frame: "18px"
+  pill: "999px"
   round: "50%"
 spacing:
   xs: "4px"
@@ -139,6 +196,10 @@ Warm bakery pastels: strawberry and marmalade for joy, cocoa for words, oat and 
 ### Named Rules
 **The Readable Pink Rule.** Small text never sits on Strawberry Felt. Lilita One has no bold, so "bold" 19px is still regular small text that needs 4.5:1: use Berry Ink (5:1) below 24px.
 
+**The Readable When Inactive Rule.** An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more.
+
+**The Content Palette.** Some colours belong to things, not to the interface: the logo's felt shading, the home row pastels, the bronze/silver/gold sticker tiers, the coin, the wooden ledge and each café scene's signature colours. They are documented so they stay consistent, but they never carry interface meaning on their own.
+
 **The Pastel Button Rule.** The home screen's bottom row gives each button its own pastel (butter, cream, peach, pink, mint) with a matching darker edge. Text on them is always Cocoa Ink.
 
 ## Typography
@@ -150,11 +211,18 @@ Warm bakery pastels: strawberry and marmalade for joy, cocoa for words, oat and 
 **Character:** a single chunky, friendly rounded face that reads like a café chalkboard or a sweet wrapper. It has exactly one weight, so hierarchy comes from size, colour and the felt surfaces, never from bold.
 
 ### Hierarchy
-- **Display**: the two-line logo, tilted a few degrees each way with stacked coloured shadows like stitched felt letters.
-- **Headline**: every screen title ("Café book", "Decorate your café") in Berry Ink.
-- **Title**: card and row names (a dish, a decoration, a regular).
-- **Body**: descriptions and hints, in Cocoa Soft when secondary.
-- **Label**: small captions on cards and stickers.
+An eight-step ramp (12, 13, 15, 17, 19, 24, 26, 30) plus two fluid sizes on the home screen. Every size in the CSS is one of these.
+
+- **Display** (fluid, 38–110px): the two-line logo, tilted a few degrees each way with stacked coloured shadows like stitched felt letters.
+- **Play** (fluid, 24–48px): the Play button only.
+- **Hero** (30px): big numbers and the game-over title.
+- **Headline** (26px): every screen title ("Café book", "Decorate your café") in Berry Ink.
+- **Large** (24px): Resume and other big buttons. 24px is the line where white on Strawberry Felt becomes acceptable.
+- **Button** (19px): ordinary buttons and HUD numbers.
+- **Title** (17px): menu buttons, card and row names.
+- **Body** (15px): descriptions, hints and tabs, in Cocoa Soft when secondary.
+- **Label** (13px): small captions, counts and chips.
+- **Micro** (12px): the smallest print, such as sticker descriptions and "Best" under the score.
 
 ### Named Rules
 **The One Voice Rule.** Lilita One everywhere: in-game text, buttons, the canvas world and the photo captions. Fredoka is only a fallback for missing glyphs, such as accented letters in a player's typed name.
@@ -183,7 +251,7 @@ Depth is physical, like stacked felt and paper. Panels float with a soft warm sh
 
 ## Shapes
 
-Gently rounded and handmade. Buttons and rows use 8–9px corners, panels 14px, and the home frame 18px. Round things are truly round (the camera, the level ring, the pause button). Ribbons have notched ends (clip-path), and felt buttons carry a dashed stitched seam 6px inside their edge. There are no hard corners and no hairline strokes: borders are 2–3px and tan-coloured.
+Gently rounded and handmade, on one radius scale: 3px for tiny tags, 6px for chips, tabs and small tiles, 8px for rows and cards, 9px for buttons, 14px for panels, 18px for the home frame, a pill for the progress bar and 50% for round things. Round things are truly round (the camera, the level ring, the pause button). Ribbons have notched ends (clip-path), and felt buttons carry a dashed stitched seam 6px inside their edge. There are no hard corners and no hairline strokes: borders are 2–3px and tan-coloured.
 
 ## Components
 
@@ -221,6 +289,8 @@ The café rendered live behind a cream frame with a paw-print border masked arou
 - **Do** give reduced-motion players a calm fade for messages instead of removing them.
 
 ### Don't:
+- **Don't** grey out text to show an inactive state; grey the surface and keep the ink readable.
+- **Don't** add a font size or corner radius that is not on the scales above.
 - **Don't** use bold weights for hierarchy; Lilita One has none.
 - **Don't** add glass, blur or glows; depth is felt and paper.
 - **Don't** put white text on Strawberry Felt below 24px.

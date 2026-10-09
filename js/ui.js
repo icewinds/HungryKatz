@@ -268,7 +268,7 @@ export class UIManager {
       stars.className = 'stars';
       stars.setAttribute('aria-label', `${tiers.filter(n => r.served >= n).length} of 3 stars`);
       ['bronze', 'silver', 'gold'].forEach((t, k) => {
-        const st = document.createElement('span'); st.className = 'star' + (r.served >= tiers[k] ? ` on ${t}` : ''); st.textContent = '★';
+        const st = document.createElement('span'); const got = r.served >= tiers[k]; st.className = 'star' + (got ? ` on ${t}` : ''); st.textContent = got ? '★' : '☆';
         st.setAttribute('aria-hidden', 'true'); stars.append(st);
       });
       row.append(img, body, stars);

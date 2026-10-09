@@ -336,7 +336,12 @@ export const ICONS = {
     for (const y of [-6, 0, 6]) { ctx.beginPath(); ctx.moveTo(5, y); ctx.lineTo(15, y - 1.5); ctx.stroke(); }
     drawHeart(ctx, -10, 0, 9, '#ec5f89');
   },
-  heartEmpty(ctx) { drawHeart(ctx, 0, 0, 26, '#f3e6ec'); },
+  heartEmpty(ctx) { // light fill with a 3:1 outline, so an empty heart still reads as a heart
+    ctx.save(); ctx.scale(2.6, 2.6);
+    ctx.beginPath(); ctx.moveTo(0, 6); ctx.bezierCurveTo(-12, -2, -6, -12, 0, -5); ctx.bezierCurveTo(6, -12, 12, -2, 0, 6);
+    ctx.fillStyle = '#fbf3f6'; ctx.fill(); ctx.lineWidth = 1.1; ctx.strokeStyle = '#9a8590'; ctx.stroke();
+    ctx.restore();
+  },
   target(ctx) {
     for (const [r, col] of [[19, '#ff6b8a'], [13.5, '#fff7f9'], [8, '#ff6b8a'], [3.5, '#fff7f9']]) { circle(ctx, 0, 1, r); fillStroke(ctx, col, OL, r > 15 ? LW : 1.4); }
     ctx.save(); ctx.translate(2, -1); ctx.rotate(-0.75);
