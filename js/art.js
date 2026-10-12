@@ -106,14 +106,41 @@ export function dressUp(look, outfit, OUTFITS) {
  * Only this sprite is flipped by o.facing; callers draw overlays separately
  * so icons and text never mirror.
  */
-/** A thick, fluffy tail along a curve (a, control c, tip b), with a round puff at the tip. */
+/**
+ * Path of an oval with a soft, fluffy edge: a ring of rounded puffs, like a pom-pom.
+ * Deterministic (no randomness), so the outline never shimmers between frames.
+ */
+function furPath(ctx, cx, cy, rx, ry, tufts, amp, seed = 0) {
+  const step = TAU / tufts, at = (a, k) => [cx + Math.cos(a) * rx * k, cy + Math.sin(a) * ry * k];
+  ctx.beginPath(); ctx.moveTo(...at(seed, 1));
+  for (let i = 0; i < tufts; i++) {
+    const a = seed + i * step, k = 1 + amp * (0.75 + 0.5 * Math.abs(Math.sin(i * 2.7 + seed * 5)));
+    ctx.quadraticCurveTo(...at(a + step / 2, 1 + (k - 1) * 2), ...at(a + step, 1)); // control pulled out: a rounded puff
+  }
+  ctx.closePath();
+}
+
+/** A fluffy plume tail along a curve (a, control c, tip b): overlapping puffs that get fuller toward the tip. */
 function fluffyTail(ctx, look, ol, a, c, b) {
-  const path = () => { ctx.beginPath(); ctx.moveTo(...a); ctx.quadraticCurveTo(...c, ...b); };
-  const fur = look.tail ?? look.fur;
-  path(); ctx.strokeStyle = ol; ctx.lineWidth = 12; ctx.stroke();
-  circle(ctx, b[0], b[1], 8); ctx.fillStyle = ol; ctx.fill();
-  path(); ctx.strokeStyle = fur; ctx.lineWidth = 8; ctx.stroke();
-  circle(ctx, b[0], b[1], 6); ctx.fillStyle = fur; ctx.fill();
+  const fur = look.tail ?? look.fur, pts = [];
+  for (let i = 0; i <= 9; i++) {
+    const t = i / 9, u = 1 - t;
+    pts.push([u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1], 4.6 + t * 4.2 + (i % 2) * 0.8]);
+  }
+  ctx.fillStyle = ol; for (const [x, y, r] of pts) { circle(ctx, x, y, r + 2); ctx.fill(); }
+  ctx.fillStyle = fur; for (const [x, y, r] of pts) { circle(ctx, x, y, r); ctx.fill(); }
+  ctx.strokeStyle = ol; ctx.globalAlpha = 0.35; ctx.lineWidth = 1.1; // a few fur lines along the plume
+  for (const i of [3, 5, 7]) { const [x, y, r] = pts[i]; ctx.beginPath(); ctx.arc(x, y, r * 0.55, 0.6, 1.9); ctx.stroke(); }
+  ctx.globalAlpha = 1;
+}
+
+/** A little tuft of hair standing up on top of the head (hats are drawn over it). */
+function headTuft(ctx, look, ol, hx, hy) {
+  ctx.beginPath(); ctx.moveTo(hx - 3, hy - 15);
+  ctx.quadraticCurveTo(hx - 3, hy - 22, hx + 1, hy - 25); ctx.quadraticCurveTo(hx + 1, hy - 20, hx + 4, hy - 19);
+  ctx.quadraticCurveTo(hx + 6, hy - 23, hx + 9, hy - 22); ctx.quadraticCurveTo(hx + 7, hy - 18, hx + 8, hy - 15);
+  ctx.fillStyle = look.fur; ctx.fill();
+  ctx.strokeStyle = ol; ctx.lineWidth = 1.8; ctx.stroke();
 }
 
 /** Cats on the café floor are drawn this much bigger than in menus and portraits (set around the café render). */
@@ -153,9 +180,9 @@ export function drawCat(ctx, x, y, look, o = {}) {
   // far legs, body, near legs
   leg(ctx, -10 - swing, look.dark, ol, look);
   leg(ctx, 7 + swing, look.dark, ol, look);
-  ellipse(ctx, 0, -20, 19, 15); ctx.fillStyle = look.fur; ctx.fill();
+  furPath(ctx, 0, -20, 19, 15, 11, 0.09, 0.3); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); bodyPattern(ctx, look); ctx.restore();
-  ellipse(ctx, 0, -20, 19, 15); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  furPath(ctx, 0, -20, 19, 15, 11, 0.09, 0.3); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
   if (look.accessory === 'chef' || look.accessory === 'waiter') { // apron
     rrect(ctx, -1, -31, 17, 22, 5); fillStroke(ctx, look.acc, '#e56b8c', 1.6);
     rrect(ctx, 3, -20, 9, 6, 2); fillStroke(ctx, '#ffd0de', null);
@@ -165,9 +192,13 @@ export function drawCat(ctx, x, y, look, o = {}) {
     for (const px of [0, 8]) { rrect(ctx, px, -22, 7, 7, 1.5); fillStroke(ctx, '#2c2f27', '#1f211c', 1); }
     rrect(ctx, -3, -31, 20, 3, 1); fillStroke(ctx, '#2c2f27', null);
   }
-  ctx.beginPath(); ctx.moveTo(-4, -36); // fluffy chest ruff peeking out under the chin
-  for (let i = 0; i <= 4; i++) ctx.lineTo(-4 + i * 5, i % 2 ? -21 : -25);
-  ctx.lineTo(18, -36); ctx.closePath(); fillStroke(ctx, look.light, null);
+  for (const [x0, w, y0, deep, n] of [[-7, 27, -37, 17, 6], [-2, 17, -36, 11, 4]]) { // fluffy two-layer chest ruff under the chin
+    ctx.beginPath(); ctx.moveTo(x0, y0);
+    for (let i = 0; i <= n; i++) ctx.lineTo(x0 + (i / n) * w, y0 + (i % 2 ? deep : deep - 5));
+    ctx.lineTo(x0 + w, y0); ctx.closePath();
+    ctx.fillStyle = look.light; ctx.fill();
+    ctx.strokeStyle = 'rgba(90,61,74,0.22)'; ctx.lineWidth = 1; ctx.stroke();
+  }
   leg(ctx, -5 + swing, look.fur, ol, look, true);
   leg(ctx, 11 - swing, look.fur, ol, look, true);
 
@@ -183,15 +214,19 @@ export function drawCat(ctx, x, y, look, o = {}) {
     const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3;
     const k = p => [cx + (p[0] - cx) * 0.5, cy + (p[1] - cy) * 0.5];
     tri(ctx, k(a), k(b), k(c)); fillStroke(ctx, '#ffb3c6', null);
+    ctx.strokeStyle = look.light; ctx.lineWidth = 1.5; // wisps of fluff inside the ear
+    const base = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2];
+    for (const f of [0.35, 0.55]) { ctx.beginPath(); ctx.moveTo(...base); ctx.quadraticCurveTo(base[0] + (b[0] - base[0]) * f * 0.5 + 2, base[1] + (b[1] - base[1]) * f * 0.5, base[0] + (b[0] - base[0]) * f, base[1] + (b[1] - base[1]) * f); ctx.stroke(); }
   }
-  for (const d of [-1, 1]) { // fluffy cheek tufts (the head covers their inner half)
-    ctx.beginPath(); ctx.moveTo(hx + d * 12, hy + 1); ctx.lineTo(hx + d * 23, hy + 4); ctx.lineTo(hx + d * 16, hy + 8);
-    ctx.lineTo(hx + d * 21, hy + 12); ctx.lineTo(hx + d * 10, hy + 14); ctx.closePath();
+  for (const d of [-1, 1]) { // big fluffy cheek tufts (the head covers their inner half)
+    ctx.beginPath(); ctx.moveTo(hx + d * 12, hy - 1); ctx.lineTo(hx + d * 25, hy + 1); ctx.lineTo(hx + d * 18, hy + 5);
+    ctx.lineTo(hx + d * 25, hy + 9); ctx.lineTo(hx + d * 17, hy + 12); ctx.lineTo(hx + d * 21, hy + 16); ctx.lineTo(hx + d * 9, hy + 15); ctx.closePath();
     fillStroke(ctx, look.fur, ol, 2);
   }
-  ellipse(ctx, hx, hy, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
+  furPath(ctx, hx, hy, 18, 17, 13, 0.05, 1.1); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); headPattern(ctx, look, hx, hy); ctx.restore();
-  ellipse(ctx, hx, hy, 18, 17); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  furPath(ctx, hx, hy, 18, 17, 13, 0.05, 1.1); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  headTuft(ctx, look, ol, hx, hy);
   ellipse(ctx, hx + 4, hy + 7, 8, 5.5); fillStroke(ctx, look.light, null);
 
   // eyes
@@ -254,9 +289,9 @@ function drawCatBack(ctx, look, { t, state, sad }) {
 
 
   // sitting body with the pattern across its back, hind paws peeking out
-  ellipse(ctx, 0, -18, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
+  furPath(ctx, 0, -18, 18, 17, 12, 0.08, 0.7); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); backPattern(ctx, look); ctx.restore();
-  ellipse(ctx, 0, -18, 18, 17); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  furPath(ctx, 0, -18, 18, 17, 12, 0.08, 0.7); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
   for (const px of [-10, 10]) { ellipse(ctx, px, -2, 6.5, 3.5); fillStroke(ctx, white ? '#fff' : look.fur, ol, 1.6); }
 
   // tail: from the bottom middle, swishing slowly side to side while waiting (in front: we're behind the cat)
@@ -271,9 +306,10 @@ function drawCatBack(ctx, look, { t, state, sad }) {
     [[hx - 16, hy - 5], [hx - 12 - droop, hy - 25 + droop * 1.5], [hx - 2, hy - 14]],
     [[hx + 2, hy - 14], [hx + 12 + droop, hy - 25 + droop * 1.5], [hx + 16, hy - 5]],
   ].entries()) { tri(ctx, a, b, c); fillStroke(ctx, i === 1 && look.ear ? look.ear : look.fur, ol, 2.2); }
-  ellipse(ctx, hx, hy, 18, 17); ctx.fillStyle = look.fur; ctx.fill();
+  furPath(ctx, hx, hy, 18, 17, 13, 0.05, 1.1); ctx.fillStyle = look.fur; ctx.fill();
   ctx.save(); ctx.clip(); backHeadPattern(ctx, look, hx, hy); ctx.restore();
-  ellipse(ctx, hx, hy, 18, 17); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  furPath(ctx, hx, hy, 18, 17, 13, 0.05, 1.1); ctx.strokeStyle = ol; ctx.lineWidth = 2.2; ctx.stroke();
+  headTuft(ctx, look, ol, hx - 3, hy);
   // whisker tips poking out either side of the head
   ctx.strokeStyle = 'rgba(90,61,74,0.45)'; ctx.lineWidth = 1;
   ctx.beginPath();
@@ -371,9 +407,13 @@ function ghostMask(ctx, hx, hy, blink = false) {
 }
 
 function leg(ctx, lx, fill, ol, look, near = false) {
-  rrect(ctx, lx - 3.5, -14, 7, 14, 3.5); fillStroke(ctx, fill, ol, 1.8);
-  if (near && (look.pattern === 'socks' || look.pattern === 'tuxedo')) {
-    rrect(ctx, lx - 3.5, -5, 7, 5, 2.5); fillStroke(ctx, '#fff', ol, 1.4);
+  rrect(ctx, lx - 3.5, -14, 7, 12, 3.5); fillStroke(ctx, fill, ol, 1.8);
+  const sock = near && (look.pattern === 'socks' || look.pattern === 'tuxedo');
+  ellipse(ctx, lx, -1.5, 5.2, 3.4); fillStroke(ctx, sock ? '#fff' : fill, ol, 1.6); // a round mitten paw
+  if (near) { // toe lines
+    ctx.strokeStyle = ol; ctx.globalAlpha = 0.45; ctx.lineWidth = 0.9;
+    for (const dx of [-1.6, 1.6]) { ctx.beginPath(); ctx.moveTo(lx + dx, -3.2); ctx.lineTo(lx + dx, -1.4); ctx.stroke(); }
+    ctx.globalAlpha = 1;
   }
 }
 
