@@ -1,7 +1,7 @@
 // UI Manager: HTML overlays (HUD, menus, upgrade screen, game over).
 // Buttons declare data-action="name"; clicks route to handlers[name](button).
 
-import { UPGRADES, MAX_UPGRADE_LEVEL, PETS, STAFF } from './config.js';
+import { UPGRADES, MAX_UPGRADE_LEVEL, PETS, STAFF, SERVER } from './config.js';
 import { FOOD_LABEL } from './inventory.js';
 import { stickerBadge, outfitCanvas } from './icons.js';
 
@@ -337,7 +337,7 @@ export class UIManager {
 
   setMenuBest(best) { $('menu-best').textContent = best; }
 
-  renderUpgrades(upg, coins, petsOwned = [], petsAway = [], staff = [], level = 1) {
+  renderUpgrades(upg, coins, petsOwned = [], petsAway = [], staff = [], level = 1, staffLevel = {}) {
     $('upg-coins').textContent = coins;
     $('upg-list').innerHTML = Object.entries(UPGRADES).map(([id, u]) => {
       const lvl = upg.level(id), max = upg.isMax(id), cost = upg.cost(id);
@@ -367,12 +367,16 @@ export class UIManager {
       </div>`;
     }).join('') + '<h3 class="pets-title">🧹 Staff</h3>' + Object.entries(STAFF).map(([id, s]) => {
       const hired = staff.includes(id), locked = level < s.level;
-      const btn = hired ? '<button class="btn buy max" disabled>Hired ✓</button>'
+      const lvl = staffLevel[id] ?? 1, trainCost = id === 'server' ? SERVER.trainCosts[lvl - 1] : undefined;
+      const train = hired && id === 'server'
+        ? `<div class="upg-lvl">Lv ${lvl}/${SERVER.tray.length} · carries ${SERVER.tray[lvl - 1]}</div><div class="bar">${SERVER.tray.map((_, i) => `<span class="seg ${i < lvl ? 'on' : ''}"></span>`).join('')}</div>` : '';
+      const btn = hired && trainCost !== undefined ? `<button class="btn buy ${coins < trainCost ? 'poor' : ''}" data-action="trainStaff" data-id="${id}">Train · 🪙 ${trainCost}</button>`
+        : hired ? `<button class="btn buy max" disabled>${id === 'server' ? 'Max ⭐' : 'Hired ✓'}</button>`
         : locked ? `<button class="btn buy poor" data-action="hireStaff" data-id="${id}">🔒 Lv ${s.level}</button>`
         : `<button class="btn buy ${coins < s.cost ? 'poor' : ''}" data-action="hireStaff" data-id="${id}">🪙 ${s.cost}</button>`;
       return `<div class="upg pet" data-id="${id}">
         <div class="upg-ico">${s.icon}</div>
-        <div class="upg-body"><div class="upg-name">${s.name}</div><div class="upg-desc">${s.desc}${locked ? ` Hire from café level ${s.level}.` : ''}</div></div>
+        <div class="upg-body"><div class="upg-name">${s.name}</div><div class="upg-desc">${s.desc}${locked ? ` Hire from café level ${s.level}.` : ''}</div>${train}</div>
         ${btn}
       </div>`;
     }).join('');

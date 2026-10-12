@@ -58,6 +58,9 @@ export function randomLook(rng = Math.random) {
 // Playable waiter cats (character select). `acc` = apron colour.
 const WAITER = { accessory: 'waiter', size: 1.08, seed: 0 };
 // Dusty the cleaner (hired staff, not playable): blue-grey with a mint scarf and a broom.
+/** Waffles the server: a golden striped cat in a blue bow tie. */
+export const SERVER_LOOK = { id: 'waffles', name: 'Waffles', fur: '#e8b56a', light: '#fff4dc', dark: '#a8743a', pattern: 'stripes',
+  acc: '#5aa9e6', eye: '#3b2a33', patch: '#fff', accessory: 'waiter', size: 1, seed: 0.8 };
 export const CLEANER_LOOK = { id: 'dusty', name: 'Dusty', fur: '#9fb0c4', light: '#eef3f8', dark: '#5f6f82', pattern: 'stripes',
   acc: '#6fcf9f', eye: '#3b2a33', patch: '#fff', accessory: 'scarf', size: 1, seed: 0.3 };
 /** Dusty's broom, held at the side (drawn after the cat). */

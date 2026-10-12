@@ -4,7 +4,7 @@
 import {
   WORLD, LAYOUT, KITCHEN, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
-  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -19,7 +19,7 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus, todaysChallenges, progressChallenges, dayKey } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, drawNameTag, setCatScale, catSize,
+  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, SERVER_LOOK, drawNameTag, setCatScale, catSize,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawDecorPreview, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
@@ -319,7 +319,7 @@ const ui = new UIManager({
   openUpgrades: () => {
     if (gm.state !== 'playing') return;
     gm.paused = true; // stops timers, movement and spawning
-    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level, save.staffLevel);
     ui.show('upgrades');
   },
   closeUpgrades: () => { gm.applyUpgrades(); gm.paused = false; ui.show(null); },
@@ -328,7 +328,7 @@ const ui = new UIManager({
     if (upgrades.buy(id)) {
       audio.play('buy');
       gm.applyUpgrades();
-      ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
+      ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level, save.staffLevel);
       ui.cardEffect(id, 'bought');
     } else {
       audio.play('wrong');
@@ -347,10 +347,23 @@ const ui = new UIManager({
     save.pets.push(id);
     persist();
     audio.play('buy');
-    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level, save.staffLevel);
     ui.cardEffect(id, 'bought');
     ui.banner(`${pet.icon} ${pet.name} moved into your café!`);
     checkStickers();
+  },
+  trainStaff: btn => {
+    const id = btn.dataset.id, lvl = save.staffLevel[id] ?? 1, cost = SERVER.trainCosts[lvl - 1];
+    if (!save.staff.includes(id) || cost === undefined) return;
+    if (save.coins < cost) { audio.play('wrong'); ui.cardEffect(id, 'poor'); ui.banner(`Need 🪙 ${cost - save.coins} more coins`); return; }
+    save.coins -= cost;
+    save.staffLevel[id] = lvl + 1;
+    persist();
+    gm.updateStaff();
+    audio.play('buy');
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level, save.staffLevel);
+    ui.cardEffect(id, 'bought');
+    ui.banner(`🍽 Waffles is now level ${lvl + 1}: ${SERVER.tray[lvl] > SERVER.tray[lvl - 1] ? `${SERVER.tray[lvl]} plates at a time!` : 'quicker paws!'}`);
   },
   hireStaff: btn => {
     const id = btn.dataset.id, who = STAFF[id];
@@ -362,7 +375,7 @@ const ui = new UIManager({
     persist();
     gm.updateStaff(); // starts work straight away
     audio.play('buy');
-    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level, save.staffLevel);
     ui.cardEffect(id, 'bought');
     ui.banner(`${who.icon} ${who.name} joined the team!`);
     checkStickers();
@@ -382,7 +395,7 @@ const ui = new UIManager({
       ui.banner(`${pet.icon} ${pet.name} is back in your café!`);
     } else return;
     persist();
-    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level);
+    ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level, save.staffLevel);
   },
   toggleMusic: () => {
     save.settings.music = !save.settings.music; persist();
@@ -719,7 +732,7 @@ function render(time) {
   // Served dishes sit on the table/bar while the cat eats; the empty plate stays until it is cleared.
   const dishes = npcs.filter(n => n.state === 'eating').map(n => ({ dish: n, y: n.spot.plate.z }));
   const leftovers = [...gm.dirty].map(s => ({ leftover: s, y: s.plate.z }));
-  const staff = gm.cleaner ? [{ cleaner: gm.cleaner, y: gm.cleaner.body.y }] : [];
+  const staff = [...(gm.cleaner ? [{ cleaner: gm.cleaner, y: gm.cleaner.body.y }] : []), ...(gm.server ? [{ server: gm.server, y: gm.server.body.y }] : [])];
   const actors = [...npcs, { chef: true, y: chefDepth(p, npcs, tables) }, ...tables, ...dishes, ...leftovers, ...staff].sort((a, b) => a.y - b.y);
   for (const a of actors) {
     if (a.dish) {
@@ -732,6 +745,11 @@ function render(time) {
       drawCat(ctx, b.x, b.y, CLEANER_LOOK, { state: b.state, t: time + 0.7, facing: b.facing });
       drawBroom(ctx, b.x, b.y, b.facing, time, walking);
       if (a.cleaner.carrying) drawPlateStack(ctx, b.x - b.facing * 16, b.y - 46, a.cleaner.carrying);
+    } else if (a.server) {
+      const b = a.server.body, walking = b.state === 'walk', tray = { items: a.server.items };
+      drawWaiterTray(ctx, b.x, b.y, b.facing, SERVER_LOOK, tray, time + 1.3, walking, false);
+      drawCat(ctx, b.x, b.y, SERVER_LOOK, { state: b.state, t: time + 1.3, facing: b.facing });
+      drawWaiterTray(ctx, b.x, b.y, b.facing, SERVER_LOOK, tray, time + 1.3, walking, true);
     } else if (a.table) {
       drawTable(ctx, a.table, scene, time);
     } else if (a.chef) {

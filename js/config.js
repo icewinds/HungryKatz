@@ -197,8 +197,12 @@ export const DECOR = [
   { id: 'catTree', name: 'Cat tree', cost: 450, desc: 'A tall scratching tower with a lookout cat on top.' },
   { id: 'pawPaper', name: 'Paw wallpaper', cost: 600, desc: 'Little paw prints all over the walls.' },
 ];
+// Waffles the server (STAFF.server): carries ready plates to waiting cats. Training levels 1..5 give a bigger
+// tray and quicker paws; trainCosts[i] buys level i + 2.
+export const SERVER = { home: { x: 190, y: 505 }, tray: [1, 1, 2, 2, 3], speed: [115, 130, 145, 160, 175], trainCosts: [300, 550, 900, 1400] };
 export const STAFF = {
   cleaner: { icon: '🧹', name: 'Dusty the cleaner', cost: 500, level: 5, desc: 'Clears empty plates from the tables for you.' },
+  server: { icon: '🍽', name: 'Waffles the server', cost: 800, level: 7, desc: 'Carries ready plates to hungry cats for you. Train him to carry more and walk faster.' },
 };
 
 // Wardrobe for your waiter cat (Choose cat screen). Hats reuse cat accessories; aprons recolour the apron.

@@ -15,6 +15,7 @@ export const DEFAULT_SAVE = () => ({
   pets: [],           // café pets bought and at the café (PETS ids)
   petsAway: [],       // bought pets sent home (no bonus; can come back free)
   staff: [],
+  staffLevel: {},     // training level per hired staff id (Waffles: 1..5)
   decor: { owned: [], hidden: [] }, // Decorate: bought decoration ids, and the ones put away          // hired staff (STAFF ids)
   challenges: { day: null, list: [] }, // today's daily challenges (see daily.js)
   daily: { last: null, streak: 0 }, // daily bonus: last claim day 'YYYY-MM-DD' + streak length
@@ -58,6 +59,7 @@ function sanitize(data) {
       pets: Array.isArray(data.pets) ? data.pets.filter(s => typeof s === 'string') : [],
       petsAway: Array.isArray(data.petsAway) ? data.petsAway.filter(s => typeof s === 'string') : [],
       staff: Array.isArray(data.staff) ? data.staff.filter(s => typeof s === 'string') : [],
+      staffLevel: Object.fromEntries(Object.entries(data.staffLevel && typeof data.staffLevel === 'object' ? data.staffLevel : {}).filter(([, v]) => Number.isInteger(v) && v >= 1 && v <= 5)),
       decor: Object.fromEntries(['owned', 'hidden'].map(k => [k, Array.isArray(data.decor?.[k]) ? data.decor[k].filter(s => typeof s === 'string') : []])),
       stats: { ...d.stats, ...(data.stats && typeof data.stats === 'object' ? data.stats : {}) },
       friends: Object.fromEntries(Object.entries(data.friends && typeof data.friends === 'object' ? data.friends : {})

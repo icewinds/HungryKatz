@@ -60,6 +60,9 @@ export class Kitchen {
     return k;
   }
 
+  /** A helper puts plates they could not hand out back on the counter. */
+  giveBack(food, n) { this.ready[food] = this.readyCount(food) + n; }
+
   /** Is `food` queued, being made or on its way to the counter? */
   busyWith(food) {
     return this.orders.some(o => o.food === food) || this.slots.some(s => s.food === food)

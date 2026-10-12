@@ -7,6 +7,7 @@ import {
 } from './config.js';
 import { Kitchen } from './kitchen.js';
 import { Cleaner } from './cleaner.js';
+import { Server } from './server.js';
 import { Player } from './player.js';
 import { NPC } from './npc.js';
 import { NpcSpawner } from './npcSpawner.js';
@@ -28,6 +29,7 @@ export class GameManager {
     this.dirty = new Set();   // seats with an empty plate left on them
     this.dirtyCarried = 0;    // empty plates in the waiter's paws
     this.cleaner = null;      // Dusty, once hired
+    this.server = null;       // Waffles, once hired
     this.npcs = [];
     this.fx = [];
     this.state = 'menu';
@@ -75,6 +77,10 @@ export class GameManager {
     const hired = this.save.staff?.includes('cleaner');
     if (!hired) this.cleaner = null;
     else if (fresh || !this.cleaner) this.cleaner = new Cleaner();
+    const lvl = this.save.staffLevel?.server ?? 1;
+    if (!this.save.staff?.includes('server')) this.server = null;
+    else if (fresh || !this.server) this.server = new Server(lvl);
+    else this.server.setLevel(lvl); // trained mid-run: quicker straight away
   }
 
   applyUpgrades() {
@@ -183,6 +189,7 @@ export class GameManager {
       const n = this.cleaner.update(dt, this.dirty, this.blockers);
       if (n) this.onEvent('plates', { n, cleaner: true });
     }
+    this.server?.update(dt, { kitchen: this.kitchen, npcs: this.npcs, blockers: this.blockers, pads: LAYOUT.pads, serve: npc => this.serve(npc, [npc.request], 'server') });
 
     this.updateFx(dt);
     if (this.missed >= MAX_MISSED) this.endRun();
@@ -238,6 +245,11 @@ export class GameManager {
       return false;
     }
     for (const f of need) this.inventory.take(f);
+    return this.serve(npc, need);
+  }
+
+  /** Pay for a served cat: coins, tips, combo, level ups, friendship. `by` = 'player' or 'server' (Waffles). */
+  serve(npc, need, by = 'player') {
     // Happy customers sometimes leave a little tip on top (VIPs always do).
     const tipChance = this.upgrades.value('luckyTips') + (this.hasPet('parrot') ? PET_BONUS.parrotTips : 0);
     const tip = npc.vip || this.rng() < tipChance ? TIPS.min + Math.floor(this.rng() * (TIPS.max - TIPS.min + 1)) : 0;
@@ -256,7 +268,7 @@ export class GameManager {
     this.score += r; // score only ever goes up; spending coins never lowers it
     this.fed++;
     npc.feed();
-    this.player.squash = 1;
+    if (by === 'player') this.player.squash = 1;
     this.text(npc.x, npc.y - 140, `+${r - tip}`, '#e0a000', 28);
     if (this.combo >= 2) this.fx.push({ kind: 'text', x: npc.x, y: npc.y - 178, text: `🔥 Combo ×${this.combo}!`, color: '#ff7a00', size: 21, t: -0.15, life: 1.3 });
     if (npc.vip) this.fx.push({ kind: 'text', x: npc.x - 34, y: npc.y - 112, text: `👑 ×${VIP.pay}`, color: '#c99a00', size: 18, t: -0.1, life: 1.3 });
@@ -276,7 +288,7 @@ export class GameManager {
     if (npc.regular) this.befriend(npc);
     this.kitchen.cancel(npc); // served: anything still queued for them is not needed
     this.persist();
-    this.onEvent('feed', { npc, reward: r, tip, combo: this.combo, vip: npc.vip });
+    this.onEvent('feed', { npc, reward: r, tip, combo: this.combo, vip: npc.vip, by });
     return true;
   }
 

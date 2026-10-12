@@ -18,7 +18,7 @@ import { Kitchen } from '../js/kitchen.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus, levelSpawnPace,
-  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING, REGULARS, FRIENDSHIP,
+  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING, REGULARS, FRIENDSHIP, SERVER,
 } from '../js/config.js';
 
 let passed = 0;
@@ -783,6 +783,26 @@ test('decorate: decorations are saved, cleaned up and drawn only when shown', ()
   const sc = makeScene('lounge', 3, null, ['catTree']);
   assert.ok(sc.decor.has('catTree') && !sc.decor.has('plants'));
   assert.equal(makeScene('strawberry', 1).decor.size, 0);
+});
+
+test('server: Waffles takes ready plates to waiting cats, and training gives a bigger tray', () => {
+  assert.equal(setup(MAX5).gm.server, null, 'no server until hired');
+  const { gm, save } = setup({ ...MAX5, level: 9, staff: ['server'] });
+  assert.equal(gm.server.tray, SERVER.tray[0]);
+  park(gm);
+  const npc = gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk', patience: 999 });
+  for (let i = 0; i < 60 * 15 && npc.state !== 'waiting'; i++) gm.update(1 / 60);
+  gm.kitchen.ready.milk = 1;
+  const coins = save.coins, events = [];
+  gm.onEvent = (type, d) => events.push([type, d]);
+  for (let i = 0; i < 60 * 20 && npc.state === 'waiting'; i++) gm.update(1 / 60);
+  assert.equal(npc.state, 'eating', 'Waffles served the cat');
+  assert.ok(save.coins > coins, 'and it paid');
+  assert.ok(events.some(([type, d]) => type === 'feed' && d.by === 'server'));
+  assert.equal(gm.server.carrying, 0);
+  save.staffLevel.server = 5; gm.updateStaff();
+  assert.equal(gm.server.tray, SERVER.tray[4]);
+  assert.equal(gm.server.body.speed, SERVER.speed[4]);
 });
 
 console.log(`${passed} passed`);
