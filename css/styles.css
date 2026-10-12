@@ -683,7 +683,7 @@ html, body {
 .star.on { -webkit-text-stroke: 1px var(--ink-soft); } /* a cocoa outline keeps every tier at 3:1+ without dulling the colours */
 .friend-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
 .friend { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px 10px; border-radius: 8px; background: var(--cream); border: 2px solid var(--line); }
-.friend canvas { width: 84px; height: 84px; }
+.friend > canvas { width: 84px; height: 84px; }
 .friend b { font-size: 15px; }
 .friend small { display: flex; align-items: center; gap: 4px; color: var(--ink-soft); font-size: 13px; min-height: 24px; }
 .friend small img { width: 22px; height: 22px; }
@@ -802,7 +802,7 @@ html, body {
 .decor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .decor-card { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 8px 10px; border-radius: 8px; background: var(--card); border: 2px solid var(--card-line); }
 .decor-card.shown { border-color: #9fd6bd; background: #f3fbf6; }
-.decor-card canvas { width: 160px; height: 110px; border-radius: 6px; }
+.decor-card > canvas { width: 160px; height: 110px; border-radius: 6px; }
 .decor-card b { font-size: 15px; }
 .decor-card small { font-size: 13px; line-height: 1.3; color: var(--ink-soft); min-height: 2.6em; }
 .decor-card .btn.buy { width: 100%; }
