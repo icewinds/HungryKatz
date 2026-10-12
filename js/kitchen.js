@@ -69,6 +69,14 @@ export class Kitchen {
       || this.toPlate.some(d => d.food === food) || this.chef.carrying === food;
   }
 
+  /** How far along `food` is, for the counter label: null = not being made, 0 = queued, 1 = on its way to the counter. */
+  progress(food) {
+    if (this.toPlate.some(d => d.food === food) || this.chef.carrying === food) return 1;
+    const s = this.slots.filter(s => s.food === food).map(s => s.t / s.need);
+    if (s.length) return Math.min(1, Math.max(...s));
+    return this.orders.some(o => o.food === food) ? 0 : null;
+  }
+
   /** Start queued orders wherever their kind of slot is free (a busy oven does not hold up the stoves). */
   startOrders() {
     for (const o of [...this.orders]) {

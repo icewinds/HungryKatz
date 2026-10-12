@@ -610,7 +610,7 @@ export const SHADOW = 'rgba(120,70,60,0.13)';
 
 /** One food's spot at the counter: the plates the chef has put out (up to 3 drawn, then a ×N badge) and,
  *  while there is something to collect, a glow on the floor where the waiter stands. Locked foods show their level. */
-export function drawPass(ctx, zone, type, ready, canTake, t, flash, lockedLevel = 0) {
+export function drawPass(ctx, zone, type, ready, canTake, t, flash, lockedLevel = 0, cooking = null) {
   const { x, y } = zone, cy = y + 38; // counter top
   ctx.font = `400 12px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   if (lockedLevel) {
@@ -627,11 +627,16 @@ export function drawPass(ctx, zone, type, ready, canTake, t, flash, lockedLevel 
     ctx.globalAlpha = 1 - k;
     ellipse(ctx, x, y + 4, 36 + k * 14, 13 + k * 5); ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 2; ctx.stroke();
     ctx.globalAlpha = 1;
-  } else {
-    ellipse(ctx, x, y + 4, 30, 10); ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(90,61,74,0.15)'; ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
   }
   rrect(ctx, x - 30, cy - 4, 60, 16, 8); fillStroke(ctx, 'rgba(255,255,255,0.5)', 'rgba(90,61,74,0.12)', 1); // place mat
-  if (!ready) drawFoodIcon(ctx, type, x, cy + 3, 0.6, 0.3);
+  if (!ready) { // a label for this spot, with a ring filling up while the chef makes it
+    circle(ctx, x, cy - 4, 16); fillStroke(ctx, '#fff', 'rgba(90,61,74,0.18)', 1.5);
+    drawFoodIcon(ctx, type, x, cy - 4, 0.62, cooking === null ? 0.55 : 1);
+    if (cooking !== null) {
+      ctx.beginPath(); ctx.arc(x, cy - 4, 16, -Math.PI / 2, -Math.PI / 2 + Math.max(0.04, cooking) * Math.PI * 2);
+      ctx.strokeStyle = '#4fb88a'; ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.stroke();
+    }
+  }
   const shown = Math.min(ready, 3);
   for (const dx of [[0], [-11, 11], [-17, 0, 17]][shown - 1] ?? []) drawDish(ctx, x + dx, cy - 6, type, 1);
   if (ready > 3) {

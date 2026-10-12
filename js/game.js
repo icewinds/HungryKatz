@@ -712,7 +712,7 @@ function render(time) {
   const menu = gm.foods;
   for (const s of gm.stations) {
     const locked = menu.includes(s.type) ? 0 : foodUnlockLevel(s.type);
-    drawPass(ctx, s.zone, s.type, gm.kitchen.readyCount(s.type), inv.room(s.type) > 0, time, s.flash, locked);
+    drawPass(ctx, s.zone, s.type, gm.kitchen.readyCount(s.type), inv.room(s.type) > 0, time, s.flash, locked, gm.kitchen.progress(s.type));
   }
   drawFx(ctx, gm.fx, 'under');
   if (gm.target) drawTapQueue(ctx, [gm.target, ...gm.queue]);

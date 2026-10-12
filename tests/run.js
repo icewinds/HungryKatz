@@ -79,6 +79,19 @@ test('counter: carry 5 milk AND 5 cat food at once (from plates the chef put out
   assert.equal(gm.kitchen.readyCount('milk'), 4, 'only what fits on the tray leaves the counter');
 });
 
+test('kitchen: progress for the counter labels goes idle, queued, cooking, done', () => {
+  const k = new Kitchen();
+  assert.equal(k.progress('fish'), null);
+  k.order({ request: 'fish' });
+  assert.equal(k.progress('fish'), 0);
+  k.update(0.5);
+  assert.ok(k.progress('fish') > 0 && k.progress('fish') < 1);
+  for (let i = 0; i < 60 * 3 && k.progress('fish') < 1; i++) k.update(1 / 60);
+  assert.equal(k.progress('fish'), 1, 'cooked: on its way to the counter');
+  for (let i = 0; i < 60 * 3 && !k.readyCount('fish'); i++) k.update(1 / 60);
+  assert.equal(k.progress('fish'), null, 'on the counter: the plates show instead');
+});
+
 test('kitchen: a seated customer\'s order is cooked as a full tray, plated, collected and served', () => {
   const { gm, save, events } = setup({ upgrades: { ...DEFAULT_SAVE().upgrades, carry: 3 } });
   const npc = arrive(gm, { spot: LAYOUT.spots[0], request: 'milk' });

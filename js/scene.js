@@ -796,14 +796,9 @@ function drawKnob(ctx, x, y, nx, ny) {
 
 // ---------------------------------------------------------------- the kitchen, live
 /** Chef Biscuit (cooking at the stoves facing us, or carrying plates to the counter), then the stove top in
- *  front of him: burners, sizzling pans with the dish, steam, and a ring showing how long each order has left. */
+ *  front of him: burners, sizzling pans with the dish, steam (progress shows on the counter labels). */
 export function drawKitchen(ctx, sc, kitchen, t) {
   const p = sc.pal, c = kitchen.chef, top = KITCHEN.stoveTop, y = LAYOUT.kitchenY;
-  const ring = (rx, ry, frac, n) => { // how long a batch has left (+ ×n plates)
-    circle(ctx, rx, ry, 10); fillStroke(ctx, '#fff', 'rgba(90,61,74,0.25)', 1.5);
-    ctx.beginPath(); ctx.arc(rx, ry, 7, -Math.PI / 2, -Math.PI / 2 + Math.min(1, frac) * Math.PI * 2); ctx.strokeStyle = '#86d6b2'; ctx.lineWidth = 3.5; ctx.stroke();
-    if (n > 1) { rrect(ctx, rx - 10, ry - 24, 20, 13, 6.5); fillStroke(ctx, '#ec5f89', '#fff', 1.2); ctx.fillStyle = '#fff'; ctx.fillText(`×${n}`, rx, ry - 17); }
-  };
   ctx.font = `400 11px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   const fr = kitchen.fridge, fx = KITCHEN.fridge.x;
   if (fr.food) { // fridge open: lit shelves with milk, door swung toward the chef
@@ -811,14 +806,12 @@ export function drawKitchen(ctx, sc, kitchen, t) {
     for (const [bx, by] of [[-10, 50], [4, 50], [-4, 78], [10, 78]]) drawFoodIcon(ctx, 'milk', fx + bx, y + by, 0.55);
     ctx.beginPath(); ctx.moveTo(fx + 26, y + 30); ctx.lineTo(fx + 44, y + 36); ctx.lineTo(fx + 44, y + 100); ctx.lineTo(fx + 26, y + 106); ctx.closePath();
     fillStroke(ctx, '#e4f4fb', '#b9dff0', 2);
-    ring(fx, y + 94, fr.t / fr.need, fr.n);
   }
   const ov = kitchen.oven, ox = KITCHEN.oven.x;
   rrect(ctx, ox - 20, y + 56, 40, 30, 4); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                   // oven window
   if (ov.food) { // baking: warm glow and the cupcakes rising
     ctx.globalAlpha = 0.75 + Math.sin(t * 4) * 0.15; rrect(ctx, ox - 18, y + 58, 36, 26, 3); ctx.fillStyle = '#ffb347'; ctx.fill(); ctx.globalAlpha = 1;
     drawFoodIcon(ctx, ov.food, ox, y + 74 - Math.min(1, ov.t / ov.need) * 3, 0.62);
-    ring(ox, y + 94, ov.t / ov.need, ov.n);
   }
   const toCounter = c.mode === 'plate' || (c.carrying && c.mode === 'walk');
   drawCat(ctx, c.x, c.y, KITCHEN_CHEF, {
@@ -828,8 +821,8 @@ export function drawKitchen(ctx, sc, kitchen, t) {
   if (c.carrying) for (let i = 0; i < Math.min(c.count, 3); i++) drawDish(ctx, c.x + c.facing * 18, c.y - 58 - i * 6, c.carrying, 1);
   rrect(ctx, -6, top, WORLD.W + 12, 22, 6); fillStroke(ctx, p.counter, p.counterEdge, 2);           // stove top
   for (const s of kitchen.stoves) {
-    ellipse(ctx, s.x, top + 10, 24, 7); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                    // burner
-    if (!s.food) continue;
+    if (!s.food) { ellipse(ctx, s.x, top + 10, 20, 5.5); fillStroke(ctx, 'rgba(90,61,74,0.12)', 'rgba(90,61,74,0.25)', 1.5); continue; } // idle burner: quiet
+    ellipse(ctx, s.x, top + 10, 24, 7); fillStroke(ctx, '#3d3540', '#2a2430', 1.5);                    // lit burner
     for (let i = 0; i < 6; i++) { // flickering flames round the burner
       const a = (i / 6) * Math.PI * 2, fx = s.x + Math.cos(a) * 17, fy = top + 10 + Math.sin(a) * 5, h = 4 + Math.sin(t * 20 + i * 2) * 1.5;
       ctx.fillStyle = i % 2 ? '#ffb347' : '#ff7a3d'; ellipse(ctx, fx, fy - h / 2, 2.2, h); ctx.fill();
@@ -839,6 +832,5 @@ export function drawKitchen(ctx, sc, kitchen, t) {
     drawFoodIcon(ctx, s.food, s.x, top - 3 - Math.abs(Math.sin(t * 6 + s.x)) * 3, 0.62);
     ctx.fillStyle = 'rgba(255,255,255,0.55)';                                                             // steam
     for (let i = 0; i < 2; i++) { const k = (t * 0.8 + i * 0.5 + s.x * 0.01) % 1; circle(ctx, s.x - 6 + i * 12 + Math.sin(t * 3 + i) * 3, top - 16 - k * 22, 3 + k * 3); ctx.globalAlpha = 1 - k; ctx.fill(); ctx.globalAlpha = 1; }
-    ring(s.x - 34, top - 2, s.t / s.need, s.n); // beside the pan
   }
 }
