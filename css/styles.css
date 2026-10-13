@@ -707,6 +707,10 @@ html, body {
 .btn.secondary:active { box-shadow: 0 0 0 var(--felt-line); }
 .btn.mint, .btn-upgrade, .btn.buy, .btn.save-name { box-shadow: 0 4px 0 #19643f, 0 8px 14px rgba(120, 80, 50, 0.16); }
 .btn.buy.poor, .btn.buy.max { box-shadow: none; outline: none; background-image: none; }
+/* HUD Upgrade: grey until something can be bought, then green with a little wiggle every few seconds */
+.btn-upgrade:not(.ready) { background-color: var(--inactive); color: var(--ink-soft); box-shadow: 0 4px 0 #d6c8ce, 0 8px 14px rgba(120, 80, 50, 0.12); }
+.btn-upgrade.ready { animation: wiggle 2.6s ease-in-out infinite; }
+@keyframes wiggle { 0%, 76%, 100% { transform: rotate(0); } 80% { transform: rotate(-7deg) scale(1.06); } 85% { transform: rotate(6deg) scale(1.06); } 90% { transform: rotate(-4deg); } 95% { transform: rotate(2deg); } }
 /* Lilita One has no bold, so 19px button text is regular-weight small text: small pink buttons use the 5:1 pink */
 .btn:where(:not(.big, .secondary, .mint, .buy, .btn-upgrade, .save-name)) { background-color: var(--pink-d); box-shadow: 0 4px 0 var(--pink-d-lip), 0 8px 14px rgba(120, 80, 50, 0.16); }
 .btn:where(:not(.big, .secondary, .mint, .buy, .btn-upgrade, .save-name)):active { box-shadow: 0 1px 0 var(--pink-d-lip); }

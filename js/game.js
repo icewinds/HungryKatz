@@ -4,7 +4,7 @@
 import {
   WORLD, LAYOUT, KITCHEN, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
-  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER, UPGRADES,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -962,6 +962,13 @@ function drawCatPortrait(canvas, look) {
   drawCat(c, 0, 0, dressUp(look, save.outfit, OUTFITS), { t: 1, facing: 1 });
 }
 
+/** Is there anything in the Upgrades screen that can be bought right now? Lights the Upgrade button green. */
+const canShop = () => Object.keys(UPGRADES).some(id => upgrades.canBuy(id))
+  || Object.entries(PETS).some(([id, p]) => !save.pets.includes(id) && save.coins >= p.cost)
+  || Object.entries(STAFF).some(([id, s]) => !save.staff.includes(id) && save.level >= s.level && save.coins >= s.cost)
+  || (save.staff.includes('server') && save.coins >= (SERVER.trainCosts[(save.staffLevel.server ?? 1) - 1] ?? Infinity));
+const upgradeBtn = document.querySelector('.btn-upgrade');
+
 // ---------------------------------------------------------------- loop
 let last = performance.now(), lastRender = 0;
 function frame(now) {
@@ -980,6 +987,7 @@ function frame(now) {
     score: gm.score,
     best: Math.max(highScores.best(), gm.score),
   });
+  upgradeBtn.classList.toggle('ready', canShop());
   ui.updateTray(gm.foods, inv, foodIcons);
   ui.setMissed(gm.missed, MAX_MISSED);
   ui.setLevelProgress(levelProgress(save.totalEarned));
