@@ -3,7 +3,7 @@
 //   pickup, plated, arrive, feed, friend, wrongFood, missed, cleared, plates, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF, REGULARS, FRIENDSHIP,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH,
 } from './config.js';
 import { Kitchen } from './kitchen.js';
 import { Cleaner } from './cleaner.js';
@@ -29,7 +29,8 @@ export class GameManager {
     this.dirty = new Set();   // seats with an empty plate left on them
     this.dirtyCarried = 0;    // empty plates in the waiter's paws
     this.cleaner = null;      // Dusty, once hired
-    this.server = null;       // Waffles, once hired
+    this.servers = {};        // hired servers by staff id: Waffles (server), Pancake (server2)
+    this.rushOn = false;      // rush hour right now
     this.npcs = [];
     this.fx = [];
     this.state = 'menu';
@@ -77,10 +78,23 @@ export class GameManager {
     const hired = this.save.staff?.includes('cleaner');
     if (!hired) this.cleaner = null;
     else if (fresh || !this.cleaner) this.cleaner = new Cleaner();
-    const lvl = this.save.staffLevel?.server ?? 1;
-    if (!this.save.staff?.includes('server')) this.server = null;
-    else if (fresh || !this.server) this.server = new Server(lvl);
-    else this.server.setLevel(lvl); // trained mid-run: quicker straight away
+    for (const [id, home] of Object.entries(SERVER.homes)) {
+      const lvl = this.save.staffLevel?.[id] ?? 1;
+      if (!this.save.staff?.includes(id)) delete this.servers[id];
+      else if (fresh || !this.servers[id]) this.servers[id] = new Server(lvl, home);
+      else this.servers[id].setLevel(lvl); // trained mid-run: quicker straight away
+    }
+  }
+
+  /** Waffles, the first server (or null). */
+  get server() { return this.servers.server ?? null; }
+
+  /** Seconds left of the current rush hour, or 0. */
+  get rushLeft() {
+    const t = this.runTime - RUSH.first;
+    if (t < 0 || this.state !== 'playing') return 0;
+    const into = t % RUSH.every;
+    return into < RUSH.length ? RUSH.length - into : 0;
   }
 
   applyUpgrades() {
@@ -160,13 +174,17 @@ export class GameManager {
     }
 
     const diff = this.difficulty;
-    const tuning = { spots: this.spots.filter(s => !this.dirty.has(s)), maxBonus: levelCrowdBonus(this.level) + diff.maxNpcs, intervalMult: diff.interval * levelSpawnPace(this.level) };
+    const rush = this.rushLeft > 0;
+    if (rush !== this.rushOn) { this.rushOn = rush; this.onEvent('rush', { on: rush }); }
+    const tuning = { spots: this.spots.filter(s => !this.dirty.has(s)), maxBonus: levelCrowdBonus(this.level) + diff.maxNpcs + (rush ? RUSH.extra : 0),
+      intervalMult: diff.interval * levelSpawnPace(this.level) * (rush ? RUSH.pace : 1) };
     for (const spawn of this.spawner.update(dt, this.runTime, this.npcs, foods, tuning)) this.spawnNpc(spawn);
 
     for (const npc of this.npcs) {
       const ev = npc.update(dt);
       if (ev === 'arrived') {
         if (npc.vip) this.text(npc.x, npc.y - 150, '👑 VIP!', '#c99a00', 20);
+        else if (npc.bigEater) this.text(npc.x, npc.y - 160, '🍽 Big eater!', '#e0607e', 20);
         this.kitchen.order(npc); // their dishes go to the chef
         this.onEvent('arrive', { npc });
       }
@@ -189,7 +207,7 @@ export class GameManager {
       const n = this.cleaner.update(dt, this.dirty, this.blockers);
       if (n) this.onEvent('plates', { n, cleaner: true });
     }
-    this.server?.update(dt, { kitchen: this.kitchen, npcs: this.npcs, blockers: this.blockers, pads: LAYOUT.pads, serve: npc => this.serve(npc, [npc.request], 'server') });
+    for (const s of Object.values(this.servers)) s.update(dt, { kitchen: this.kitchen, npcs: this.npcs, blockers: this.blockers, pads: LAYOUT.pads, serve: npc => this.serve(npc, [npc.request], 'server') });
 
     this.updateFx(dt);
     if (this.missed >= MAX_MISSED) this.endRun();
@@ -207,14 +225,20 @@ export class GameManager {
       if (pool.length) { regular = pick(pool); request = regular.fav; vip = false; }
     }
     request ??= requests?.[0] ?? pick(foods);
-    if (!requests) { // weekend special: a second, different dish
+    let bigEater = false;
+    if (!requests) { // weekend special, or a big eater any day: a second, different dish
       requests = [request];
       if (this.specialDay && foods.length >= 2 && this.rng() < SPECIALS.chance) requests.push(pick(foods.filter(f => f !== request)));
+      else if (!regular && foods.length >= 2 && this.runTime >= BIG_EATER.after && this.rng() < BIG_EATER.chance) {
+        requests.push(pick(foods.filter(f => f !== request)));
+        bigEater = true;
+      }
     }
     vip ??= this.runTime >= VIP.after && this.rng() < VIP.chance;
     patience ??= this.spawner.stage(this.runTime).patience;
     const look = regular ? { ...regular.look } : randomLook(this.rng);
     if (vip) look.accessory = 'crown';
+    if (bigEater) look.size = (look.size ?? 1) * BIG_EATER.size; // a big, round, very hungry cat
     const npc = new NPC({
       spot, request: requests[0], look,
       patience: patience * this.difficulty.patience * (vip ? VIP.patience : 1)
@@ -223,6 +247,7 @@ export class GameManager {
     });
     npc.requests = requests;
     npc.vip = vip;
+    npc.bigEater = bigEater;
     npc.regular = regular?.id ?? null;
     if (regular) this.save.friends[regular.id] ??= 0; // met
     npc.relaxed = !!this.difficulty.relaxed;
@@ -252,11 +277,13 @@ export class GameManager {
   serve(npc, need, by = 'player') {
     // Happy customers sometimes leave a little tip on top (VIPs always do).
     const tipChance = this.upgrades.value('luckyTips') + (this.hasPet('parrot') ? PET_BONUS.parrotTips : 0);
-    const tip = npc.vip || this.rng() < tipChance ? TIPS.min + Math.floor(this.rng() * (TIPS.max - TIPS.min + 1)) : 0;
+    const [tMin, tMax] = npc.bigEater ? BIG_EATER.tip : [TIPS.min, TIPS.max];
+    const tip = npc.bigEater || npc.vip || this.rng() < tipChance ? tMin + Math.floor(this.rng() * (tMax - tMin + 1)) : 0;
     let base = need.reduce((sum, f) => sum + this.rewardFor(f), 0);
     if (need.length > 1) base = Math.round(base * SPECIALS.bonus); // weekend special
     if (npc.vip) base *= VIP.pay;
     if (this.hasPet('goldfish')) base += PET_BONUS.goldfishCoins;
+    if (this.rushOn) base = Math.round(base * RUSH.pay);
     // Combo: serving again soon after the last serve grows the streak
     this.combo = this.runTime - this.lastServeAt <= COMBO.window ? this.combo + 1 : 1;
     this.lastServeAt = this.runTime;
@@ -272,7 +299,7 @@ export class GameManager {
     this.text(npc.x, npc.y - 140, `+${r - tip}`, '#e0a000', 28);
     if (this.combo >= 2) this.fx.push({ kind: 'text', x: npc.x, y: npc.y - 178, text: `🔥 Combo ×${this.combo}!`, color: '#ff7a00', size: 21, t: -0.15, life: 1.3 });
     if (npc.vip) this.fx.push({ kind: 'text', x: npc.x - 34, y: npc.y - 112, text: `👑 ×${VIP.pay}`, color: '#c99a00', size: 18, t: -0.1, life: 1.3 });
-    if (tip) this.fx.push({ kind: 'text', x: npc.x + 34, y: npc.y - 112, text: `+${tip} tip!`, color: '#2f9e6e', size: 18, t: -0.25, life: 1.3 });
+    if (tip) this.fx.push({ kind: 'text', x: npc.x + 34, y: npc.y - 112, text: `+${tip} ${npc.bigEater ? 'big tip!' : 'tip!'}`, color: '#2f9e6e', size: npc.bigEater ? 24 : 18, t: -0.25, life: 1.3 });
     this.burst(npc.x, npc.y - 60, 'heart', 6, '#ff6b8a');
     this.burst(npc.x, npc.y - 60, 'coin', tip ? 10 : 5);
     const lvl = levelForEarned(this.save.totalEarned);

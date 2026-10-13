@@ -370,11 +370,11 @@ export class UIManager {
       </div>`;
     }).join('') + '<h3 class="pets-title">🧹 Staff</h3>' + Object.entries(STAFF).map(([id, s]) => {
       const hired = staff.includes(id), locked = level < s.level;
-      const lvl = staffLevel[id] ?? 1, trainCost = id === 'server' ? SERVER.trainCosts[lvl - 1] : undefined;
-      const train = hired && id === 'server'
+      const trainable = id in SERVER.homes, lvl = staffLevel[id] ?? 1, trainCost = trainable ? SERVER.trainCosts[lvl - 1] : undefined;
+      const train = hired && trainable
         ? `<div class="upg-lvl">Lv ${lvl}/${SERVER.tray.length} · carries ${SERVER.tray[lvl - 1]}</div><div class="bar">${SERVER.tray.map((_, i) => `<span class="seg ${i < lvl ? 'on' : ''}"></span>`).join('')}</div>` : '';
       const btn = hired && trainCost !== undefined ? `<button class="btn buy ${coins < trainCost ? 'poor' : ''}" data-action="trainStaff" data-id="${id}">Train · 🪙 ${trainCost}</button>`
-        : hired ? `<button class="btn buy max" disabled>${id === 'server' ? 'Max ⭐' : 'Hired ✓'}</button>`
+        : hired ? `<button class="btn buy max" disabled>${trainable ? 'Max ⭐' : 'Hired ✓'}</button>`
         : locked ? `<button class="btn buy poor" data-action="hireStaff" data-id="${id}">🔒 Lv ${s.level}</button>`
         : `<button class="btn buy ${coins < s.cost ? 'poor' : ''}" data-action="hireStaff" data-id="${id}">🪙 ${s.cost}</button>`;
       return `<div class="upg pet" data-id="${id}">

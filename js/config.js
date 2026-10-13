@@ -127,6 +127,14 @@ export const SPAWN_STAGES = [
 // The chance comes from the Lucky Tips upgrade (25% at level 1).
 export const TIPS = { min: 2, max: 6 };
 
+// Big eaters: now and then (after the first `after` seconds, once two foods are on the menu) a cat orders
+// two different dishes and leaves a big tip [min, max] on top. They come any day; servers leave them to you.
+export const BIG_EATER = { chance: 0.1, after: 40, tip: [12, 20], size: 1.15 };
+
+// Rush hour: from `first` seconds into a run, every `every` seconds, `length` busy seconds:
+// cats arrive faster (spawn gap × `pace`), up to `extra` more at once, and every serve pays × `pay`.
+export const RUSH = { first: 75, every: 150, length: 20, pace: 0.45, extra: 2, pay: 1.5 };
+
 // Daily bonus coins for streak days 1..7 (missing a day restarts at day 1; after day 7 it loops).
 export const DAILY_REWARDS = [20, 30, 40, 50, 60, 80, 120];
 
@@ -202,10 +210,12 @@ export const DECOR = [
 ];
 // Waffles the server (STAFF.server): carries ready plates to waiting cats. Training levels 1..5 give a bigger
 // tray and quicker paws; trainCosts[i] buys level i + 2.
-export const SERVER = { home: { x: 190, y: 505 }, tray: [1, 1, 2, 2, 3], speed: [115, 130, 145, 160, 175], trainCosts: [300, 550, 900, 1400] };
+// `homes`: where each server waits (Waffles by the milk end, Pancake by the cupcake end); also the list of servers.
+export const SERVER = { homes: { server: { x: 190, y: 505 }, server2: { x: 930, y: 505 } }, tray: [1, 1, 2, 2, 3], speed: [115, 130, 145, 160, 175], trainCosts: [300, 550, 900, 1400] };
 export const STAFF = {
   cleaner: { icon: '🧹', name: 'Dusty the cleaner', cost: 500, level: 5, desc: 'Clears empty plates from the tables for you.' },
   server: { icon: '🍽', name: 'Waffles the server', cost: 800, level: 7, desc: 'Carries ready plates to hungry cats for you. Train him to carry more and walk faster.' },
+  server2: { icon: '🍽', name: 'Pancake the server', cost: 1500, level: 9, desc: 'A second server for the busiest times, working from the other end of the counter. Train Pancake too.' },
 };
 
 // Wardrobe for your waiter cat (Choose cat screen). Hats reuse cat accessories; aprons recolour the apron.

@@ -18,7 +18,7 @@ import { Kitchen } from '../js/kitchen.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus, levelSpawnPace,
-  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING, REGULARS, FRIENDSHIP, SERVER,
+  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH,
 } from '../js/config.js';
 
 let passed = 0;
@@ -816,6 +816,46 @@ test('server: Waffles takes ready plates to waiting cats, and training gives a b
   save.staffLevel.server = 5; gm.updateStaff();
   assert.equal(gm.server.tray, SERVER.tray[4]);
   assert.equal(gm.server.body.speed, SERVER.speed[4]);
+});
+
+test('servers: Pancake joins Waffles from the other end of the counter, each trained on their own', () => {
+  const { gm, save } = setup({ ...MAX5, level: 9, staff: ['server', 'server2'], staffLevel: { server2: 3 } });
+  assert.deepEqual(Object.keys(gm.servers).sort(), ['server', 'server2']);
+  assert.equal(gm.servers.server2.home, SERVER.homes.server2);
+  assert.equal(gm.servers.server2.tray, SERVER.tray[2]);
+  assert.equal(gm.servers.server.tray, SERVER.tray[0]);
+  save.staff = ['server']; gm.updateStaff();
+  assert.deepEqual(Object.keys(gm.servers), ['server'], 'only hired servers work');
+});
+
+test('big eater: orders two different dishes, comes out bigger and leaves a big tip', () => {
+  const { gm, events } = setup({ ...MAX5, level: 9 }, () => 0);
+  gm.runTime = BIG_EATER.after + 1;
+  const npc = gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk' });
+  assert.ok(npc.bigEater);
+  assert.equal(npc.requests.length, 2);
+  assert.notEqual(npc.requests[0], npc.requests[1]);
+  assert.ok(npc.look.size > 1);
+  gm.serve(npc, npc.requests);
+  const fed = events.find(([type]) => type === 'feed')[1];
+  assert.ok(fed.tip >= BIG_EATER.tip[0] && fed.tip <= BIG_EATER.tip[1]);
+  const early = setup({ ...MAX5, level: 9 }, () => 0).gm; // too early in the run: an ordinary cat
+  assert.ok(!early.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk' }).bigEater);
+});
+
+test('rush hour: starts on time, announces itself, pays more, then ends', () => {
+  const { gm, events } = setup({ ...MAX5, level: 9 });
+  const pay = () => { const n = gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk', vip: false }); const c = gm.save.coins; gm.combo = 0; gm.lastServeAt = -99; gm.serve(n, ['milk']); return gm.save.coins - c; };
+  const normal = pay();
+  gm.runTime = RUSH.first - 0.01; tick(gm, 0.05);
+  assert.ok(gm.rushLeft > 0 && gm.rushOn);
+  assert.ok(events.some(([type, d]) => type === 'rush' && d.on));
+  assert.equal(pay(), Math.round(normal * RUSH.pay));
+  gm.runTime = RUSH.first + RUSH.length + 0.5; tick(gm, 0.05);
+  assert.equal(gm.rushLeft, 0);
+  assert.ok(events.some(([type, d]) => type === 'rush' && !d.on), 'and says when it is over');
+  gm.runTime = RUSH.first + RUSH.every + 1;
+  assert.ok(gm.rushLeft > 0, 'it comes back every few minutes');
 });
 
 console.log(`${passed} passed`);

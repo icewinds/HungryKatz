@@ -4,7 +4,7 @@
 import {
   WORLD, LAYOUT, KITCHEN, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
-  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER, UPGRADES,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER, UPGRADES, RUSH,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -19,7 +19,7 @@ import { CharacterManager } from './characters.js';
 import { DailyBonus, todaysChallenges, progressChallenges, dayKey } from './daily.js';
 import { FOOD, FOOD_LABEL } from './inventory.js';
 import {
-  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, SERVER_LOOK, drawNameTag, setCatScale, catSize,
+  drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, SERVER_LOOK, SERVER2_LOOK, drawNameTag, setCatScale, catSize,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawDecorPreview, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
@@ -123,6 +123,10 @@ function onEvent(type, d) {
       setTimeout(() => audio.play('coin'), 120);
       ui.bump('hud-coins'); ui.bump('hud-score');
       if (d.tip) setTimeout(() => audio.play('tip'), 300); // ka-ching as the tip pops up
+      break;
+    case 'rush':
+      if (d.on) { audio.play('bell'); ui.banner(`⏱ Rush hour! Coins ×${RUSH.pay} for ${RUSH.length} seconds`); }
+      else ui.banner('⏱ Rush hour is over. Phew!');
       break;
     case 'missed': {
       audio.play('sad'); ui.flashMiss();
@@ -368,7 +372,7 @@ const ui = new UIManager({
     audio.play('buy');
     ui.renderUpgrades(upgrades, save.coins, save.pets, save.petsAway, save.staff, save.level, save.staffLevel);
     ui.cardEffect(id, 'bought');
-    ui.banner(`🍽 Waffles is now level ${lvl + 1}: ${SERVER.tray[lvl] > SERVER.tray[lvl - 1] ? `${SERVER.tray[lvl]} plates at a time!` : 'quicker paws!'}`);
+    ui.banner(`🍽 ${STAFF[id].name.split(' ')[0]} is now level ${lvl + 1}: ${SERVER.tray[lvl] > SERVER.tray[lvl - 1] ? `${SERVER.tray[lvl]} plates at a time!` : 'quicker paws!'}`);
   },
   hireStaff: btn => {
     const id = btn.dataset.id, who = STAFF[id];
@@ -737,7 +741,7 @@ function render(time) {
   // Served dishes sit on the table/bar while the cat eats; the empty plate stays until it is cleared.
   const dishes = npcs.filter(n => n.state === 'eating').map(n => ({ dish: n, y: n.spot.plate.z }));
   const leftovers = [...gm.dirty].map(s => ({ leftover: s, y: s.plate.z }));
-  const staff = [...(gm.cleaner ? [{ cleaner: gm.cleaner, y: gm.cleaner.body.y }] : []), ...(gm.server ? [{ server: gm.server, y: gm.server.body.y }] : [])];
+  const staff = [...(gm.cleaner ? [{ cleaner: gm.cleaner, y: gm.cleaner.body.y }] : []), ...Object.entries(gm.servers).map(([id, s]) => ({ server: s, look: id === 'server2' ? SERVER2_LOOK : SERVER_LOOK, y: s.body.y }))];
   const actors = [...npcs, { chef: true, y: chefDepth(p, npcs, tables) }, ...tables, ...dishes, ...leftovers, ...staff].sort((a, b) => a.y - b.y);
   for (const a of actors) {
     if (a.dish) {
@@ -752,9 +756,9 @@ function render(time) {
       if (a.cleaner.carrying) drawPlateStack(ctx, b.x - b.facing * 16, b.y - 46, a.cleaner.carrying);
     } else if (a.server) {
       const b = a.server.body, walking = b.state === 'walk', tray = { items: a.server.items };
-      drawWaiterTray(ctx, b.x, b.y, b.facing, SERVER_LOOK, tray, time + 1.3, walking, false);
-      drawCat(ctx, b.x, b.y, SERVER_LOOK, { state: b.state, t: time + 1.3, facing: b.facing });
-      drawWaiterTray(ctx, b.x, b.y, b.facing, SERVER_LOOK, tray, time + 1.3, walking, true);
+      drawWaiterTray(ctx, b.x, b.y, b.facing, a.look, tray, time + 1.3, walking, false);
+      drawCat(ctx, b.x, b.y, a.look, { state: b.state, t: time + 1.3, facing: b.facing });
+      drawWaiterTray(ctx, b.x, b.y, b.facing, a.look, tray, time + 1.3, walking, true);
     } else if (a.table) {
       drawTable(ctx, a.table, scene, time);
     } else if (a.chef) {
@@ -785,6 +789,7 @@ function render(time) {
   }
   if (gm.state === 'playing') drawCarryBadge(ctx, p.x, p.y, inv, gm.dirtyCarried);
   drawFx(ctx, gm.fx, 'over');
+  drawRushClock(time);
   drawFirstGameHint(time);
   setCatScale(1);
 
@@ -800,6 +805,19 @@ function drawStreet(time) {
     drawCat(ctx, 0, 0, n.look, { state: 'walk', t: time + n.phase, facing: n.facing });
     ctx.restore();
   }
+}
+
+/** During rush hour: a berry pill over the first window (clear of order bubbles), counting the busy seconds down. */
+function drawRushClock(time) {
+  const left = gm.rushLeft;
+  if (!left) return;
+  const pulse = reduceMotion.matches ? 1 : 1 + Math.sin(time * 8) * 0.04;
+  ctx.save(); ctx.translate(165, 72); ctx.scale(pulse, pulse);
+  ctx.beginPath(); ctx.roundRect(-96, -18, 192, 36, 18); ctx.fillStyle = '#c43d5c'; ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+  ctx.font = `400 19px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
+  fillRichText(ctx, `⏱ Rush hour ${Math.ceil(left)}s`, 0, 1, 19);
+  ctx.restore();
 }
 
 let lastDoor = 0;
@@ -981,7 +999,7 @@ function drawCatPortrait(canvas, look) {
 const shopCount = () => Object.keys(UPGRADES).filter(id => upgrades.canBuy(id)).length
   + Object.entries(PETS).filter(([id, p]) => !save.pets.includes(id) && save.coins >= p.cost).length
   + Object.entries(STAFF).filter(([id, s]) => !save.staff.includes(id) && save.level >= s.level && save.coins >= s.cost).length
-  + (save.staff.includes('server') && save.coins >= (SERVER.trainCosts[(save.staffLevel.server ?? 1) - 1] ?? Infinity) ? 1 : 0);
+  + Object.keys(SERVER.homes).filter(id => save.staff.includes(id) && save.coins >= (SERVER.trainCosts[(save.staffLevel[id] ?? 1) - 1] ?? Infinity)).length;
 const upgradeBtn = document.querySelector('.btn-upgrade');
 let shopSeen = 0;
 /** Green when something can be bought; a few wiggles each time something new becomes affordable, then it rests. */

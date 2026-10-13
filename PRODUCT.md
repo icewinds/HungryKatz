@@ -36,6 +36,8 @@ A hand-made, family game: built for one child, grown feature by feature from her
   - Character select, plus an outfit wardrobe.
   - A kitchen: Chef Biscuit cooks each order (a full tray at a time) and the player is the waiter collecting plates from the counter.
   - Clearing tables: happy cats leave plates; Dusty the cleaner can be hired from café level 5.
+  - Servers: Waffles (café level 7) and Pancake (level 9) carry ready plates to one-dish orders; each trains through 5 levels.
+  - Big eaters (two dishes, big tip, any day) and rush hour (20 busy seconds every 2½ minutes, coins ×1.5).
   - Upgrades (incl. Faster Chef) and café pets (send home or bring back).
   - Combos, VIPs, weekend specials, and named regulars who become best friends and bring gifts.
   - Decorate your café: bought decorations (cat tree, cat bed, shelves, plants, lanterns, wallpaper) that show in the café and on the home screen.

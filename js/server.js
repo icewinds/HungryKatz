@@ -10,8 +10,9 @@ import { route, constrain } from './pathing.js';
 const REACH = 50; // close enough to hand a cat its plate
 
 export class Server {
-  constructor(level = 1) {
-    this.body = new Player(SERVER.home.x, SERVER.home.y);
+  constructor(level = 1, home = SERVER.homes.server) {
+    this.home = home;
+    this.body = new Player(home.x, home.y);
     this.items = {};     // plates on the tray: food -> count
     this.jobs = [];      // [{ npc, food, held }] cats this round of plates is for
     this.task = null;    // { kind: 'pickup', food } | { kind: 'serve', job } | { kind: 'return' } | { kind: 'home' }
@@ -84,7 +85,7 @@ export class Server {
     const t = this.task;
     if (t.kind === 'pickup') return { x: pads[t.food].x, y: pads[t.food].y };
     if (t.kind === 'serve') return { x: t.job.npc.spot.x, y: t.job.npc.spot.y };
-    if (t.kind === 'return') { const f = Object.keys(this.items).find(k => this.items[k]); return f ? { x: pads[f].x, y: pads[f].y } : SERVER.home; }
-    return SERVER.home;
+    if (t.kind === 'return') { const f = Object.keys(this.items).find(k => this.items[k]); return f ? { x: pads[f].x, y: pads[f].y } : this.home; }
+    return this.home;
   }
 }

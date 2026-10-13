@@ -61,6 +61,9 @@ const WAITER = { accessory: 'waiter', size: 1.08, seed: 0 };
 /** Waffles the server: a golden striped cat in a blue bow tie. */
 export const SERVER_LOOK = { id: 'waffles', name: 'Waffles', fur: '#e8b56a', light: '#fff4dc', dark: '#a8743a', pattern: 'stripes',
   acc: '#5aa9e6', eye: '#3b2a33', patch: '#fff', accessory: 'waiter', size: 1, seed: 0.8 };
+/** Pancake, the second server: a cream-and-white cat in a pink bow tie. */
+export const SERVER2_LOOK = { id: 'pancake', name: 'Pancake', fur: '#f3dcb2', light: '#fffaf0', dark: '#b8925a', pattern: 'socks',
+  acc: '#ec5f89', eye: '#3b2a33', patch: '#fff', accessory: 'waiter', size: 1, seed: 1.7 };
 export const CLEANER_LOOK = { id: 'dusty', name: 'Dusty', fur: '#9fb0c4', light: '#eef3f8', dark: '#5f6f82', pattern: 'stripes',
   acc: '#6fcf9f', eye: '#3b2a33', patch: '#fff', accessory: 'scarf', size: 1, seed: 0.3 };
 /** Dusty's broom, held at the side (drawn after the cat). */
