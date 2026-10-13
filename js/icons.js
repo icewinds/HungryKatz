@@ -52,12 +52,20 @@ function catFace(ctx, mood) {
       ctx.beginPath(); ctx.moveTo(d * 10, -5); ctx.lineTo(d * 3.5, -2.5); ctx.stroke();
       ellipse(ctx, d * 6.5, 1.5, 2.4, 1.7); ctx.fill();
     }
+  } else if (mood === 'sad') { // droopy brows, eyes looking down, a tear
+    for (const d of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(d * 3.5, -4.5); ctx.lineTo(d * 10, -2); ctx.stroke();
+      circle(ctx, d * 6.5, 1.5, 2.4); ctx.fill();
+    }
+    ctx.beginPath(); ctx.moveTo(-8, 4); ctx.quadraticCurveTo(-10.5, 8.5, -8, 10); ctx.quadraticCurveTo(-5.5, 8.5, -8, 4);
+    ctx.fillStyle = '#7fc4f0'; ctx.fill(); ctx.fillStyle = INK;
   } else {
     for (const d of [-1, 1]) { circle(ctx, d * 6.5, 0.5, 2.6); ctx.fill(); }
   }
   ctx.fillStyle = '#ff6b8a'; tri(ctx, [-2, 6], [2, 6], [0, 8.2]); ctx.fill(); // nose
   ctx.lineWidth = 1.6; ctx.beginPath();
   if (mood === 'smirk') { ctx.moveTo(-3, 11); ctx.quadraticCurveTo(2, 13, 5, 9.5); }
+  else if (mood === 'sad') { ctx.moveTo(-4, 12); ctx.quadraticCurveTo(0, 9, 4, 12); } // frown
   else { ctx.arc(-2, 9, 2, 0, Math.PI); ctx.arc(2, 9, 2, 0, Math.PI); }
   ctx.stroke();
   if (mood === 'happy') { ctx.fillStyle = 'rgba(255,107,138,0.35)'; ellipse(ctx, -11, 7, 3, 2); ctx.fill(); ellipse(ctx, 11, 7, 3, 2); ctx.fill(); }
@@ -131,6 +139,7 @@ export const ICONS = {
   catHappy: ctx => catFace(ctx, 'happy'),
   catCalm: ctx => catFace(ctx, 'calm'),
   catSmirk: ctx => catFace(ctx, 'smirk'),
+  catSad: ctx => catFace(ctx, 'sad'),
   rosette(ctx) {
     for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(d * 3, 4); ctx.lineTo(d * 12, 21); ctx.lineTo(d * 6, 18); ctx.lineTo(d * 2, 22); ctx.lineTo(d * -3, 6); fillStroke(ctx, d < 0 ? '#ec5f89' : '#ff8fab', OL, 1.6); }
     ctx.beginPath();
@@ -364,7 +373,7 @@ for (const [id, color] of [['apronPink', '#ff8fab'], ['apronMint', '#6fcf9f'], [
 
 // Emoji (as written in copy) -> drawn icon. Variation selectors are ignored.
 const EMOJI = {
-  '🪙': 'coin', '🐾': 'paw', '🏆': 'trophy', '👑': 'crown', '🎖': 'medal', '🎉': 'party', '😺': 'catHappy', '🐱': 'catCalm', '😼': 'catSmirk',
+  '🪙': 'coin', '🐾': 'paw', '🏆': 'trophy', '👑': 'crown', '🎖': 'medal', '🎉': 'party', '😺': 'catHappy', '🐱': 'catCalm', '😼': 'catSmirk', '😿': 'catSad',
   '🏅': 'rosette', '🏠': 'house', '🍽': 'plate', '🌸': 'flower', '🔥': 'fire', '🎁': 'gift', '🎵': 'note', '♪': 'note', '♫': 'note',
   '🔊': 'speaker', '🐞': 'bug', '⭐': 'star', '🔒': 'lock', '▶': 'play', '📤': 'share', '🥛': 'milk', '🍼': 'milk', '⬆': 'up',
   '🐶': 'puppy', '💰': 'bag', '💖': 'heart', '✨': 'sparkles', '🔗': 'link', '❓': 'help', '⚙': 'gear', '📲': 'install', '👆': 'tap',

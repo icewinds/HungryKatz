@@ -197,7 +197,7 @@ Warm bakery pastels: strawberry and marmalade for joy, cocoa for words, oat and 
 ### Named Rules
 **The Readable Pink Rule.** Small text never sits on Strawberry Felt. Lilita One has no bold, so "bold" 19px is still regular small text that needs 4.5:1: use Berry Ink (5:1) below 24px.
 
-**The Readable When Inactive Rule.** An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more. Locked level cards grey their surface and keep Cocoa Soft digits; earned tier stars carry a thin Cocoa outline so bronze, silver and gold all hold 3:1. Green text on the Mint Wash uses Mint Deep.
+**The Readable When Inactive Rule.** An inactive or empty state greys its surface, never its ink. Can't-afford and done buttons use the Inactive Wash with Cocoa Soft text (4.75:1). An inactive felt button rests on the Inactive Lip (`--inactive-lip`). Empty stars (shown as outlines), empty hearts and unused paws keep an Empty Outline at 3:1 or more. Locked level cards grey their surface and keep Cocoa Soft digits; earned tier stars carry a thin Cocoa outline so bronze, silver and gold all hold 3:1. Green text on the Mint Wash uses Mint Deep.
 
 **The Exempt Colours.** A few values sit outside this palette on purpose and are not drift: the developer panel (only with `?debug`), `#000` inside CSS masks (it is a mask value, not a colour), the red miss-flash and the soft shadows under the ledge and logo (effects), and speech colours drawn on the canvas for characters (Ghost, the screaming gnome, chatting cats).
 
@@ -264,6 +264,7 @@ Gently rounded and handmade, on one radius scale: 3px for tiny tags, 6px for chi
 - **Play / Resume:** Strawberry Felt at 24px and up, the one place the bright pink carries text.
 - **Felt (secondary):** Cream Felt with a Cream Felt Edge lip and a cocoa stitch; the home row uses per-button pastels.
 - **Mint:** Mint Ink for buy, upgrade and share actions.
+- **HUD Upgrade:** inactive (grey, on its Inactive Lip) until something in the shop is affordable, then Mint Ink. It wiggles three times each time something new becomes affordable, then rests green; its label says "something new to buy" for screen readers.
 - **Focus:** a 3px Berry Ink ring 3px outside the button, over the stitching. The stitching is decoration and must never replace the focus ring.
 - **Pressed:** moves down 3px onto its lip.
 

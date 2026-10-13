@@ -977,12 +977,22 @@ function drawCatPortrait(canvas, look) {
   drawCat(c, 0, 0, dressUp(look, save.outfit, OUTFITS), { t: 1, facing: 1 });
 }
 
-/** Is there anything in the Upgrades screen that can be bought right now? Lights the Upgrade button green. */
-const canShop = () => Object.keys(UPGRADES).some(id => upgrades.canBuy(id))
-  || Object.entries(PETS).some(([id, p]) => !save.pets.includes(id) && save.coins >= p.cost)
-  || Object.entries(STAFF).some(([id, s]) => !save.staff.includes(id) && save.level >= s.level && save.coins >= s.cost)
-  || (save.staff.includes('server') && save.coins >= (SERVER.trainCosts[(save.staffLevel.server ?? 1) - 1] ?? Infinity));
+/** How many things in the Upgrades screen can be bought right now (lights the Upgrade button green). */
+const shopCount = () => Object.keys(UPGRADES).filter(id => upgrades.canBuy(id)).length
+  + Object.entries(PETS).filter(([id, p]) => !save.pets.includes(id) && save.coins >= p.cost).length
+  + Object.entries(STAFF).filter(([id, s]) => !save.staff.includes(id) && save.level >= s.level && save.coins >= s.cost).length
+  + (save.staff.includes('server') && save.coins >= (SERVER.trainCosts[(save.staffLevel.server ?? 1) - 1] ?? Infinity) ? 1 : 0);
 const upgradeBtn = document.querySelector('.btn-upgrade');
+let shopSeen = 0;
+/** Green when something can be bought; a few wiggles each time something new becomes affordable, then it rests. */
+function updateUpgradeButton() {
+  const n = shopCount();
+  if (n === shopSeen) return;
+  upgradeBtn.classList.toggle('ready', n > 0);
+  upgradeBtn.setAttribute('aria-label', n ? 'Upgrade: something new to buy' : 'Upgrade');
+  if (n > shopSeen) { upgradeBtn.classList.remove('wiggle'); void upgradeBtn.offsetWidth; upgradeBtn.classList.add('wiggle'); }
+  shopSeen = n;
+}
 
 // ---------------------------------------------------------------- loop
 let last = performance.now(), lastRender = 0;
@@ -1002,7 +1012,7 @@ function frame(now) {
     score: gm.score,
     best: Math.max(highScores.best(), gm.score),
   });
-  upgradeBtn.classList.toggle('ready', canShop());
+  updateUpgradeButton();
   ui.updateTray(gm.foods, inv, foodIcons);
   ui.setMissed(gm.missed, MAX_MISSED);
   ui.setLevelProgress(levelProgress(save.totalEarned));
