@@ -15,9 +15,13 @@ export class NPC {
     this.look = look;
     this.patience = patience;
     this.timeLeft = patience;
-    this.x = LAYOUT.entry.x;
-    this.y = LAYOUT.entry.y;
-    this.path = [{ ...LAYOUT.door }, ...route(LAYOUT.door, spot, blockers)]; // walks around tables
+    // First a stroll along the street outside (seen through the windows), then in through the front door
+    const st = LAYOUT.street;
+    this.outside = true;
+    this.x = st.from[Math.random() < 0.5 ? 0 : 1];
+    this.y = st.y;
+    this.path = [{ x: LAYOUT.entry.x, y: st.y }];
+    this.indoorPath = [{ ...LAYOUT.door }, ...route(LAYOUT.door, spot, blockers)]; // walks around tables
     // 'entering' -> 'waiting' -> ('eating' ->) 'leaving' -> 'gone'
     this.state = 'entering';
     this.mood = null;            // 'happy' | 'sad' while leaving
@@ -54,7 +58,10 @@ export class NPC {
     this.hintCd = Math.max(0, this.hintCd - dt);
     switch (this.state) {
       case 'entering':
-        if (this.walk(dt)) {
+        if (this.walk(dt) && this.outside) { // reached the front door: step inside
+          this.outside = false;
+          Object.assign(this, { ...LAYOUT.entry, path: this.indoorPath });
+        } else if (!this.path.length) {
           this.state = 'waiting';
           this.arriveT = 0;
           this.squash = 1;
@@ -73,7 +80,12 @@ export class NPC {
         break;
       case 'leaving':
         this.leaveT += dt;
-        if (this.walk(dt)) { this.state = 'gone'; return 'gone'; }
+        if (this.walk(dt)) {
+          if (this.outside) { this.state = 'gone'; return 'gone'; }
+          // out of the front door: stroll off along the street
+          const st = LAYOUT.street;
+          Object.assign(this, { outside: true, x: LAYOUT.entry.x, y: st.y, path: [{ x: st.to[Math.random() < 0.5 ? 0 : 1], y: st.y }] });
+        }
         break;
     }
     return null;

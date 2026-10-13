@@ -560,10 +560,10 @@ function skyColor(hour) {
 }
 
 /** Animated windows (clouds, sun/moon, stars, birds), real-time clock, and fairy lights when fancy. */
-export function drawWallLive(ctx, t, sc, now = new Date()) {
+export function drawWallLive(ctx, t, sc, now = new Date(), outside = null) {
   const p = sc.pal, st = sc.stage;
   const sky = skyAt(now);
-  for (const [i, win] of WINDOWS.entries()) { drawPane(ctx, win, i, t, sc, sky); drawWindowFrame(ctx, win, i, sc); }
+  for (const [i, win] of WINDOWS.entries()) { drawPane(ctx, win, i, t, sc, sky, outside); drawWindowFrame(ctx, win, i, sc); }
   // wall clock showing the real time
   const cx = CLOCK_X, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
   circle(ctx, cx, cy, 25); fillStroke(ctx, '#fff', st >= 3 ? '#e3b94f' : p.clockRim, 4);
@@ -583,7 +583,7 @@ export function drawWallLive(ctx, t, sc, now = new Date()) {
 const skyAt = now => { const hour = now.getHours() + now.getMinutes() / 60; return { color: skyColor(hour), night: hour < 6 || hour >= 20.5 }; };
 
 /** The view through one window: sky for the time of day, sun or moon, clouds, birds, seasonal weather. */
-function drawPane(ctx, { x, y, w, h }, i, t, sc, { color: sky, night }) {
+function drawPane(ctx, { x, y, w, h }, i, t, sc, { color: sky, night }, outside) {
   const st = sc.stage;
   ctx.save();
     rrect(ctx, x, y, w, h, 16); ctx.fillStyle = sky; ctx.fill(); ctx.clip();
@@ -634,6 +634,7 @@ function drawPane(ctx, { x, y, w, h }, i, t, sc, { color: sky, night }) {
       ctx.fillStyle = 'rgba(120,95,70,0.22)';
       for (const [dx, dy, rx, ry] of [[40, 70, 34, 16], [130, 30, 28, 12], [160, 80, 24, 14]]) { ellipse(ctx, x + dx, y + dy, rx, ry); ctx.fill(); }
     }
+    outside?.(); // cats strolling along the street, behind the glass
   ctx.restore();
 }
 

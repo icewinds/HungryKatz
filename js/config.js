@@ -37,6 +37,9 @@ export const LAYOUT = {
   walk: { minX: 26, maxX: 1094, minY: 248, maxY: KITCHEN_Y - 28 }, // where the player may stand (up to the kitchen counter)
   playerStart: { x: 560, y: 500 },
   entry: { x: 325, y: 178 },  // NPCs step out of the front door in the back wall (scene.js FRONT_DOOR)
+  // The street outside: arriving cats stroll to the door along it and leaving cats stroll away,
+  // seen head and shoulders through the windows. `from` = where arrivals start, `to` = where leavers vanish.
+  street: { y: 142, from: [-40, 720], to: [-40, 1160] },
   door: { x: 325, y: 240 },   // first waypoint, just in front of the door
   exit: { x: 325, y: 178 },   // NPCs are removed after walking back through it
   windowBar: { x: 380, y: 168, w: 360, h: 54 },

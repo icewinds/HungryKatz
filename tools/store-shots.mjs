@@ -95,7 +95,11 @@ await run(`
   const want = ['milk', 'fish', 'cupcake', 'sushi', 'catfood', 'milk', 'fish', 'sushi', 'cupcake', 'catfood'];
   ['W1', 'W3', 'W4', 'T1a', 'T1b', 'T2c', 'T3b', 'T4a', 'T5c', 'T5b'].forEach((id, i) =>
     g.spawnNpc({ spot: g.spots.find(s => s.id === id), request: want[i], patience: 99, vip: i === 4 }));
-  for (let i = 0; i < 60 * 6; i++) g.update(1 / 60);         // everyone walks in from the door, the kitchen gets busy
+  for (let i = 0; i < 60 * 10; i++) g.update(1 / 60);        // everyone strolls up the street and in, the kitchen gets busy
+  for (const [id, x] of [['T2a', 150], ['T3a', 560]]) {       // two more on their way, seen through the windows
+    const n = g.spawnNpc({ spot: g.spots.find(s => s.id === id), request: 'milk', patience: 99 });
+    Object.assign(n, { x, facing: x < 325 ? 1 : -1 });
+  }
   g.kitchen.ready = { milk: 2, catfood: 3 };
   Object.assign(g.inventory.items, { fish: 1, sushi: 1, cupcake: 1 });
   Object.assign(g.player, { x: 700, y: 505, facing: 1 }); g.player.stop();

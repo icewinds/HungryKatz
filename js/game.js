@@ -699,10 +699,10 @@ function render(time) {
   ctx.drawImage(bg, ox, oy, WORLD.W * scale, WORLD.H * scale);
   ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
 
-  const { player: p, npcs, inventory: inv } = gm;
+  const { player: p, inventory: inv } = gm, npcs = gm.npcs.filter(n => !n.outside);
   ctx.save();
   ctx.beginPath(); ctx.rect(0, -200, WORLD.W, WORLD.H + 400); ctx.clip(); // cats outside the walls stay hidden until they reach the door
-  drawWallLive(ctx, time, scene);
+  drawWallLive(ctx, time, scene, undefined, () => drawStreet(time));
   const door = doorOpenness(npcs);
   if (door > 0.08 && lastDoor <= 0.08) audio.play('bell'); // ding-ding as the door starts to open
   lastDoor = door;
@@ -785,6 +785,16 @@ function render(time) {
 
   ctx.restore();
   if (debug.on) drawDebug();
+}
+
+/** Cats out on the street, a little smaller (further away): only their heads and shoulders show above the sills. */
+function drawStreet(time) {
+  for (const n of gm.npcs) {
+    if (!n.outside) continue;
+    ctx.save(); ctx.translate(n.x, n.y); ctx.scale(0.8, 0.8);
+    drawCat(ctx, 0, 0, n.look, { state: 'walk', t: time + n.phase, facing: n.facing });
+    ctx.restore();
+  }
 }
 
 let lastDoor = 0;
