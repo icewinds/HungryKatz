@@ -203,7 +203,7 @@ Warm bakery pastels: strawberry and marmalade for joy, cocoa for words, oat and 
 
 **The Content Palette.** Some colours belong to things, not to the interface: the logo's felt shading, the home row pastels, the bronze/silver/gold sticker tiers, the coin, the wooden ledge and each café scene's signature colours. They are documented so they stay consistent, but they never carry interface meaning on their own.
 
-**The Pastel Button Rule.** The home screen's bottom row gives each button its own pastel (butter, cream, peach, pink, mint) with a matching darker edge. Text on them is always Cocoa Ink.
+**The Pastel Button Rule.** The home screen's bottom row has four big buttons, each in its own pastel (butter Challenges, peach Cats, pink Café book, mint Decorate) with a matching darker edge. Text on them is always Cocoa Ink.
 
 ## Typography
 
@@ -235,7 +235,7 @@ An eight-step ramp (12, 13, 15, 17, 19, 24, 26, 30) plus two fluid sizes on the 
 Landscape only. Held upright, a "Turn your phone sideways" card covers the game.
 
 - **Café (play):** the world scales to fit the important rows, top of the windows to just below the stoves. The HUD floats over the corners: score card bottom-left (coins, level ring, score, missed paws), pause top-right, Upgrade bottom-right where the right thumb rests. There are no side columns; what the waiter carries shows on its tray and the badge above it.
-- **Home:** the café fills the screen behind a cream frame with a paw-print border. The logo and your cat on a wooden ledge sit on the left; Play, the high score ribbon and the tagline on the right; one row of pastel buttons along the bottom. The camera sits in the top-right corner. Beside it, a small mint Install button appears on phones that are not yet installed: it opens the browser's install prompt, or, on iPhone (no prompt), a paper note under it explaining Add to Home Screen. Any other tap closes the note.
+- **Home:** the café fills the screen behind a cream frame with a paw-print border, under a soft cream wash so the menu reads calmly. The logo and your cat on a wooden ledge sit on the left; the cat says hello in a paper speech bubble (its name, today's challenges, or a cosy line). On the right, a paper welcome card holds Play and the high score, with the tagline ribbon pinned across its top edge. Four pastel buttons run along the bottom. Help, Settings, Share and the camera are small round paper buttons in the top-right corner (icon-only, each with a label for screen readers). Beside them, a small mint Install button appears on phones that are not yet installed: it opens the browser's install prompt, or, on iPhone (no prompt), a paper note under it explaining Add to Home Screen. Any other tap closes the note.
 - **Screens:** wide paper cards (up to 820px) centred over the café, with content in columns: three-across help steps, two-column settings and game over, multi-column grids for cats, stickers, friends, levels, upgrades and decorations. Tall content scrolls inside the card.
 - **Rhythm:** 4 / 8 / 12 / 16 / 22px; cards in a grid sit 8–10px apart.
 

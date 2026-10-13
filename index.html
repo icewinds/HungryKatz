@@ -68,25 +68,28 @@
   <!-- Main menu -->
   <section id="screen-menu" class="screen">
     <div class="panel">
-      <button class="photo-btn" data-action="takePhoto" aria-label="Take a photo of your café">📷</button>
+      <div class="menu-tools">
+        <button id="btn-install" class="btn mint hidden" data-action="install" aria-controls="install-hint" aria-expanded="false">📲 Install</button>
+        <button class="round-btn" data-action="openHelp" aria-label="How to play" title="How to play">❓</button>
+        <button class="round-btn" data-action="openSettings" aria-label="Settings" title="Settings">⚙</button>
+        <button class="round-btn" data-action="share" aria-label="Share the game" title="Share">📤</button>
+        <button class="round-btn" data-action="takePhoto" aria-label="Take a photo of your café" title="Photo">📷</button>
+      </div>
       <h1 class="logo"><span>Hungry</span><span class="katz">Katz</span></h1>
       <div class="menu-hero">
-      <canvas id="menu-cat" width="210" height="268" role="button" tabindex="0" aria-label="Your waiter cat. Tap to make it yawn"></canvas>
+        <p id="menu-hello" class="menu-hello">Hi! Let's feed some hungry katz!</p>
+        <canvas id="menu-cat" width="210" height="268" role="button" tabindex="0" aria-label="Your waiter cat. Tap to make it yawn"></canvas>
       </div>
       <div class="menu-side">
+        <p class="tagline">Run the cutest café in town!</p>
         <button class="btn big" data-action="play">▶ Play</button>
         <p class="best">🏆 High Score: <b id="menu-best">0</b></p>
-        <p class="tagline">Run the cutest café in town!</p>
       </div>
       <div class="menu-grid">
-        <button class="btn secondary wide" data-action="openChallenges">🎯 <span class="lbl-long">Challenges</span><span class="lbl-short">Today</span> <span id="challenge-count" class="challenge-count">0/3</span></button>
-        <button class="btn secondary" data-action="openHelp">❓ <span class="lbl-long">How to play</span><span class="lbl-short">Help</span></button>
+        <button class="btn secondary" data-action="openChallenges">🎯 <span class="lbl-long">Challenges</span><span class="lbl-short">Today</span> <span id="challenge-count" class="challenge-count">0/3</span></button>
         <button class="btn secondary" data-action="openCharacters">🐱 <span class="lbl-long">Choose cat</span><span class="lbl-short">Cats</span></button>
         <button class="btn secondary" data-action="openStickers">📖 <span class="lbl-long">Café book</span><span class="lbl-short">Book</span></button>
         <button class="btn secondary" data-action="openDecor">🏠 Decorate</button>
-        <button class="btn secondary" data-action="openSettings">⚙ Settings</button>
-        <button class="btn secondary" data-action="share">📤 Share</button>
-        <button id="btn-install" class="btn mint hidden" data-action="install" aria-controls="install-hint" aria-expanded="false">📲 Install</button>
       </div>
       <p id="install-hint" class="hint">Tip: in Chrome on Android tap <b>⋮</b> → <b>Add to Home screen</b> (or <b>Install app</b>) to play full-screen, even offline.</p>
     </div>

@@ -25,6 +25,7 @@ export class UIManager {
   /** Show one overlay screen by name, or none with null. */
   show(name) {
     this.current = name;
+    if (name === 'menu') this.onMenu?.();
     for (const [k, el] of Object.entries(this.screens)) el.classList.toggle('active', k === name);
   }
 

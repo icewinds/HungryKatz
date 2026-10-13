@@ -57,6 +57,16 @@ function showChallenges() {
     ...c, icon: CHALLENGES[c.kind].icon, img: c.food && foodIcons[c.food], text: challengeText(c) })));
 }
 const challengeText = c => CHALLENGES[c.kind].text.replace('{goal}', c.goal).replace('{food}', FOODS.find(f => f.id === c.food)?.label ?? '');
+/** What your cat says on the home screen: a hello by name, today's challenges, or a cosy line. */
+function greet() {
+  const name = playerLook(chars.current()).name;
+  const left = todaysChallenges(save, foodsForLevel(save.level)).filter(c => !c.done).length;
+  const lines = [`${name} here! Let's feed some hungry katz!`, 'Mmm, the kitchen smells yummy today!', 'The regulars are waiting for you!', 'Tap me if you feel sleepy too!'];
+  document.getElementById('menu-hello').textContent = !save.stats.served ? `Hi, I'm ${name}! Tap Play to open the café!`
+    : left && Math.random() < 0.5 ? `${name} here! ${left} challenge${left > 1 ? 's' : ''} to do today 🎯`
+    : lines[Math.floor(Math.random() * lines.length)];
+}
+
 /** Count towards today's challenges; finished ones pay out with a banner. */
 function challenge(kind, amount = 1, food = null) {
   const done = progressChallenges(save, todaysChallenges(save, foodsForLevel(save.level)), kind, amount, food);
@@ -429,6 +439,7 @@ const ui = new UIManager({
   dbgMiss9: () => { if (gm.state === 'playing') gm.missed = MAX_MISSED - 1; },
   dbgReset: () => { if (confirm('Erase ALL HungryKatz progress?')) { Storage.reset(); location.reload(); } },
 });
+ui.onMenu = greet; // the cat says hello each time the home screen shows
 
 function syncToggles() {
   ui.syncToggles(save.settings, debug.on);
