@@ -18,7 +18,7 @@ export class NPC {
     // First a stroll along the street outside (seen through the windows), then in through the front door
     const st = LAYOUT.street;
     this.outside = true;
-    this.x = st.from[Math.random() < 0.5 ? 0 : 1];
+    this.x = st.ends[Math.random() < 0.5 ? 0 : 1];
     this.y = st.y;
     this.path = [{ x: LAYOUT.entry.x, y: st.y }];
     this.indoorPath = [{ ...LAYOUT.door }, ...route(LAYOUT.door, spot, blockers)]; // walks around tables
@@ -84,7 +84,7 @@ export class NPC {
           if (this.outside) { this.state = 'gone'; return 'gone'; }
           // out of the front door: stroll off along the street
           const st = LAYOUT.street;
-          Object.assign(this, { outside: true, x: LAYOUT.entry.x, y: st.y, path: [{ x: st.to[Math.random() < 0.5 ? 0 : 1], y: st.y }] });
+          Object.assign(this, { outside: true, x: LAYOUT.entry.x, y: st.y, path: [{ x: st.ends[Math.random() < 0.5 ? 0 : 1], y: st.y }] });
         }
         break;
     }
@@ -93,7 +93,7 @@ export class NPC {
 
   /** Follow waypoints. Returns true once the last one is reached. */
   walk(dt) {
-    let step = NPC_SPEED * dt;
+    let step = NPC_SPEED * (this.outside ? LAYOUT.street.pace : 1) * dt; // a brisk stroll outside
     while (step > 0 && this.path.length) {
       const p = this.path[0];
       const dx = p.x - this.x, dy = p.y - this.y, d = Math.hypot(dx, dy);

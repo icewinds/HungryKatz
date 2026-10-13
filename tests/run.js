@@ -211,7 +211,7 @@ test('feeding: correct food consumes one and pays coins + score', () => {
   assert.equal(npc.state, 'eating');
   assert.equal(save.coins, 10);
   assert.equal(gm.score, 10);
-  park(gm); tick(gm, 6);
+  park(gm); tick(gm, 12); // out of the door, then along the street past the windows
   assert.equal(gm.npcs.length, 0, 'fed NPC walks off and is removed');
 });
 
@@ -244,7 +244,7 @@ test('countdown: unfed NPC leaves sad and counts as missed', () => {
   assert.equal(npc.state, 'leaving');
   assert.equal(npc.mood, 'sad');
   assert.ok(events.some(e => e[0] === 'missed'));
-  tick(gm, 8);
+  tick(gm, 14); // out of the door and along the street
   assert.equal(gm.npcs.length, 0);
 });
 

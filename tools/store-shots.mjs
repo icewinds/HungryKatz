@@ -96,7 +96,7 @@ await run(`
   ['W1', 'W3', 'W4', 'T1a', 'T1b', 'T2c', 'T3b', 'T4a', 'T5c', 'T5b'].forEach((id, i) =>
     g.spawnNpc({ spot: g.spots.find(s => s.id === id), request: want[i], patience: 99, vip: i === 4 }));
   for (let i = 0; i < 60 * 10; i++) g.update(1 / 60);        // everyone strolls up the street and in, the kitchen gets busy
-  for (const [id, x] of [['T2a', 150], ['T3a', 560]]) {       // two more on their way, seen through the windows
+  for (const [id, x] of [["T2a", -40], ["T3a", 1140]]) {       // two more on their way: about a second later they are passing the windows
     const n = g.spawnNpc({ spot: g.spots.find(s => s.id === id), request: 'milk', patience: 99 });
     Object.assign(n, { x, facing: x < 325 ? 1 : -1 });
   }
