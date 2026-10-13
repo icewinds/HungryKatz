@@ -235,7 +235,7 @@ An eight-step ramp (12, 13, 15, 17, 19, 24, 26, 30) plus two fluid sizes on the 
 Landscape only. Held upright, a "Turn your phone sideways" card covers the game.
 
 - **Café (play):** the world scales to fit the important rows, top of the windows to just below the stoves. The HUD floats over the corners: score card bottom-left (coins, level ring, score, missed paws), pause top-right, Upgrade bottom-right where the right thumb rests. There are no side columns; what the waiter carries shows on its tray and the badge above it.
-- **Home:** the café fills the screen behind a cream frame with a paw-print border. The logo and your cat on a wooden ledge sit on the left; Play, the high score ribbon and the tagline on the right; one row of pastel buttons along the bottom. The camera sits in the top-right corner.
+- **Home:** the café fills the screen behind a cream frame with a paw-print border. The logo and your cat on a wooden ledge sit on the left; Play, the high score ribbon and the tagline on the right; one row of pastel buttons along the bottom. The camera sits in the top-right corner. Beside it, a small mint Install button appears on phones that are not yet installed: it opens the browser's install prompt, or, on iPhone (no prompt), a paper note under it explaining Add to Home Screen. Any other tap closes the note.
 - **Screens:** wide paper cards (up to 820px) centred over the café, with content in columns: three-across help steps, two-column settings and game over, multi-column grids for cats, stickers, friends, levels, upgrades and decorations. Tall content scrolls inside the card.
 - **Rhythm:** 4 / 8 / 12 / 16 / 22px; cards in a grid sit 8–10px apart.
 

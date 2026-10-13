@@ -319,6 +319,21 @@
           "#fefdfd"
         ]
       },
+      "inactive-lip": {
+        "role": "neutral",
+        "displayName": "Inactive Lip",
+        "canonical": "#d6c8ce",
+        "tonalRamp": [
+          "#4b4247",
+          "#776f73",
+          "#a49c9f",
+          "#d0c8cc",
+          "#f5eff2",
+          "#f8f5f6",
+          "#fcfafb",
+          "#fefdfd"
+        ]
+      },
       "empty-outline": {
         "role": "neutral",
         "displayName": "Empty Outline",

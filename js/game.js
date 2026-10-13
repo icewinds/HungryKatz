@@ -410,7 +410,7 @@ const ui = new UIManager({
   toggleSfx: () => { save.settings.sfx = !save.settings.sfx; persist(); syncToggles(); },
   toggleDebug: () => { if (!debugAllowed) return; debug.on = !debug.on; syncToggles(); },
   install: async () => {
-    if (!installPrompt) return;
+    if (!installPrompt) { ui.toggleInstallHint(); return; } // no prompt (iPhone): show how to add it to the Home Screen
     installPrompt.prompt();
     await installPrompt.userChoice;
     installPrompt = null;

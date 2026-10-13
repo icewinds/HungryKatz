@@ -15,6 +15,7 @@ export class UIManager {
     this.hudCache = {};
     document.addEventListener('click', e => {
       const btn = e.target.closest('[data-action]');
+      if (btn?.dataset.action !== 'install') this.toggleInstallHint(false); // any other tap closes the install note
       if (!btn || btn.disabled) return;
       handlers.click?.();
       handlers[btn.dataset.action]?.(btn);
@@ -442,7 +443,16 @@ export class UIManager {
   }
 
   setInstall({ available, standalone }) {
-    $('btn-install').classList.toggle('hidden', !available);
-    $('install-hint').classList.toggle('hidden', standalone || !this.installTip); // tip only on phones that need it
+    // Chrome offers a real install prompt; other phones (iPhone) get the button too, which opens the how-to note
+    const howTo = !available && !standalone && this.installTip;
+    $('btn-install').classList.toggle('hidden', !available && !howTo);
+    $('install-hint').classList.toggle('hidden', !howTo);
+    if (!howTo) this.toggleInstallHint(false);
+  }
+
+  /** The little paper note under the Install button explaining Add to Home Screen. */
+  toggleInstallHint(open = !$('install-hint').classList.contains('open')) {
+    $('install-hint').classList.toggle('open', open);
+    $('btn-install').setAttribute('aria-expanded', String(open));
   }
 }
