@@ -124,7 +124,12 @@ function onEvent(type, d) {
       ui.bump('hud-coins'); ui.bump('hud-score');
       if (d.tip) setTimeout(() => audio.play('tip'), 300); // ka-ching as the tip pops up
       break;
-    case 'missed': audio.play('sad'); ui.bump('hud-paws'); ui.flashMiss(); break;
+    case 'missed': {
+      audio.play('sad'); ui.flashMiss();
+      const left = MAX_MISSED - d.missed;
+      if (left > 0) ui.banner(left <= 3 ? `😿 Careful! ${left} more miss${left > 1 ? 'es' : ''} and the café closes` : `😿 A hungry cat left! (${d.missed} of ${MAX_MISSED} missed)`);
+      break;
+    }
     case 'levelUp':
       audio.play('levelUp');
       if (!d.cafeGrew) { // playing a lower level: the new level is just unlocked for later

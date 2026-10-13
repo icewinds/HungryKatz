@@ -488,9 +488,12 @@ html, body {
   pointer-events: none;
   z-index: 4;
   opacity: 0;
-  box-shadow: inset 0 0 70px 18px rgba(255, 70, 100, 0.55);
+  box-shadow: inset 0 0 110px 34px rgba(255, 70, 100, 0.7);
 }
-#miss-flash.on { animation: missflash 0.7s ease-out; }
+#miss-flash.on { animation: missflash 1.1s ease-out; }
+/* the paw counter shakes on a red pill so you see which counter just went up */
+#hud-paws.hit { animation: shake 0.18s 4, pawhit 1.2s ease-out; border-radius: 999px; }
+@keyframes pawhit { 0%, 50% { background: rgba(255, 93, 115, 0.3); } 100% { background: transparent; } }
 @keyframes missflash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
 
 /* Debug */

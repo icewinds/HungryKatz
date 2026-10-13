@@ -100,10 +100,12 @@ export class UIManager {
 
   /** Brief red glow around the screen edges when a customer is missed. */
   flashMiss() {
-    const el = $('miss-flash');
-    el.classList.remove('on');
-    void el.offsetWidth;
-    el.classList.add('on');
+    for (const [id, cls] of [['miss-flash', 'on'], ['hud-paws', 'hit']]) { // red edges + the paw counter shakes
+      const el = $(id);
+      el.classList.remove(cls);
+      void el.offsetWidth;
+      el.classList.add(cls);
+    }
   }
 
   /** Several banners one after another (e.g. level up + new table + makeover). */

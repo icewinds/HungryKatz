@@ -319,7 +319,7 @@ export class GameManager {
     this.kitchen.cancel(npc);
     this.missed++;
     this.combo = 0; // a miss breaks the streak
-    this.text(npc.x, npc.y - 150, 'Missed!', '#ff5d73', 26);
+    this.text(npc.x, npc.y - 150, 'Missed!', '#ff5d73', 36);
     this.burst(npc.x, npc.y - 70, 'heart', 4, '#b9aab1');
     this.onEvent('missed', { npc, missed: this.missed });
   }
