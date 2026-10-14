@@ -1,7 +1,7 @@
 // Gameplay rule tests (no browser needed): npm test
 
 import assert from 'node:assert/strict';
-import { GameManager } from '../js/gameManager.js';
+import { GameManager, pickBreed } from '../js/gameManager.js';
 import { UpgradeManager } from '../js/upgrades.js';
 import { HighScoreManager, cleanName } from '../js/highScores.js';
 import { DEFAULT_SAVE, Storage } from '../js/storage.js';
@@ -18,7 +18,7 @@ import { Kitchen } from '../js/kitchen.js';
 import {
   LAYOUT, MAX_MISSED, FOODS, FOOD_UNLOCK_EVERY, TIPS, DAILY_REWARDS, MAX_UPGRADE_LEVEL, UPGRADES, FEED_RADIUS, foodsForLevel,
   TABLES, DIFFICULTY, tablesForLevel, spotsForLevel, decorStage, levelCrowdBonus, levelSpawnPace,
-  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH,
+  COMBO, VIP, SPECIALS, PET_BONUS, OUTFITS, KITCHEN, CLEARING, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH, BREEDS, ALBUM, EVENTS, eventKey,
 } from '../js/config.js';
 
 let passed = 0;
@@ -856,6 +856,47 @@ test('rush hour: starts on time, announces itself, pays more, then ends', () => 
   assert.ok(events.some(([type, d]) => type === 'rush' && !d.on), 'and says when it is over');
   gm.runTime = RUSH.first + RUSH.every + 1;
   assert.ok(gm.rushLeft > 0, 'it comes back every few minutes');
+});
+
+test('album: customers are breeds by rarity; serving a new one adds it to the album once', () => {
+  assert.equal(pickBreed(() => 0.1, null).rarity, 'common');
+  assert.equal(pickBreed(() => 1 - ALBUM.rareChance - ALBUM.uncommonChance / 2, null).rarity, 'uncommon');
+  assert.equal(pickBreed(() => 0.9999, null).rarity, 'rare');
+  assert.equal(pickBreed(() => 0.01, 'halloween').id, 'pumpkin', 'the event brings its seasonal cat');
+  assert.notEqual(pickBreed(() => 0.01, null).rarity, 'seasonal', 'no seasonal cats out of season');
+  const { gm, save, events } = setup({ ...MAX5, level: 9 });
+  const npc = gm.spawnNpc({ spot: LAYOUT.spots[0], request: 'milk' });
+  const breed = BREEDS.find(b => b.id === npc.breed);
+  assert.ok(breed, 'every customer has a breed');
+  assert.equal(npc.look.fur, breed.look.fur);
+  gm.serve(npc, ['milk']);
+  assert.equal(save.album[breed.id], 1);
+  assert.equal(events.filter(([type]) => type === 'album').length, 1);
+  const again = gm.spawnNpc({ spot: LAYOUT.spots[1], request: 'milk' });
+  again.breed = breed.id;
+  gm.serve(again, ['milk']);
+  assert.equal(save.album[breed.id], 2);
+  assert.equal(events.filter(([type]) => type === 'album').length, 1, 'only the first one is new');
+});
+
+test('events: serving during an event wins its prizes in order, and event items cannot be bought', () => {
+  const { gm, save, events } = setup({ ...MAX5, level: 9 });
+  gm.season = 'halloween';
+  const ev = EVENTS.halloween, coins = save.coins;
+  for (let i = 0; i < ev.prizes[1].at; i++) gm.eventServe();
+  const e = save.events[eventKey('halloween')];
+  assert.equal(e.served, ev.prizes[1].at);
+  assert.deepEqual(e.won, [0, 1]);
+  assert.equal(save.coins, coins + ev.prizes[0].coins);
+  assert.ok(save.ownedOutfits.includes('witch'));
+  assert.ok(!save.decor.owned.includes('pumpkins'), 'the last prize is still to come');
+  assert.equal(events.filter(([type]) => type === 'eventPrize').length, 2);
+  for (let i = 0; i < 200; i++) gm.eventServe();
+  assert.ok(save.decor.owned.includes('pumpkins'));
+  assert.equal(events.filter(([type]) => type === 'eventPrize').length, 3, 'each prize only once');
+  gm.season = null; gm.eventServe();
+  assert.equal(e.served, ev.prizes[1].at + 200, 'no event, no counting');
+  assert.equal(eventKey('winter', new Date(2027, 0, 3)), 'winter-2026', 'January belongs to last December');
 });
 
 console.log(`${passed} passed`);

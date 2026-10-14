@@ -24,7 +24,9 @@ export const DEFAULT_SAVE = () => ({
   stickers: [],       // earned sticker ids (achievements.js)
   outfit: { hat: 'none', apron: 'classic' }, // what the waiter cat wears
   waiter: true,       // saves from before the kitchen rework still wear the old default chef hat
-  ownedOutfits: [],   // bought hats/aprons ids
+  ownedOutfits: [],
+  album: {},          // Cat Album: breed id -> times served
+  events: {},         // seasonal events: 'halloween-2026' -> { served, won: [prize indexes] }   // bought hats/aprons ids
   settings: { music: true, sfx: true, debug: false, difficulty: 'normal', scene: 'lounge' },
 });
 
@@ -69,6 +71,10 @@ function sanitize(data) {
         { ...d.outfit, ...(data.outfit && typeof data.outfit === 'object' ? data.outfit : {}) }),
       waiter: true,
       ownedOutfits: Array.isArray(data.ownedOutfits) ? data.ownedOutfits.filter(x => typeof x === 'string') : [],
+      album: Object.fromEntries(Object.entries(data.album && typeof data.album === 'object' ? data.album : {}).filter(([, v]) => Number.isInteger(v) && v > 0)),
+      events: Object.fromEntries(Object.entries(data.events && typeof data.events === 'object' ? data.events : {})
+        .filter(([, e]) => e && Number.isInteger(e.served) && e.served >= 0)
+        .map(([k, e]) => [k, { served: e.served, won: Array.isArray(e.won) ? e.won.filter(Number.isInteger) : [] }])),
       challenges: (() => { // a broken list just re-rolls today
         const c = data.challenges, ok = x => x && typeof x.kind === 'string' && [x.goal, x.reward, x.n].every(Number.isFinite);
         return typeof c?.day === 'string' && Array.isArray(c.list) && c.list.every(ok)

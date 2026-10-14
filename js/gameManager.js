@@ -3,7 +3,7 @@
 //   pickup, plated, arrive, feed, friend, wrongFood, missed, cleared, plates, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH, BREEDS, ALBUM, EVENTS, eventKey, OUTFITS, DECOR,
 } from './config.js';
 import { Kitchen } from './kitchen.js';
 import { Cleaner } from './cleaner.js';
@@ -18,6 +18,15 @@ import { constrain, route } from './pathing.js';
 
 const MAX_QUEUED_TAPS = 8;
 
+/** Which breed walks in: sometimes the event's seasonal breed, rarely a rare one, often an uncommon one. */
+export function pickBreed(rng, season) {
+  const roll = rng(), seasonal = season && BREEDS.find(b => b.season === season), of = r => BREEDS.filter(b => b.rarity === r);
+  const pool = seasonal && roll < ALBUM.seasonalChance ? [seasonal]
+    : roll >= 1 - ALBUM.rareChance ? of('rare')
+    : roll >= 1 - ALBUM.rareChance - ALBUM.uncommonChance ? of('uncommon') : of('common');
+  return pool[Math.floor(rng() * pool.length)];
+}
+
 export class GameManager {
   constructor({ save, persist = () => {}, upgrades, highScores, rng = Math.random, onEvent = () => {} }) {
     Object.assign(this, { save, persist, upgrades, highScores, rng, onEvent });
@@ -31,6 +40,7 @@ export class GameManager {
     this.cleaner = null;      // Dusty, once hired
     this.servers = {};        // hired servers by staff id: Waffles (server), Pancake (server2)
     this.rushOn = false;      // rush hour right now
+    this.season = null;       // seasonal event running ('halloween' | 'winter' | 'valentine'), set by the game
     this.npcs = [];
     this.fx = [];
     this.state = 'menu';
@@ -185,6 +195,7 @@ export class GameManager {
       if (ev === 'arrived') {
         if (npc.vip) this.text(npc.x, npc.y - 150, '👑 VIP!', '#c99a00', 20);
         else if (npc.bigEater) this.text(npc.x, npc.y - 160, '🍽 Big eater!', '#e0607e', 20);
+        if (npc.rare) this.onEvent('rare', { npc, name: BREEDS.find(b => b.id === npc.breed).name });
         this.kitchen.order(npc); // their dishes go to the chef
         this.onEvent('arrive', { npc });
       }
@@ -192,6 +203,11 @@ export class GameManager {
       else if (ev === 'fedDone') { npc.leave('happy'); this.dirty.add(npc.spot); } // their empty plate stays behind
     }
     this.npcs = this.npcs.filter(n => n.state !== 'gone');
+    for (const n of this.npcs) { // rare visitors sparkle while they're in the café
+      if (!n.rare || n.outside || n.state === 'leaving') continue;
+      n.sparkleT = (n.sparkleT ?? 0) - dt;
+      if (n.sparkleT <= 0) { n.sparkleT = 0.45; this.burst(n.x, n.y - 70, 'sparkle', 2, '#ffd34d'); }
+    }
 
     const reach = FEED_RADIUS + this.upgrades.value('reach'); // Quick Paws serves from further away
     for (const npc of this.npcs) {
@@ -236,7 +252,8 @@ export class GameManager {
     }
     vip ??= this.runTime >= VIP.after && this.rng() < VIP.chance;
     patience ??= this.spawner.stage(this.runTime).patience;
-    const look = regular ? { ...regular.look } : randomLook(this.rng);
+    const breed = regular ? null : pickBreed(this.rng, this.season);
+    const look = regular ? { ...regular.look } : { ...randomLook(this.rng), ...breed.look };
     if (vip) look.accessory = 'crown';
     if (bigEater) look.size = (look.size ?? 1) * BIG_EATER.size; // a big, round, very hungry cat
     const npc = new NPC({
@@ -248,6 +265,8 @@ export class GameManager {
     npc.requests = requests;
     npc.vip = vip;
     npc.bigEater = bigEater;
+    npc.breed = breed?.id ?? null;
+    npc.rare = breed?.rarity === 'rare';
     npc.regular = regular?.id ?? null;
     if (regular) this.save.friends[regular.id] ??= 0; // met
     npc.relaxed = !!this.difficulty.relaxed;
@@ -313,10 +332,39 @@ export class GameManager {
       this.onEvent('levelUp', { level: lvl, reward: this.reward, newFoods, cafeGrew: playingTop });
     }
     if (npc.regular) this.befriend(npc);
+    if (npc.breed) this.collect(npc);
+    this.eventServe();
     this.kitchen.cancel(npc); // served: anything still queued for them is not needed
     this.persist();
     this.onEvent('feed', { npc, reward: r, tip, combo: this.combo, vip: npc.vip, by });
     return true;
+  }
+
+  /** Cat Album: count the breed; the first one of a kind is a new album entry. */
+  collect(npc) {
+    const a = this.save.album, first = !a[npc.breed];
+    a[npc.breed] = (a[npc.breed] ?? 0) + 1;
+    if (!first) return;
+    const breed = BREEDS.find(b => b.id === npc.breed);
+    this.text(npc.x, npc.y - 200, '📖 New!', '#c43d5c', 20);
+    this.onEvent('album', { breed });
+  }
+
+  /** Seasonal event: one more cat served; any prize reached is won (coins, an event hat or decoration). */
+  eventServe() {
+    const ev = EVENTS[this.season];
+    if (!ev) return;
+    const key = eventKey(this.season), e = this.save.events[key] ??= { served: 0, won: [] };
+    e.served++;
+    ev.prizes.forEach((p, i) => {
+      if (e.served < p.at || e.won.includes(i)) return;
+      e.won.push(i);
+      if (p.coins) { this.save.coins += p.coins; this.save.totalEarned += p.coins; }
+      if (p.hat && !this.save.ownedOutfits.includes(p.hat)) this.save.ownedOutfits.push(p.hat);
+      if (p.decor && !this.save.decor.owned.includes(p.decor)) this.save.decor.owned.push(p.decor);
+      const name = p.coins ? `${p.coins} coins` : p.hat ? OUTFITS.hats.find(h => h.id === p.hat).name : DECOR.find(d => d.id === p.decor).name;
+      this.onEvent('eventPrize', { event: ev, prize: p, name });
+    });
   }
 
   /** A regular was served: their friendship grows; reaching best friends brings a gift of coins. */

@@ -110,10 +110,11 @@
     <div class="panel wide">
       <button class="close-x" data-action="closeStickers" aria-label="Back">✕</button>
       <h2>Café book</h2>
-      <div class="tabs three" role="tablist" aria-label="Café book">
+      <div class="tabs four" role="tablist" aria-label="Café book">
         <button class="tab" role="tab" id="tab-btn-stickers" aria-selected="true" aria-controls="tab-stickers" data-action="bookTab" data-tab="stickers">🏅 Stickers</button>
         <button class="tab" role="tab" id="tab-btn-recipes" aria-selected="false" aria-controls="tab-recipes" data-action="bookTab" data-tab="recipes">📖 Recipes</button>
         <button class="tab" role="tab" id="tab-btn-friends" aria-selected="false" aria-controls="tab-friends" data-action="bookTab" data-tab="friends">💖 Friends</button>
+        <button class="tab" role="tab" id="tab-btn-album" aria-selected="false" aria-controls="tab-album" data-action="bookTab" data-tab="album">🐱 Album</button>
       </div>
       <div id="tab-stickers" role="tabpanel" aria-labelledby="tab-btn-stickers">
         <p class="coins-big">🏅 <b id="sticker-count">0 / 0</b></p>
@@ -126,6 +127,10 @@
       <div id="tab-friends" role="tabpanel" aria-labelledby="tab-btn-friends" hidden>
         <p class="hint hint-top0">Regulars come back for their favourite dish. Serve one 5 times to become best friends, and they bring you a gift!</p>
         <div id="friend-list" class="friend-grid"></div>
+      </div>
+      <div id="tab-album" role="tabpanel" aria-labelledby="tab-btn-album" hidden>
+        <p class="hint hint-top0">Every customer is a kind of cat. Serve a new kind to add it to your album. <b>Rare</b> cats sparkle, and <b>seasonal</b> cats only visit during events! <span class="album-total">🐱 <b id="album-count">0 / 0</b></span></p>
+        <div id="album-list" class="friend-grid"></div>
       </div>
     </div>
   </section>
@@ -163,6 +168,7 @@
           <li><span class="tip-ico" aria-hidden="true">🍣</span><span>Level up your café to unlock <b>new foods</b>: cat food, fish, sushi and cupcakes.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🏠</span><span><b>Decorate</b> your café with cat trees, cosy beds, plants and lanterns.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🍽</span><span>From café level 7, hire <b>Waffles the server</b> to carry plates to hungry cats (and <b>Pancake</b> from level 9), and train them to carry more. Watch out for <b>rush hour</b> and <b>big eaters</b>: busy, but they pay extra!</span></li>
+          <li><span class="tip-ico" aria-hidden="true">📖</span><span>Every customer is a kind of cat: collect them all in the <b>Cat Album</b> (Café book). Watch for sparkly <b>rare</b> cats, and seasonal <b>events</b> with prizes you can only win then.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🐶</span><span>Adopt <b>café pets</b> in Upgrades for handy bonuses.</span></li>
           <li><span class="tip-ico" aria-hidden="true">⚙️</span><span>Pick a <b>difficulty</b> and a <b>scene</b> in Settings.</span></li>
           <li><span class="tip-ico" aria-hidden="true">🌸</span><span>Little chefs can pick <b>Relaxed</b> in Settings: nobody leaves sad.</span></li>
@@ -219,6 +225,7 @@
     <div class="panel wide">
       <button class="close-x" data-action="closeChallenges" aria-label="Back">✕</button>
       <h2>Today's challenges</h2>
+      <div id="event-card" class="event-card" hidden></div>
       <p class="hint hint-top0">Three new challenges every day. Finish one for bonus coins!</p>
       <div id="challenge-list" class="book-list"></div>
     </div>

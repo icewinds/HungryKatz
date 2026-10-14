@@ -668,6 +668,25 @@ html, body {
 
 /* Café book: three tabs, tiered stickers, recipes and friends */
 .tabs.three { grid-template-columns: repeat(3, 1fr); }
+.tabs.four { grid-template-columns: repeat(4, 1fr); }
+.tabs.four .tab { font-size: 13px; padding-left: 4px; padding-right: 4px; }
+/* Cat Album: the friend cards, with a rarity tag */
+.album-total { white-space: nowrap; margin-left: 6px; }
+.album-card.unmet > canvas { filter: brightness(0); opacity: 0.2; } /* a mystery silhouette until you meet one */
+.album-card .rarity { font-size: 12px; padding: 1px 8px; border-radius: 6px; background: var(--card-line); color: var(--ink-soft); }
+.album-card .rarity.uncommon { background: var(--mint-soft); color: var(--mint-deep); }
+.album-card .rarity.rare { background: var(--butter); color: var(--gold-ink); }
+.album-card .rarity.seasonal { background: #ffe3ec; color: var(--pink-d); }
+/* Seasonal event on the Challenges screen */
+.event-card { margin: 0 0 12px; padding: 12px 14px; text-align: left; background: var(--butter); border: 2px solid var(--butter-edge); border-radius: 8px; }
+.event-card h3 { margin: 0 0 4px; font-size: 19px; color: var(--pink-d); font-weight: 400; }
+.event-card progress { width: 100%; height: 12px; accent-color: var(--pink); }
+.event-prizes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+.event-prizes li { display: flex; flex-direction: column; gap: 2px; padding: 6px 8px; border-radius: 6px; background: var(--card); border: 2px solid var(--card-line); }
+.event-prizes li b { font-size: 15px; }
+.event-prizes li small { font-size: 13px; color: var(--ink-soft); }
+.event-prizes li.won { background: var(--mint-soft); border-color: #9fd6bd; }
+.event-prizes li.won small { color: var(--mint-deep); }
 .tabs.three .tab { font-size: 13px; padding-left: 4px; padding-right: 4px; }
 .sticker .tier { font-size: 12px; font-style: normal; text-transform: capitalize; color: var(--ink-soft); }
 .sticker.got.tier-bronze { background: #fbe9da; box-shadow: inset 0 0 0 2px #e8b083; }

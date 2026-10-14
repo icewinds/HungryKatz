@@ -38,6 +38,7 @@ A hand-made, family game: built for one child, grown feature by feature from her
   - Clearing tables: happy cats leave plates; Dusty the cleaner can be hired from café level 5.
   - Servers: Waffles (café level 7) and Pancake (level 9) carry ready plates to one-dish orders; each trains through 5 levels.
   - Big eaters (two dishes, big tip, any day) and rush hour (20 busy seconds every 2½ minutes, coins ×1.5).
+  - Long-term goals for maxed players: the Cat Album (every customer is a breed: common, uncommon, rare sparkly visitors, and seasonal cats) and seasonal events (Spooky Café in October, Snowy Café in December, Sweetheart Café in early February), each with a serve goal and prizes only won then: coins, an event hat and an event decoration.
   - Upgrades (incl. Faster Chef) and café pets (send home or bring back).
   - Combos, VIPs, weekend specials, and named regulars who become best friends and bring gifts.
   - Decorate your café: bought decorations (cat tree, cat bed, shelves, plants, lanterns, wallpaper) that show in the café and on the home screen.

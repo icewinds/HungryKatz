@@ -199,6 +199,46 @@ export const CLEARING = {
 };
 // Decorate your café: decorations bought with coins, each with its own spot in the café (drawn by scene.js).
 // Bought ones can be shown or hidden in the Decorate screen.
+// Cat Album: every customer (except regulars) is one of these breeds; serving one for the first time adds it
+// to the album in the Café book. `look` overrides the random look (accessories stay random unless set).
+// Rare breeds visit now and then with sparkles; a seasonal breed only visits during its event.
+export const BREEDS = [
+  { id: 'gingerTabby', name: 'Ginger Tabby', rarity: 'common', look: { fur: '#f4a259', light: '#ffe6c9', dark: '#c0702c', pattern: 'stripes' } },
+  { id: 'greyTabby', name: 'Grey Tabby', rarity: 'common', look: { fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'stripes' } },
+  { id: 'tuxedo', name: 'Tuxedo', rarity: 'common', look: { fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'tuxedo' } },
+  { id: 'blackCat', name: 'Black Cat', rarity: 'common', look: { fur: '#433a46', light: '#f6f2f6', dark: '#241e26', pattern: 'none' } },
+  { id: 'creamPuff', name: 'Cream Puff', rarity: 'common', look: { fur: '#fbf3ea', light: '#ffffff', dark: '#c9b6a2', pattern: 'none' } },
+  { id: 'calico', name: 'Calico', rarity: 'common', look: { fur: '#fbf3ea', light: '#ffffff', dark: '#c9b6a2', pattern: 'patch', patch: '#f4a259' } },
+  { id: 'cocoaSpots', name: 'Cocoa Spots', rarity: 'common', look: { fur: '#b07a52', light: '#f3dcc6', dark: '#7a4d2e', pattern: 'spots' } },
+  { id: 'greySocks', name: 'Grey Socks', rarity: 'common', look: { fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'socks' } },
+  { id: 'lavender', name: 'Lavender', rarity: 'uncommon', look: { fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'none' } },
+  { id: 'lilacSocks', name: 'Lilac Socks', rarity: 'uncommon', look: { fur: '#c9b7e8', light: '#f4effc', dark: '#8e78bd', pattern: 'socks' } },
+  { id: 'mintSwirl', name: 'Mint Swirl', rarity: 'uncommon', look: { fur: '#9fd8cb', light: '#e9f8f3', dark: '#5ea999', pattern: 'stripes' } },
+  { id: 'strawberry', name: 'Strawberry', rarity: 'uncommon', look: { fur: '#f2b5c4', light: '#fdeaf0', dark: '#cc7f93', pattern: 'spots' } },
+  { id: 'marshmallow', name: 'Marshmallow', rarity: 'uncommon', look: { fur: '#f2b5c4', light: '#fdeaf0', dark: '#cc7f93', pattern: 'patch', patch: '#fbf3ea' } },
+  { id: 'smokyTux', name: 'Smoky Tuxedo', rarity: 'uncommon', look: { fur: '#9a9aa8', light: '#ececf2', dark: '#626270', pattern: 'tuxedo' } },
+  { id: 'golden', name: 'Golden Cat', rarity: 'rare', look: { fur: '#f6c445', light: '#fff4c8', dark: '#c9921a', pattern: 'none', eye: '#3b82c4' } },
+  { id: 'midnightStar', name: 'Midnight Star', rarity: 'rare', look: { fur: '#3a3f73', light: '#dfe2fb', dark: '#1d2047', pattern: 'spots', eye: '#ffd34d' } },
+  { id: 'snowLeopard', name: 'Snow Leopard', rarity: 'rare', look: { fur: '#eef0f2', light: '#ffffff', dark: '#8d949c', pattern: 'spots', eye: '#3b82c4' } },
+  { id: 'cloud', name: 'Cloud', rarity: 'rare', look: { fur: '#bfe0f7', light: '#f2f9fe', dark: '#7fa9c9', pattern: 'none', eye: '#8a5cc7' } },
+  { id: 'pumpkin', name: 'Pumpkin Cat', rarity: 'seasonal', season: 'halloween', look: { fur: '#f08a2c', light: '#ffd9a8', dark: '#a8521a', pattern: 'stripes', accessory: 'witch', acc: '#ff9f43' } },
+  { id: 'snowball', name: 'Snowball', rarity: 'seasonal', season: 'winter', look: { fur: '#fbfdff', light: '#ffffff', dark: '#b8c6d4', pattern: 'none', accessory: 'earmuffs', acc: '#ff6b8a' } },
+  { id: 'sweetheart', name: 'Sweetheart', rarity: 'seasonal', season: 'valentine', look: { fur: '#f7a8c0', light: '#fff0f5', dark: '#c96a88', pattern: 'patch', patch: '#fff', accessory: 'heartband', acc: '#ff5d73' } },
+];
+// Chance per customer: a seasonal breed (during its event), a rare breed, an uncommon breed; the rest are common.
+export const ALBUM = { seasonalChance: 0.12, rareChance: 0.006, uncommonChance: 0.25 };
+
+// Seasonal events (season from scene.seasonFor): serve cats during the event to win its prizes, in order.
+// A prize is coins, a hat (OUTFITS.hats id) or a decoration (DECOR id); hats and decorations marked with
+// `event` can only be won, never bought. `when` is shown to players.
+export const EVENTS = {
+  halloween: { name: 'Spooky Café', when: 'all October', prizes: [{ at: 30, coins: 150 }, { at: 80, hat: 'witch' }, { at: 150, decor: 'pumpkins' }] },
+  winter: { name: 'Snowy Café', when: 'December to 6 January', prizes: [{ at: 30, coins: 150 }, { at: 80, hat: 'earmuffs' }, { at: 150, decor: 'snowman' }] },
+  valentine: { name: 'Sweetheart Café', when: '1 to 14 February', prizes: [{ at: 25, coins: 150 }, { at: 60, hat: 'heartband' }, { at: 110, decor: 'hearts' }] },
+};
+/** Save key for this year's run of an event (winter that started in December keeps December's year). */
+export const eventKey = (season, d = new Date()) => `${season}-${d.getMonth() === 0 ? d.getFullYear() - 1 : d.getFullYear()}`;
+
 export const DECOR = [
   { id: 'plants', name: 'Hanging plants', cost: 80, desc: 'Little pots of trailing leaves by the windows.' },
   { id: 'lanterns', name: 'Paper lanterns', cost: 120, desc: 'Warm glowing lanterns along the ceiling.' },
@@ -207,6 +247,9 @@ export const DECOR = [
   { id: 'catBed', name: 'Cosy cat bed', cost: 300, desc: 'A squishy cushion bed with a cat curled up asleep.' },
   { id: 'catTree', name: 'Cat tree', cost: 450, desc: 'A tall scratching tower with a lookout cat on top.' },
   { id: 'pawPaper', name: 'Paw wallpaper', cost: 600, desc: 'Little paw prints all over the walls.' },
+  { id: 'pumpkins', name: 'Pumpkin patch', event: 'halloween', desc: 'Smiley pumpkins by the front door.' },
+  { id: 'snowman', name: 'Snow cat', event: 'winter', desc: 'A little snowman with cat ears and a scarf.' },
+  { id: 'hearts', name: 'Heart garland', event: 'valentine', desc: 'A string of pink hearts along the wall.' },
 ];
 // Waffles the server (STAFF.server): carries ready plates to waiting cats. Training levels 1..5 give a bigger
 // tray and quicker paws; trainCosts[i] buys level i + 2.
@@ -229,6 +272,9 @@ export const OUTFITS = {
     { id: 'beret', name: 'Beret', icon: '🎨', cost: 150, color: '#e8504f' },
     { id: 'hat', name: 'Top hat', icon: '🎩', cost: 200, color: '#ffc94d' },
     { id: 'crown', name: 'Crown', icon: '👑', cost: 400 },
+    { id: 'witch', name: 'Witch hat', icon: '🎁', event: 'halloween', color: '#ff9f43' },
+    { id: 'earmuffs', name: 'Earmuffs', icon: '🎁', event: 'winter', color: '#ff6b8a' },
+    { id: 'heartband', name: 'Heart band', icon: '🎁', event: 'valentine', color: '#ff5d73' },
   ],
   aprons: [
     { id: 'classic', name: 'Classic', icon: '🩷', cost: 0, color: null },

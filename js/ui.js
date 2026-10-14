@@ -1,7 +1,7 @@
 // UI Manager: HTML overlays (HUD, menus, upgrade screen, game over).
 // Buttons declare data-action="name"; clicks route to handlers[name](button).
 
-import { UPGRADES, MAX_UPGRADE_LEVEL, PETS, STAFF, SERVER } from './config.js';
+import { UPGRADES, MAX_UPGRADE_LEVEL, PETS, STAFF, SERVER, EVENTS } from './config.js';
 import { FOOD_LABEL } from './inventory.js';
 import { stickerBadge, outfitCanvas } from './icons.js';
 
@@ -247,10 +247,11 @@ export class UIManager {
       const name = document.createElement('b'); name.textContent = d.name;
       const desc = document.createElement('small'); desc.textContent = d.desc;
       const btn = document.createElement('button');
-      btn.className = 'btn buy' + (!have && coins < d.cost ? ' poor' : '') + (shown ? ' on' : '');
+      btn.className = 'btn buy' + (!have && (d.event || coins < d.cost) ? ' poor' : '') + (shown ? ' on' : '');
       btn.dataset.action = have ? 'toggleDecor' : 'buyDecor';
+      if (!have && d.event) btn.disabled = true;
       btn.dataset.id = d.id;
-      btn.textContent = have ? (shown ? '✔ In the café' : 'Put it out') : `🪙 ${d.cost}`;
+      btn.textContent = have ? (shown ? '✔ In the café' : 'Put it out') : d.event ? `🎁 ${EVENTS[d.event].name} prize` : `🪙 ${d.cost}`;
       if (have) btn.setAttribute('aria-pressed', shown);
       card.append(pic, name, desc, btn);
       return card;
@@ -303,6 +304,46 @@ export class UIManager {
     }));
   }
 
+  /** Cat Album: one card per breed; collected ones in colour with how often they were served, the rest greyed. */
+  renderAlbum(rows, portrait) {
+    $('album-count').textContent = `${rows.filter(r => r.got).length} / ${rows.length}`;
+    const label = { common: 'Common', uncommon: 'Uncommon', rare: 'Rare', seasonal: 'Seasonal' };
+    $('album-list').replaceChildren(...rows.map(r => {
+      const card = document.createElement('div');
+      card.className = 'friend album-card' + (r.got ? '' : ' unmet');
+      const pic = Object.assign(document.createElement('canvas'), { width: 120, height: 120 });
+      pic.setAttribute('aria-hidden', 'true');
+      portrait(pic, r.look, r.got);
+      const name = document.createElement('b'); name.textContent = r.got ? r.name : '???';
+      const tag = document.createElement('span'); tag.className = `rarity ${r.rarity}`; tag.textContent = label[r.rarity];
+      const note = document.createElement('small');
+      note.textContent = r.got ? `Served ×${r.served}` : r.rarity === 'seasonal' ? `Only in the ${EVENTS[r.season].name}` : r.rarity === 'rare' ? 'A rare visitor' : 'Not met yet';
+      card.append(pic, name, tag, note);
+      return card;
+    }));
+  }
+
+  /** Challenges screen: the running seasonal event, its progress and prizes (hidden when no event is on). */
+  renderEvent(info) {
+    const box = $('event-card');
+    box.hidden = !info;
+    if (!info) return;
+    const h = document.createElement('h3'); h.textContent = `🎁 ${info.name}, ${info.when}`;
+    const p = document.createElement('p'); p.className = 'hint hint-top0';
+    p.textContent = info.next ? `Serve cats to win prizes! ${info.served} served, next prize at ${info.next.at}.` : `You won every prize! ${info.served} cats served.`;
+    const bar = Object.assign(document.createElement('progress'), { max: info.next?.at ?? 1, value: info.next ? info.served : 1 });
+    bar.setAttribute('aria-label', info.next ? `${info.served} of ${info.next.at} cats` : 'All prizes won');
+    const list = document.createElement('ul'); list.className = 'event-prizes';
+    list.append(...info.prizes.map(z => {
+      const li = document.createElement('li'); li.className = z.won ? 'won' : '';
+      const b = document.createElement('b'); b.textContent = z.label;
+      const s = document.createElement('small'); s.textContent = z.won ? '✔ Won' : `at ${z.at} cats`;
+      li.append(b, s);
+      return li;
+    }));
+    box.replaceChildren(h, p, bar, list);
+  }
+
   /** Sticker book grid: earned stickers as drawn badges, the rest as dashed empty slots. DOM APIs only. */
   renderStickers(all, earned) {
     $('sticker-count').textContent = `${earned.length} / ${all.length}`;
@@ -324,14 +365,14 @@ export class UIManager {
   renderOutfits(outfits, outfit, owned, coins, wearing) {
     const row = (kind, list, current) => list.map(o => {
       const b = document.createElement('button');
-      const has = o.cost === 0 || owned.includes(o.id);
-      b.className = 'outfit' + (o.id === current ? ' worn' : '') + (has ? '' : ' locked') + (!has && coins < o.cost ? ' poor' : '');
+      const has = o.cost === 0 || owned.includes(o.id), prize = !has && o.event;
+      b.className = 'outfit' + (o.id === current ? ' worn' : '') + (has ? '' : ' locked') + (!has && (prize || coins < o.cost) ? ' poor' : '');
       b.dataset.action = 'pickOutfit'; b.dataset.kind = kind; b.dataset.id = o.id;
-      b.setAttribute('aria-label', `${o.name}${has ? '' : `, costs ${o.cost} coins`}${o.id === current ? ', wearing' : ''}`);
+      b.setAttribute('aria-label', `${o.name}${prize ? `, a ${EVENTS[o.event].name} prize` : has ? '' : `, costs ${o.cost} coins`}${o.id === current ? ', wearing' : ''}`);
       const i = kind === 'hats' ? outfitCanvas(wearing(o.id)) : document.createElement('span');
       if (kind !== 'hats') { i.className = 'outfit-icon'; i.textContent = o.icon; }
       const name = document.createElement('b'); name.textContent = o.name;
-      const t = document.createElement('small'); t.textContent = o.id === current ? '✓ Wearing' : has ? 'Owned' : `🪙 ${o.cost}`;
+      const t = document.createElement('small'); t.textContent = o.id === current ? '✓ Wearing' : has ? 'Owned' : prize ? `🎁 ${EVENTS[o.event].name}` : `🪙 ${o.cost}`;
       b.append(i, name, t);
       return b;
     });

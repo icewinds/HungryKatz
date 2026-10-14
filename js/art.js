@@ -539,6 +539,21 @@ export function accessory(ctx, look, hx, hy, blink = false) {
       ctx.beginPath(); ctx.moveTo(hx - 6, hy - 22); ctx.lineTo(hx + 6, hy - 25); ctx.moveTo(hx - 3, hy - 30); ctx.lineTo(hx + 4, hy - 32); ctx.stroke();
       circle(ctx, hx + 1, hy - 41, 3.2); fillStroke(ctx, '#ffd34d', ol, 1);
       break;
+    case 'witch': // Spooky Café prize: a floppy witch hat with a coloured band
+      ellipse(ctx, hx + 1, hy - 17, 19, 5); fillStroke(ctx, '#4a3b5c', ol, 1.4);
+      ctx.beginPath(); ctx.moveTo(hx - 10, hy - 19); ctx.quadraticCurveTo(hx - 3, hy - 36, hx + 9, hy - 46);
+      ctx.quadraticCurveTo(hx + 6, hy - 34, hx + 11, hy - 19); ctx.closePath(); fillStroke(ctx, '#4a3b5c', ol, 1.4);
+      rrect(ctx, hx - 9, hy - 25, 20, 4.5, 1.5); fillStroke(ctx, c, null);
+      break;
+    case 'earmuffs': // Snowy Café prize
+      ctx.beginPath(); ctx.arc(hx + 1, hy - 5, 17, Math.PI * 1.08, Math.PI * 1.92); ctx.strokeStyle = '#8b7a84'; ctx.lineWidth = 3; ctx.stroke();
+      for (const dx of [-15, 17]) { circle(ctx, hx + dx, hy - 4, 6.5); fillStroke(ctx, c, ol, 1.4); circle(ctx, hx + dx - 1.5, hy - 5.5, 2.2); ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fill(); }
+      break;
+    case 'heartband': // Sweetheart Café prize: a headband with two hearts on springs
+      ctx.beginPath(); ctx.arc(hx + 1, hy - 5, 17, Math.PI * 1.1, Math.PI * 1.9); ctx.strokeStyle = '#ff8fab'; ctx.lineWidth = 3; ctx.stroke();
+      ctx.strokeStyle = '#8b7a84'; ctx.lineWidth = 1.4;
+      for (const dx of [-7, 9]) { ctx.beginPath(); ctx.moveTo(hx + dx, hy - 20); ctx.lineTo(hx + dx * 1.3, hy - 30); ctx.stroke(); drawHeart(ctx, hx + dx * 1.3, hy - 33, 8, c); }
+      break;
     case 'beret':
       ellipse(ctx, hx + 2, hy - 16, 16, 6); fillStroke(ctx, c, ol, 1.4);
       rrect(ctx, hx + 1, hy - 25, 3, 5, 1.5); fillStroke(ctx, c, null);

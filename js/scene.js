@@ -395,6 +395,44 @@ function lantern(ctx, x, y) {
   for (const k of [-6, 0, 6]) { ctx.beginPath(); ctx.ellipse(x, y + 25, Math.abs(k) ? 9 : 4, 15, 0, 0, Math.PI * 2); ctx.stroke(); }
   for (const cy of [y + 10, y + 38]) { rrect(ctx, x - 6, cy, 12, 3, 1.5); fillStroke(ctx, '#c0453a', null); }
 }
+/** Spooky Café prize: three smiley pumpkins. */
+function pumpkinPatch(ctx, x, y) {
+  ellipse(ctx, x, y + 2, 44, 7); ctx.fillStyle = SHADOW; ctx.fill();
+  for (const [dx, s] of [[-26, 0.8], [26, 0.72], [0, 1.05]]) {
+    ctx.save(); ctx.translate(x + dx, y); ctx.scale(s, s);
+    for (const px of [-9, 9]) { ellipse(ctx, px, -14, 10, 13); fillStroke(ctx, '#f08a2c', '#b85f1a', 1.6); }
+    ellipse(ctx, 0, -14, 11, 14); fillStroke(ctx, '#f7a13c', '#b85f1a', 1.6);
+    rrect(ctx, -2, -33, 4, 7, 2); fillStroke(ctx, '#6b8f3a', null);
+    ctx.fillStyle = '#5a2e12';
+    tri(ctx, [-8, -16], [-3, -16], [-5.5, -21]); ctx.fill();
+    tri(ctx, [3, -16], [8, -16], [5.5, -21]); ctx.fill();
+    ctx.beginPath(); ctx.arc(0, -11, 5, 0.25, Math.PI - 0.25); ctx.strokeStyle = '#5a2e12'; ctx.lineWidth = 1.8; ctx.stroke();
+    ctx.restore();
+  }
+}
+/** Snowy Café prize: a snowman with cat ears, a carrot nose and a red scarf. */
+function snowCat(ctx, x, y) {
+  ellipse(ctx, x, y + 2, 26, 6); ctx.fillStyle = SHADOW; ctx.fill();
+  circle(ctx, x, y - 20, 21); fillStroke(ctx, '#ffffff', '#b8c6d4', 2);
+  for (const d of [-1, 1]) { tri(ctx, [x + d * 4, y - 62], [x + d * 13, y - 66], [x + d * 11, y - 54]); fillStroke(ctx, '#ffffff', '#b8c6d4', 2); }
+  circle(ctx, x, y - 52, 14); fillStroke(ctx, '#ffffff', '#b8c6d4', 2);
+  rrect(ctx, x - 15, y - 41, 30, 6, 3); fillStroke(ctx, '#e8504f', null);
+  rrect(ctx, x + 6, y - 39, 6, 14, 3); fillStroke(ctx, '#e8504f', null);
+  ctx.fillStyle = INK; for (const dx of [-5, 5]) { circle(ctx, x + dx, y - 55, 1.8); ctx.fill(); }
+  tri(ctx, [x - 1, y - 51], [x + 1, y - 49], [x + 9, y - 50]); ctx.fillStyle = '#ff9f43'; ctx.fill();
+  for (const dy of [-26, -16]) { circle(ctx, x, y + dy, 2); ctx.fillStyle = INK; ctx.fill(); }
+}
+/** Sweetheart Café prize: a sagging string of pink and red hearts along the wall. */
+function heartGarland(ctx, x, y) {
+  const span = 1072, n = 16;
+  ctx.strokeStyle = 'rgba(90,61,74,0.35)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + span / 2, y + 24, x + span, y); ctx.stroke();
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, hx = x + span * t, hy = y + 24 * 2 * t * (1 - t);
+    drawHeart(ctx, hx, hy + 7, 9, i % 2 ? '#ff5d73' : '#ff8fab');
+  }
+}
+
 /** Wall shelf (top at y) with a ginger cat napping on it and a little succulent. */
 function nappingShelf(ctx, x, y) {
   for (const bx of [x - 30, x + 26]) { ctx.fillStyle = '#9c744a'; ctx.beginPath(); ctx.moveTo(bx, y + 8); ctx.lineTo(bx + 4, y + 8); ctx.lineTo(bx + 4, y + 22); ctx.closePath(); ctx.fill(); }
@@ -449,6 +487,9 @@ const DECOR_ART = {
   catBed: { layer: 'floor', spots: [[1058, 300]], draw: catBed, prev: [80, 92, 1.3] },
   catTree: { layer: 'floor', spots: [[44, 330]], draw: catTree, prev: [86, 104, 0.5] },
   pawPaper: { layer: 'paper', spots: [[0, 0]], draw: pawPaper, prev: [0, 0, 1] },
+  pumpkins: { layer: 'floor', spots: [[246, 226]], draw: pumpkinPatch, prev: [80, 96, 1.15] },
+  snowman: { layer: 'floor', spots: [[990, 236]], draw: snowCat, prev: [80, 102, 0.95] },
+  hearts: { layer: 'wall', spots: [[24, 142]], draw: heartGarland, prev: [-10, 40, 0.42] },
 };
 function drawDecor(ctx, sc, layer) {
   for (const [id, a] of Object.entries(DECOR_ART)) if (a.layer === layer && sc.decor?.has(id)) for (const [x, y] of a.spots) a.draw(ctx, x, y, sc);

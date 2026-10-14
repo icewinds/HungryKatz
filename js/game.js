@@ -4,7 +4,7 @@
 import {
   WORLD, LAYOUT, KITCHEN, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
-  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER, UPGRADES, RUSH,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER, UPGRADES, RUSH, BREEDS, EVENTS, eventKey,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -52,7 +52,19 @@ const playerOutfit = () => dressUp(playerLook(chars.current()), save.outfit, OUT
 const hatLook = hat => dressUp(playerLook(chars.current() === 'ghost' ? 'mango' : chars.current()), { ...save.outfit, hat }, OUTFITS);
 
 /** Today's challenges into the list (also refreshes the menu button's count). */
+/** Album portraits: each breed in a plain look (no random hat), so it reads the same every time. */
+const BREED_BASE = { accessory: 'none', acc: '#ff6b8a', eye: '#3b2a33', patch: '#fff', size: 1, seed: 1 };
+/** The running seasonal event for the Challenges screen (null when none is on). */
+function eventInfo() {
+  const ev = EVENTS[season];
+  if (!ev) return null;
+  const e = save.events[eventKey(season)] ?? { served: 0, won: [] };
+  const label = z => z.coins ? `🪙 ${z.coins} coins` : z.hat ? `🎁 ${OUTFITS.hats.find(h => h.id === z.hat).name}` : `🏠 ${DECOR.find(d => d.id === z.decor).name}`;
+  return { name: ev.name, when: ev.when, served: e.served, next: ev.prizes.find((z, i) => !e.won.includes(i)),
+    prizes: ev.prizes.map((z, i) => ({ at: z.at, label: label(z), won: e.won.includes(i) })) };
+}
 function showChallenges() {
+  ui.renderEvent(eventInfo());
   ui.renderChallenges(todaysChallenges(save, foodsForLevel(save.level)).map(c => ({
     ...c, icon: CHALLENGES[c.kind].icon, img: c.food && foodIcons[c.food], text: challengeText(c) })));
 }
@@ -62,7 +74,9 @@ function greet() {
   const name = playerLook(chars.current()).name;
   const left = todaysChallenges(save, foodsForLevel(save.level)).filter(c => !c.done).length;
   const lines = [`${name} here! Let's feed some hungry katz!`, 'Mmm, the kitchen smells yummy today!', 'The regulars are waiting for you!', 'Tap me if you feel sleepy too!'];
+  const ev = EVENTS[season], evNext = ev && ev.prizes.find((z, i) => !(save.events[eventKey(season)]?.won ?? []).includes(i));
   document.getElementById('menu-hello').textContent = !save.stats.served ? `Hi, I'm ${name}! Tap Play to open the café!`
+    : evNext && Math.random() < 0.5 ? `It's the ${ev.name}! Serve cats for prizes 🎁`
     : left && Math.random() < 0.5 ? `${name} here! ${left} challenge${left > 1 ? 's' : ''} to do today 🎯`
     : lines[Math.floor(Math.random() * lines.length)];
 }
@@ -133,6 +147,12 @@ function onEvent(type, d) {
       setTimeout(() => audio.play('coin'), 120);
       ui.bump('hud-coins'); ui.bump('hud-score');
       if (d.tip) setTimeout(() => audio.play('tip'), 300); // ka-ching as the tip pops up
+      break;
+    case 'rare': audio.play('levelUp'); ui.banner(`✨ A rare ${d.name} is visiting! Serve it for your Cat Album.`); break;
+    case 'album': checkStickers(); ui.banner(`📖 New in your Cat Album: ${d.breed.name}!`); break;
+    case 'eventPrize':
+      audio.play('levelUp'); persist(); refreshScene(); checkStickers();
+      ui.banner(`🎁 ${d.event.name} prize: ${d.name}!${d.prize.hat ? ' Wear it from Choose cat.' : d.prize.decor ? ' It is in your café now.' : ''}`);
       break;
     case 'rush':
       if (d.on) { audio.play('bell'); ui.banner(`⏱ Rush hour! Coins ×${RUSH.pay} for ${RUSH.length} seconds`); }
@@ -214,6 +234,9 @@ const ui = new UIManager({
       max: FRIENDSHIP.max, best: (save.friends[r.id] ?? 0) >= FRIENDSHIP.max,
       favIcon: foodIcons[r.fav], favLabel: FOODS.find(f => f.id === r.fav)?.label ?? '' })),
       (canvas, look, met) => drawCatPortrait(canvas, met ? look : greyLook(look)));
+    ui.renderAlbum(BREEDS.filter(b => b.rarity !== 'seasonal' || save.album[b.id] || b.season === season).map(b => ({
+      name: b.name, rarity: b.rarity, season: b.season, got: !!save.album[b.id], served: save.album[b.id] ?? 0,
+      look: { ...BREED_BASE, ...b.look } })), (canvas, look, got) => drawCatPortrait(canvas, got ? look : greyLook(look)));
     showTabs(BOOK_TABS, 'stickers');
     ui.show('stickers');
   },
@@ -227,7 +250,7 @@ const ui = new UIManager({
   closeDecor: () => ui.show('menu'),
   buyDecor: btn => {
     const d = DECOR.find(x => x.id === btn.dataset.id);
-    if (!d || save.decor.owned.includes(d.id)) return;
+    if (!d || d.event || save.decor.owned.includes(d.id)) return;
     if (save.coins < d.cost) { audio.play('wrong'); ui.banner(`Need 🪙 ${d.cost - save.coins} more coins`); return; }
     save.coins -= d.cost;
     save.decor.owned.push(d.id);
@@ -248,6 +271,7 @@ const ui = new UIManager({
     const kind = btn.dataset.kind, item = OUTFITS[kind]?.find(o => o.id === btn.dataset.id);
     if (!item) return;
     const owned = item.cost === 0 || save.ownedOutfits.includes(item.id);
+    if (!owned && item.event) { audio.play('wrong'); ui.banner(`🎁 Win the ${item.name} in the ${EVENTS[item.event].name} event!`); return; }
     if (!owned) {
       if (save.coins < item.cost) { audio.play('wrong'); ui.banner(`Need 🪙 ${item.cost - save.coins} more coins`); return; }
       save.coins -= item.cost;
@@ -447,7 +471,7 @@ function syncToggles() {
 }
 
 /** Choose cat: switch between the Cats and Wardrobe tabs. */
-const BOOK_TABS = ['stickers', 'recipes', 'friends'];
+const BOOK_TABS = ['stickers', 'recipes', 'friends', 'album'];
 function showTabs(tabs, tab) {
   for (const t of tabs) {
     document.getElementById(`tab-${t}`).hidden = t !== tab;
@@ -552,6 +576,7 @@ document.getElementById('go-name-input').addEventListener('input', () => ui.name
 const seasonParam = new URLSearchParams(location.search).get('season');
 const season = seasonParam ? (seasonParam === 'none' ? null : seasonParam) : seasonFor();
 const shownDecor = () => save.decor.owned.filter(id => !save.decor.hidden.includes(id));
+gm.season = season in EVENTS ? season : null; // seasonal events run with the seasonal decorations
 let scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
 /** Re-read theme/level and redraw the static café (after level up or a scene change). */
 function refreshScene() {
