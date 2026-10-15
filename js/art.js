@@ -394,6 +394,10 @@ function accessoryBack(ctx, look, hx, hy) {
       ctx.moveTo(hx + 19, hy); ctx.lineTo(hx + 13, hy - 3);
       ctx.stroke();
       break;
+    case 'waiter': case 'chef': // from behind: no bow tie or collar, just any wardrobe hat
+      if (look.hat && look.hat !== 'none') accessory(ctx, { ...look, accessory: look.hat, acc: look.hatColor ?? look.acc }, hx, hy);
+      else if (look.accessory === 'chef') accessory(ctx, { ...look, hat: null }, hx, hy);
+      break;
     default: accessory(ctx, look, hx, hy); // hats, bows and flowers look the same from behind
   }
 }
