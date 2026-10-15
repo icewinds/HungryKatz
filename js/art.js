@@ -228,11 +228,14 @@ export function drawCat(ctx, x, y, look, o = {}) {
   fluffyTail(ctx, look, ol, [-14, -16], [-34 + sway * 0.4, -18], [-30 + sway, -44 + Math.abs(sway) * 0.3]);
 
   // far legs, body, near legs
+  // legs tucked under the body: only short stubby legs and mitten paws peek out below it
   leg(ctx, -10 - swing, look.dark, ol, look);
   leg(ctx, 7 + swing, look.dark, ol, look);
-  furPath(ctx, 0, -19, 17, 16, 11, 0.09, 0.3); ctx.fillStyle = look.fur; ctx.fill();
-  ctx.save(); ctx.clip(); bodyPattern(ctx, look); plush(ctx, 0, -19, 17, 16); felt(ctx, 0, -19, 17, 16, look.seed); ctx.restore();
-  softFurEdge(ctx, look, ol, 0, -19, 17, 16, 11, 0.09, 0.3);
+  leg(ctx, -5 + swing, look.fur, ol, look, true);
+  leg(ctx, 11 - swing, look.fur, ol, look, true);
+  furPath(ctx, 0, -22, 17, 16, 11, 0.09, 0.3); ctx.fillStyle = look.fur; ctx.fill();
+  ctx.save(); ctx.clip(); bodyPattern(ctx, look); plush(ctx, 0, -22, 17, 16); felt(ctx, 0, -22, 17, 16, look.seed); ctx.restore();
+  softFurEdge(ctx, look, ol, 0, -22, 17, 16, 11, 0.09, 0.3);
   if (look.accessory === 'chef' || look.accessory === 'waiter') { // felt apron with a pocket and a little paw print
     rrect(ctx, -5, -32, 21, 25, 6); fillStroke(ctx, look.acc, 'rgba(60,30,45,0.3)', 1.4);
     rrect(ctx, 0, -21, 11, 7, 2.5); fillStroke(ctx, 'rgba(255,255,255,0.16)', 'rgba(60,30,45,0.25)', 1);
@@ -252,8 +255,6 @@ export function drawCat(ctx, x, y, look, o = {}) {
     ctx.fillStyle = look.light; ctx.fill();
     ctx.strokeStyle = 'rgba(90,61,74,0.22)'; ctx.lineWidth = 1; ctx.stroke();
   }
-  leg(ctx, -5 + swing, look.fur, ol, look, true);
-  leg(ctx, 11 - swing, look.fur, ol, look, true);
 
   // head
   const hx = 5, hy = -44 - yawn * 3 + (eat ? 3 + Math.abs(Math.sin(t * 14)) * 3 : talk ? Math.abs(Math.sin(t * 7)) * 2 : 0);
