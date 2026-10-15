@@ -397,6 +397,10 @@ function kitchen(ctx, sc) {
   rrect(ctx, -6, y + 16, W + 12, 8, 3); fillStroke(ctx, p.counterEdge, null);
   if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(0, y + 15, W, 2); }
   if (st === 0) { ctx.fillStyle = 'rgba(110,80,50,0.15)'; ellipse(ctx, 224, y + 10, 22, 5); ctx.fill(); } // stain
+  if (sc.iso) { // chunkier counter: a lit top edge and a longer shadow on the café floor
+    ctx.fillStyle = 'rgba(255,255,255,0.38)'; ctx.fillRect(0, y + 2, W, 3);
+    ctx.fillStyle = 'rgba(70,40,25,0.1)'; ctx.fillRect(0, y - 16, W, 10);
+  }
 }
 
 /** Kitchen shelves at the far ends: jars, a sack of flour and a pot plant. */
@@ -571,12 +575,14 @@ export function drawTable(ctx, t, sc, time = 0) {
 }
 function drawTableTop(ctx, t, sc, time) {
   const p = sc.pal, st = sc.stage;
-  ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill();
+  if (sc.iso) { ellipse(ctx, t.x + 12, t.y + 6, 44, 11); ctx.fillStyle = SHADOW; ctx.fill(); } // light from the windows: shadow falls forward-right
+  else { ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill(); }
   ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, p.woodDark, null);
   rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, p.wood, null);
   clipped(ctx, () => rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4), () => woodGrain(ctx, t.x - 5, t.y - 24, 10, 25, t.x, true));
   if (st === 0) { // bare, slightly tilted wooden top with a crack
     ctx.save(); ctx.translate(t.x, t.y - 26); ctx.rotate(-0.04);
+    if (sc.iso) { ellipse(ctx, 0, 6, 44, 22); fillStroke(ctx, p.woodDark, null); } // tabletop thickness
     ellipse(ctx, 0, 0, 44, 22); fillStroke(ctx, p.wood, p.woodDark, 2.5);
     clipped(ctx, () => ellipse(ctx, 0, 0, 42.5, 20.5), () => woodGrain(ctx, -44, -22, 88, 44, t.x + t.y));
     ctx.strokeStyle = p.woodDark; ctx.lineWidth = 1.5;
@@ -584,6 +590,7 @@ function drawTableTop(ctx, t, sc, time) {
     ctx.restore();
     return;
   }
+  if (sc.iso) { ellipse(ctx, t.x, t.y - 20, 46, 24); fillStroke(ctx, p.clothRim, null); } // tabletop thickness
   ellipse(ctx, t.x, t.y - 26, 46, 24); fillStroke(ctx, p.cloth, st >= 3 ? '#e3b94f' : p.clothRim, 3);
   ellipse(ctx, t.x, t.y - 27, 34, 16); ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
   if (st >= 2) { // vase + flower
@@ -677,8 +684,8 @@ export function drawWallLive(ctx, t, sc, now = new Date(), outside = null) {
   circle(ctx, cx, cy, 2.5); ctx.fillStyle = '#ff8fab'; ctx.fill();
   if (st >= 3) fairyLights(ctx, t);
   if (sc.season && sc.season !== 'halloween') drawSeason(ctx, t, sc);
-  });
   if (sc.theme === 'seaside') drawGnome(ctx, t);
+  });
   if (sc.season === 'halloween') drawSeason(ctx, t, sc); // pumpkins on the counter: not on the wall
 }
 

@@ -11,7 +11,7 @@ const inside = (p, r) => p.x > r.x && p.x < r.x + r.w && p.y > r.y && p.y < r.y 
 export function constrain(p, blockers = LAYOUT.blockers) {
   const w = LAYOUT.walk;
   p.x = clamp(p.x, w.minX, w.maxX);
-  p.y = clamp(p.y, w.minY, w.maxY);
+  p.y = clamp(p.y, w.wallY ? Math.max(w.minY, w.wallY(p.x)) : w.minY, w.maxY); // iso room: the walls come further forward at the sides
   for (const b of blockers) {
     if (!inside(p, b)) continue;
     const d = [p.x - b.x, b.x + b.w - p.x, p.y - b.y, b.y + b.h - p.y];

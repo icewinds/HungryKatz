@@ -2,6 +2,7 @@
 
 import assert from 'node:assert/strict';
 import { GameManager, pickBreed } from '../js/gameManager.js';
+import { constrain } from '../js/pathing.js';
 import { UpgradeManager } from '../js/upgrades.js';
 import { HighScoreManager, cleanName } from '../js/highScores.js';
 import { DEFAULT_SAVE, Storage } from '../js/storage.js';
@@ -897,6 +898,19 @@ test('events: serving during an event wins its prizes in order, and event items 
   gm.season = null; gm.eventServe();
   assert.equal(e.served, ev.prizes[1].at + 200, 'no event, no counting');
   assert.equal(eventKey('winter', new Date(2027, 0, 3)), 'winter-2026', 'January belongs to last December');
+});
+
+test('iso room: walkers stop in front of the slanted walls; without it the flat limit applies', () => {
+  const p = { x: 30, y: 200 };
+  constrain(p, []);
+  assert.equal(p.y, LAYOUT.walk.minY, 'flat room: the usual top limit');
+  LAYOUT.walk.wallY = x => 172 + 0.25 * Math.abs(x - 560) + 26;
+  try {
+    const q = { x: 30, y: 200 }; constrain(q, []);
+    assert.equal(q.y, 172 + 0.25 * 530 + 26, 'iso: further forward at the sides');
+    const mid = { x: 560, y: 200 }; constrain(mid, []);
+    assert.equal(mid.y, LAYOUT.walk.minY, 'by the corner the old limit still holds');
+  } finally { delete LAYOUT.walk.wallY; }
 });
 
 console.log(`${passed} passed`);

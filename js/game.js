@@ -580,7 +580,12 @@ const shownDecor = () => save.decor.owned.filter(id => !save.decor.hidden.includ
 gm.season = season in EVENTS ? season : null; // seasonal events run with the seasonal decorations
 // Isometric room prototype: open the game with ?iso. Cats step out of the (lower) iso front door.
 const ISO_ON = new URLSearchParams(location.search).has('iso');
-if (ISO_ON) LAYOUT.entry.y = LAYOUT.exit.y = LAYOUT.entry.y + wallDrop(LAYOUT.entry.x); // ponytail: mutates config for the prototype; move into LAYOUT once iso is the only room
+if (ISO_ON) { // ponytail: mutates config for the prototype; move into LAYOUT once iso is the only room
+  LAYOUT.entry.y = LAYOUT.exit.y = LAYOUT.entry.y + wallDrop(LAYOUT.entry.x);
+  LAYOUT.walk.wallY = x => 172 + wallDrop(x) + 26; // feet stay in front of the slanted walls
+}
+/** A tap on the (slanted iso) wall, in flat-wall coordinates, for things on the window sills. */
+const onWallPoint = p => (scene.iso ? { x: p.x, y: p.y - wallDrop(p.x) } : p);
 let scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
 scene.iso = ISO_ON;
 /** Re-read theme/level and redraw the static café (after level up or a scene change). */
@@ -635,8 +640,8 @@ canvas.addEventListener('pointerdown', e => {
   dragging = true;
   downAt = { x: e.clientX, y: e.clientY };
   const p = toWorld(e.clientX, e.clientY);
-  if (gm.state === 'playing' && !gm.paused && inEggPot(p)) return eggTap();
-  if (gm.state === 'playing' && !gm.paused && scene.theme === 'seaside' && inRect(p, GNOME_SPOT)) return gnomeScream();
+  if (gm.state === 'playing' && !gm.paused && inEggPot(onWallPoint(p))) return eggTap();
+  if (gm.state === 'playing' && !gm.paused && scene.theme === 'seaside' && inRect(onWallPoint(p), GNOME_SPOT)) return gnomeScream();
   gm.tap(p.x, p.y);
 });
 
@@ -677,7 +682,7 @@ function gnomeScream() {
   audio.unlock();
   audio.play('gnome');
   if (!save.stats.gnome) { save.stats.gnome = true; persist(); checkStickers(); }
-  gm.fx.push({ kind: 'text', x: gnome.x - 40, y: gnome.y + 30, text: 'HOOO!', color: '#e8504f', size: 24, t: 0, life: 1 });
+  gm.fx.push({ kind: 'text', x: gnome.x - 40, y: gnome.y + 30 + (scene.iso ? wallDrop(gnome.x) : 0), text: 'HOOO!', color: '#e8504f', size: 24, t: 0, life: 1 });
 }
 const inEggPot = p => p.x >= EGG_POT.x && p.x <= EGG_POT.x + EGG_POT.w && p.y >= EGG_POT.y && p.y <= EGG_POT.y + EGG_POT.h;
 let eggTaps = 0, eggLast = 0, preGhostCat = null;
