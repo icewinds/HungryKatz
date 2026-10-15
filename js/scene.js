@@ -101,7 +101,7 @@ export function seasonFor(d = new Date()) {
 // The flat back wall folds into two walls meeting in a corner at ISO.apex. Everything on the wall is drawn slanted
 // (vertical edges stay vertical), so windows, door, clock and decorations follow; the floor gets diagonal planks.
 // Gameplay positions are unchanged: only the room shell is drawn differently.
-export const ISO = { apex: 560, slope: 0.25 };
+export const ISO = { apex: 560, slope: 0.25, tableLift: 10 }; // tableLift: iso tabletops stand this much taller
 /** How far the iso walls drop below the flat back wall at x (0 at the corner). */
 export const wallDrop = x => ISO.slope * Math.abs(x - ISO.apex);
 /** Draw wall things slanted onto the two iso walls, or straight onto the flat back wall when not in iso. */
@@ -588,7 +588,7 @@ export function drawTable(ctx, t, sc, time = 0) {
 /** Iso table body, drawn under the top: shadow cast away from the windows, a raised base disc, a pedestal shaded on its
  *  right, and the top's thickness: a wooden edge when shabby, otherwise a tablecloth hanging over it with a scalloped hem. */
 function isoTableBody(ctx, t, sc) {
-  const p = sc.pal, cloth = sc.stage > 0, top = t.y - 26, drop = cloth ? 13 : 7, side = cloth ? p.clothRim : p.woodDark;
+  const p = sc.pal, cloth = sc.stage > 0, top = t.y - 26 - ISO.tableLift, drop = cloth ? 20 : 10, side = cloth ? p.clothRim : p.woodDark;
   ellipse(ctx, t.x + 14, t.y + 6, 48, 12); ctx.fillStyle = SHADOW; ctx.fill();
   ellipse(ctx, t.x, t.y + 3, 20, 6.5); fillStroke(ctx, p.woodDark, null);                 // base disc: its edge
   ellipse(ctx, t.x, t.y, 20, 6.5); fillStroke(ctx, p.wood, p.woodDark, 1.2);               // base disc: its top
@@ -602,7 +602,9 @@ function isoTableBody(ctx, t, sc) {
   ctx.save(); band(); ctx.clip(); ctx.fillStyle = 'rgba(60,30,15,0.14)'; ctx.fillRect(t.x + 4, top - 30, 60, 80); ctx.restore(); // right side in shade
   if (cloth) { // scalloped hem along the front of the hanging cloth
     ctx.fillStyle = side;
-    for (let k = 0; k <= 12; k++) { const a = Math.PI * (0.06 + k * 0.88 / 12); circle(ctx, t.x + Math.cos(a) * 45, top + drop + Math.sin(a) * 23.5, 3.6); ctx.fill(); }
+    const gold = sc.stage >= 3; // fancy cafés: a gold band above the hem and gold-edged scallops
+    for (let k = 0; k <= 12; k++) { const a = Math.PI * (0.06 + k * 0.88 / 12); circle(ctx, t.x + Math.cos(a) * 45, top + drop + Math.sin(a) * 23.5, 3.6); fillStroke(ctx, side, gold ? '#e3b94f' : null, 1); }
+    if (gold) { ctx.beginPath(); ctx.ellipse(t.x, top + drop - 4, 46, 24, 0, Math.PI * 0.04, Math.PI * 0.96); ctx.strokeStyle = '#e3b94f'; ctx.lineWidth = 2; ctx.stroke(); }
   }
 }
 function drawTableTop(ctx, t, sc, time) {
@@ -614,12 +616,14 @@ function drawTableTop(ctx, t, sc, time) {
     rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, p.wood, null);
     clipped(ctx, () => rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4), () => woodGrain(ctx, t.x - 5, t.y - 24, 10, 25, t.x, true));
   }
+  ctx.save(); ctx.translate(0, sc.iso ? -ISO.tableLift : 0); // the top (and what sits on it) stands taller in iso
   if (st === 0) { // bare, slightly tilted wooden top with a crack
     ctx.save(); ctx.translate(t.x, t.y - 26); ctx.rotate(-0.04);
     ellipse(ctx, 0, 0, 44, 22); fillStroke(ctx, p.wood, p.woodDark, 2.5);
     clipped(ctx, () => ellipse(ctx, 0, 0, 42.5, 20.5), () => woodGrain(ctx, -44, -22, 88, 44, t.x + t.y));
     ctx.strokeStyle = p.woodDark; ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.moveTo(-10, -12); ctx.lineTo(-4, -4); ctx.lineTo(-9, 4); ctx.stroke();
+    ctx.restore();
     ctx.restore();
     return;
   }
@@ -638,6 +642,7 @@ function drawTableTop(ctx, t, sc, time) {
     ellipse(ctx, cx, cy - 4, 2.2 * f, 3.6 * f); ctx.fillStyle = '#ffb347'; ctx.fill();
     ellipse(ctx, cx, cy - 3, 1, 1.8); ctx.fillStyle = '#fff6c2'; ctx.fill();
   }
+  ctx.restore();
 }
 
 /** Open tables at the scene's level. */

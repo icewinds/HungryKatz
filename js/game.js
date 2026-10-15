@@ -584,6 +584,7 @@ if (ISO_ON) { // ponytail: mutates config for the prototype; move into LAYOUT on
   LAYOUT.entry.y = LAYOUT.exit.y = LAYOUT.entry.y + wallDrop(LAYOUT.entry.x);
   LAYOUT.walk.wallY = x => 172 + wallDrop(x) + 26; // feet stay in front of the slanted walls
   for (const s of LAYOUT.spots) if (s.row === 'bar') { s.y += wallDrop(s.x); s.plate.y += wallDrop(s.plate.x); } // the corner bar follows the walls
+  for (const s of LAYOUT.spots) if (s.row === 'table') s.plate.y -= ISO.tableLift; // dishes sit on the taller iso tabletops
 }
 /** A tap on the (slanted iso) wall, in flat-wall coordinates, for things on the window sills. */
 const onWallPoint = p => (scene.iso ? { x: p.x, y: p.y - wallDrop(p.x) } : p);
