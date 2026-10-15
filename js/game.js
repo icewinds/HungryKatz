@@ -22,6 +22,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, SERVER_LOOK, SERVER2_LOOK, drawNameTag, setCatScale, catSize,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
+import { ISO, wallDrop } from './scene.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawDecorPreview, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
@@ -577,10 +578,15 @@ const seasonParam = new URLSearchParams(location.search).get('season');
 const season = seasonParam ? (seasonParam === 'none' ? null : seasonParam) : seasonFor();
 const shownDecor = () => save.decor.owned.filter(id => !save.decor.hidden.includes(id));
 gm.season = season in EVENTS ? season : null; // seasonal events run with the seasonal decorations
+// Isometric room prototype: open the game with ?iso. Cats step out of the (lower) iso front door.
+const ISO_ON = new URLSearchParams(location.search).has('iso');
+if (ISO_ON) LAYOUT.entry.y = LAYOUT.exit.y = LAYOUT.entry.y + wallDrop(LAYOUT.entry.x); // ponytail: mutates config for the prototype; move into LAYOUT once iso is the only room
 let scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
+scene.iso = ISO_ON;
 /** Re-read theme/level and redraw the static café (after level up or a scene change). */
 function refreshScene() {
   scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
+  scene.iso = ISO_ON;
   if (bg.width > 1) buildBackground();
 }
 
@@ -837,7 +843,9 @@ function render(time) {
 function drawStreet(time) {
   for (const n of gm.npcs) {
     if (!n.outside) continue;
-    ctx.save(); ctx.translate(n.x, n.y); ctx.scale(0.8, 0.8);
+    ctx.save(); ctx.translate(n.x, n.y);
+    if (scene.iso) ctx.transform(1, n.x < ISO.apex ? ISO.slope : -ISO.slope, 0, 1, 0, 0); // undo the wall slant: cats stand upright
+    ctx.scale(0.8, 0.8);
     drawCat(ctx, 0, 0, n.look, { state: 'walk', t: time + n.phase, facing: n.facing });
     ctx.restore();
   }
@@ -848,7 +856,7 @@ function drawRushClock(time) {
   const left = gm.rushLeft;
   if (!left) return;
   const pulse = reduceMotion.matches ? 1 : 1 + Math.sin(time * 8) * 0.04;
-  ctx.save(); ctx.translate(165, 72); ctx.scale(pulse, pulse);
+  ctx.save(); ctx.translate(165, 72 + (scene.iso ? wallDrop(165) : 0)); ctx.scale(pulse, pulse);
   ctx.beginPath(); ctx.roundRect(-96, -18, 192, 36, 18); ctx.fillStyle = '#c43d5c'; ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
   ctx.font = `400 19px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';
