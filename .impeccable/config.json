@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "css/styles.css"
+        ],
+        "createdAt": "2026-10-13T21:30:51.483Z",
+        "reason": "Claude verified: the flagged borders are the speech-bubble tail (a rotated square with two edges, .menu-hello::before) and the wooden ledge under the home cat, not a card accent stripe"
+      }
+    ]
+  }
+}
