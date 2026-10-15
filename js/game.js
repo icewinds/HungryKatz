@@ -22,7 +22,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, SERVER_LOOK, SERVER2_LOOK, drawNameTag, setCatScale, catSize,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { ISO, wallDrop } from './scene.js';
+import { ISO, wallDrop, onWalls } from './scene.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawDecorPreview, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
@@ -583,6 +583,7 @@ const ISO_ON = new URLSearchParams(location.search).has('iso');
 if (ISO_ON) { // ponytail: mutates config for the prototype; move into LAYOUT once iso is the only room
   LAYOUT.entry.y = LAYOUT.exit.y = LAYOUT.entry.y + wallDrop(LAYOUT.entry.x);
   LAYOUT.walk.wallY = x => 172 + wallDrop(x) + 26; // feet stay in front of the slanted walls
+  for (const s of LAYOUT.spots) if (s.row === 'bar') { s.y += wallDrop(s.x); s.plate.y += wallDrop(s.plate.x); } // the corner bar follows the walls
 }
 /** A tap on the (slanted iso) wall, in flat-wall coordinates, for things on the window sills. */
 const onWallPoint = p => (scene.iso ? { x: p.x, y: p.y - wallDrop(p.x) } : p);
@@ -763,7 +764,7 @@ function render(time) {
   if (door > 0.08 && lastDoor <= 0.08) audio.play('bell'); // ding-ding as the door starts to open
   lastDoor = door;
   drawDoor(ctx, scene, door);
-  drawPets(ctx, save.pets, time);
+  onWalls(ctx, scene, () => drawPets(ctx, save.pets, time)); // pets by the bar and the wall follow the iso slant
 
   const menu = gm.foods;
   for (const s of gm.stations) {

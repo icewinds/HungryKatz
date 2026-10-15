@@ -43,6 +43,7 @@ export const LAYOUT = {
   door: { x: 325, y: 240 },   // first waypoint, just in front of the door
   exit: { x: 325, y: 178 },   // NPCs are removed after walking back through it
   windowBar: { x: 380, y: 168, w: 360, h: 54 },
+  longBar: { x: 380, y: 168, w: 520, h: 54 }, // with the 'longBar' decoration: stretches right (the front door is on the left), two more window seats
   tables: TABLES,
   kitchenY: KITCHEN_Y,        // top of the counter where the chef puts ready plates
   // Solid furniture for ALL tables (feet can't enter); see blockersForLevel for the active ones
@@ -60,6 +61,9 @@ export const LAYOUT = {
       { id: `T${i + 1}c`, row: 'table', table: t, x: t.x, y: t.y + SEAT_BACK, face: 1, level: t.level },
       { id: `T${i + 1}d`, row: 'table', table: t, x: t.x, y: t.y + SEAT_FRONT, face: 1, level: t.level, back: true },
     ]),
+    // the ends of the longer window bar (Decorate): only open while that decoration is out
+    { id: 'W5', row: 'bar', x: 760, y: BAR_Y, face: 1, level: 1, back: true, decor: 'longBar' },
+    { id: 'W6', row: 'bar', x: 840, y: BAR_Y, face: -1, level: 1, back: true, decor: 'longBar' },
   ],
 };
 for (let i = 0; i < LAYOUT.spots.length; i += 2) {
@@ -82,7 +86,9 @@ for (const s of LAYOUT.spots) {
 const memo = (fn, cache = new Map()) => level => cache.get(level) ?? cache.set(level, fn(level)).get(level);
 export const tablesForLevel = memo(level => TABLES.filter(t => t.level <= level));
 export const blockersForLevel = memo(level => tablesForLevel(level).map(t => LAYOUT.blockers[TABLES.indexOf(t)]));
-export const spotsForLevel = memo(level => LAYOUT.spots.filter(s => s.level <= level));
+export const spotsForLevel = memo(level => LAYOUT.spots.filter(s => s.level <= level && !s.decor)); // decoration seats: see decorSpots
+/** Extra seats that come with a decoration (e.g. the longer window bar), for the ids that are out in the café. */
+export const decorSpots = has => LAYOUT.spots.filter(s => s.decor && has(s.decor));
 
 // Café makeover: the restaurant starts shabby and gets nicer as it levels up.
 export const DECOR_STAGES = [
@@ -247,6 +253,7 @@ export const DECOR = [
   { id: 'catBed', name: 'Cosy cat bed', cost: 300, desc: 'A squishy cushion bed with a cat curled up asleep.' },
   { id: 'catTree', name: 'Cat tree', cost: 450, desc: 'A tall scratching tower with a lookout cat on top.' },
   { id: 'pawPaper', name: 'Paw wallpaper', cost: 600, desc: 'Little paw prints all over the walls.' },
+  { id: 'longBar', name: 'Longer window bar', cost: 500, desc: 'Stretches the window bar with two more seats by the windows.' },
   { id: 'pumpkins', name: 'Pumpkin patch', event: 'halloween', desc: 'Smiley pumpkins by the front door.' },
   { id: 'snowman', name: 'Snow cat', event: 'winter', desc: 'A little snowman with cat ears and a scarf.' },
   { id: 'hearts', name: 'Heart garland', event: 'valentine', desc: 'A string of pink hearts along the wall.' },

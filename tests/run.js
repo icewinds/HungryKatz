@@ -913,4 +913,14 @@ test('iso room: walkers stop in front of the slanted walls; without it the flat 
   } finally { delete LAYOUT.walk.wallY; }
 });
 
+test('longer window bar: two more window seats while the decoration is out', () => {
+  const { gm, save } = setup({ ...MAX5, level: 1 });
+  const ids = () => gm.spots.map(s => s.id);
+  assert.ok(!ids().includes('W5'), 'not without the decoration');
+  save.decor.owned.push('longBar');
+  assert.ok(ids().includes('W5') && ids().includes('W6'), 'bought: two more seats');
+  save.decor.hidden.push('longBar');
+  assert.ok(!ids().includes('W6'), 'put away: the seats go too');
+});
+
 console.log(`${passed} passed`);

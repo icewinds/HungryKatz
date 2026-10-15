@@ -3,7 +3,7 @@
 //   pickup, plated, arrive, feed, friend, wrongFood, missed, cleared, plates, levelUp, gameOver
 
 import {
-  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH, BREEDS, ALBUM, EVENTS, eventKey, OUTFITS, DECOR,
+  LAYOUT, MAX_MISSED, FEED_RADIUS, FOODS, TIPS, DIFFICULTY, COMBO, VIP, SPECIALS, PET_BONUS, levelForEarned, blockersForLevel, spotsForLevel, decorSpots, levelCrowdBonus, levelSpawnPace, rewardForLevel, foodsForLevel, foodUnlockLevel, KITCHEN, CLEARING, STAFF, REGULARS, FRIENDSHIP, SERVER, BIG_EATER, RUSH, BREEDS, ALBUM, EVENTS, eventKey, OUTFITS, DECOR,
 } from './config.js';
 import { Kitchen } from './kitchen.js';
 import { Cleaner } from './cleaner.js';
@@ -118,7 +118,9 @@ export class GameManager {
   get reward() { return rewardForLevel(this.level); }
   /** Tables (as walk blockers) and seats open at the current restaurant level. */
   get blockers() { return blockersForLevel(this.level); }
-  get spots() { return spotsForLevel(this.level); }
+  get spots() { return [...spotsForLevel(this.level), ...decorSpots(id => this.hasDecor(id))]; }
+  /** A decoration that is bought and out in the café (not put away). */
+  hasDecor(id) { return !!this.save.decor?.owned.includes(id) && !this.save.decor.hidden.includes(id); }
   /** Player-chosen difficulty from Settings. */
   get difficulty() { return DIFFICULTY[this.save.settings?.difficulty] ?? DIFFICULTY.normal; }
   /** Foods on the menu right now (unlocked by restaurant level). */

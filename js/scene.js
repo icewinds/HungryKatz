@@ -2,7 +2,7 @@
 // (shabby -> tidy -> cosy -> fancy) that unlock as the restaurant levels up.
 // A scene object is { stage: 0..3, pal: palette, level } — see makeScene().
 
-import { LAYOUT, WORLD, KITCHEN, decorStage, tablesForLevel, spotsForLevel } from './config.js';
+import { LAYOUT, WORLD, KITCHEN, decorStage, tablesForLevel, spotsForLevel, decorSpots } from './config.js';
 import { ellipse, circle, rrect, tri, fillStroke, drawFoodIcon, drawHeart, hexRgb, INK, SHADOW, FONT, drawCat, drawDish, KITCHEN_CHEF } from './art.js';
 
 const TAU = Math.PI * 2;
@@ -185,8 +185,9 @@ export function drawBackground(ctx, sc) {
   });
   if (sc.iso) isoShell(ctx);
 
-  // window bar
-  const b = LAYOUT.windowBar;
+  // window bar (a corner bar folded along both walls in iso; longer with the 'longBar' decoration)
+  const b = sc.decor?.has('longBar') ? LAYOUT.longBar : LAYOUT.windowBar;
+  onWalls(ctx, sc, () => {
   // a proper bar table: thick top, skirt board, four legs on the floor and a footrest rail
   const wood = sc.theme !== 'seaside', floorY = b.y + 66, edge = 'rgba(70,40,25,0.35)';
   ellipse(ctx, b.x + b.w / 2, floorY, b.w / 2 + 10, 7); ctx.fillStyle = SHADOW; ctx.fill();          // floor shadow
@@ -208,10 +209,11 @@ export function drawBackground(ctx, sc) {
     for (const [x, y, l] of [[b.x + 40, 182, 30], [b.x + 160, 190, 22], [b.x + 270, 178, 34]]) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + l, y + 3); ctx.stroke(); }
   }
   if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(b.x - 4, b.y + 21, b.w + 8, 2); } // gold edge trim
+  });
 
   // seats for every open spot: wooden crates when shabby, cushions after
-  for (const s of spotsForLevel(sc.level)) {
-    if (s.row === 'bar' && st >= 1) { ellipse(ctx, s.x, b.y + 15, 13, 5); fillStroke(ctx, '#fff', '#f1d4dc', 1.5); }
+  for (const s of [...spotsForLevel(sc.level), ...decorSpots(id => !!sc.decor?.has(id))]) {
+    if (s.row === 'bar' && st >= 1) { ellipse(ctx, s.x, b.y + 15 + (sc.iso ? wallDrop(s.x) : 0), 13, 5); fillStroke(ctx, '#fff', '#f1d4dc', 1.5); }
     if (st === 0) {
       rrect(ctx, s.x - 17, s.y - 9, 34, 16, 3); fillStroke(ctx, p.wood, p.woodDark, 2);
       ctx.strokeStyle = p.woodDark; ctx.lineWidth = 1.2;
@@ -457,6 +459,15 @@ function lantern(ctx, x, y) {
   for (const k of [-6, 0, 6]) { ctx.beginPath(); ctx.ellipse(x, y + 25, Math.abs(k) ? 9 : 4, 15, 0, 0, Math.PI * 2); ctx.stroke(); }
   for (const cy of [y + 10, y + 38]) { rrect(ctx, x - 6, cy, 12, 3, 1.5); fillStroke(ctx, '#c0453a', null); }
 }
+/** Decorate preview of the longer window bar: a stretch of bar top with two window-seat cushions. */
+function barPreview(ctx, x, y, sc) {
+  const p = sc.pal, edge = 'rgba(70,40,25,0.35)';
+  for (const lx of [-58, 48]) { rrect(ctx, x + lx, y + 10, 10, 34, 2); fillStroke(ctx, p.barFront, edge, 1.2); }
+  rrect(ctx, x - 70, y + 4, 140, 12, 4); fillStroke(ctx, p.barFront, edge, 1.2);
+  rrect(ctx, x - 74, y - 10, 148, 18, 7); fillStroke(ctx, p.bar, edge, 1.4);
+  for (const dx of [-34, 34]) { ellipse(ctx, x + dx, y + 52, 18, 6); fillStroke(ctx, p.cushion, p.cushionEdge, 2); }
+}
+
 /** Spooky Café prize: three smiley pumpkins. */
 function pumpkinPatch(ctx, x, y) {
   ellipse(ctx, x, y + 2, 44, 7); ctx.fillStyle = SHADOW; ctx.fill();
@@ -552,6 +563,7 @@ const DECOR_ART = {
   pumpkins: { layer: 'floor', spots: [[246, 226]], isoSpots: [[246, 300]], draw: pumpkinPatch, prev: [80, 96, 1.15] },
   snowman: { layer: 'floor', spots: [[990, 236]], isoSpots: [[1000, 304]], draw: snowCat, prev: [80, 102, 0.95] },
   hearts: { layer: 'wall', spots: [[24, 142]], draw: heartGarland, prev: [-10, 40, 0.42] },
+  longBar: { layer: 'bar', spots: [], draw: barPreview, prev: [80, 70, 1] }, // drawn as the window bar itself; this is the shop picture
 };
 function drawDecor(ctx, sc, layer) {
   for (const [id, a] of Object.entries(DECOR_ART)) if (a.layer === layer && sc.decor?.has(id)) for (const [x, y] of (sc.iso && a.isoSpots) || a.spots) a.draw(ctx, x, y, sc);
