@@ -369,7 +369,7 @@ export const ICONS = {
     circle(ctx, 0, 11, 2.4); ctx.fillStyle = '#b7a4ad'; ctx.fill();
   },
 };
-for (const [id, color] of [['apronPink', '#ff8fab'], ['apronMint', '#6fcf9f'], ['apronSky', '#7fb3ff'], ['apronSunny', '#ffc94d'], ['apronGrape', '#a07be0'], ['apronCherry', '#ff5d73']]) ICONS[id] = apron(color);
+for (const [id, color] of [['apronPink', '#ff8fab'], ['apronMint', '#6fcf9f'], ['apronSky', '#7fb3ff'], ['apronSunny', '#ffc94d'], ['apronGrape', '#a07be0'], ['apronCherry', '#ff5d73'], ['apronCocoa', '#3b2f36']]) ICONS[id] = apron(color);
 
 // Emoji (as written in copy) -> drawn icon. Variation selectors are ignored.
 const EMOJI = {
@@ -379,7 +379,7 @@ const EMOJI = {
   '🐶': 'puppy', '💰': 'bag', '💖': 'heart', '✨': 'sparkles', '🔗': 'link', '❓': 'help', '⚙': 'gear', '📲': 'install', '👆': 'tap',
   '🍣': 'sushi', '🧁': 'cupcake', '👒': 'sunhat', '🧹': 'broom', '🧙': 'gnome', '🐟': 'goldfish', '🦜': 'parrot', '🧑‍🍳': 'chefhat',
   '🧶': 'beanie', '🥳': 'partyhat', '🎨': 'beret', '🎩': 'tophat', '🩷': 'apronPink', '🟢': 'apronMint', '🔵': 'apronSky', '🟡': 'apronSunny',
-  '🟣': 'apronGrape', '🔴': 'apronCherry', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '📷': 'camera', '⌨': 'keyboard', '🎯': 'target', '🤍': 'heartEmpty',
+  '🟣': 'apronGrape', '🔴': 'apronCherry', '🟤': 'apronCocoa', '⚡': 'bolt', '⏱': 'timer', '🍀': 'clover', '🪑': 'table', '❔': 'question', '📋': 'clipboard', '📥': 'restore', '📖': 'book', '📷': 'camera', '⌨': 'keyboard', '🎯': 'target', '🤍': 'heartEmpty',
 };
 const EMOJI_RE = /\p{Extended_Pictographic}️?(?:‍\p{Extended_Pictographic}️?)*/gu;
 export const iconFor = emoji => EMOJI[emoji.replace(/️/g, '')];

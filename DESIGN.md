@@ -160,7 +160,7 @@ components:
 
 HungryKatz looks like a café sewn from felt and paper by hand. Every surface has a material: cream paper panels with a faint grain, felt buttons with a stitched seam just inside the edge and a darker lip underneath, a paw-print wallpaper around the frame. The café itself is the stage. The home screen is the live café seen through a cream frame, and menus sit over it as paper cards, never as opaque pages.
 
-Density is low and the type is big because the players are children holding a phone sideways with both thumbs. One typeface does all the talking, warm and chunky, in strawberry pink, marmalade orange and cocoa brown on oat and cream. The cats are drawn fluffy (cheek tufts, chest ruff, a puffed tail tip), and the décor (cat trees, cushion beds, lanterns, plants) keeps the room cosy rather than busy.
+Density is low and the type is big because the players are children holding a phone sideways with both thumbs. One typeface does all the talking, warm and chunky, in strawberry pink, marmalade orange and cocoa brown on oat and cream. The cats look needle-felted and chibi: a big round head, soft rounded ears with pink insides, big glossy dark eyes with two highlights (each cat's eye colour as a soft glint), rosy blush ovals, a tiny pink nose and a "w" mouth, barely-there outlines with a soft fuzz halo and faint fibre flecks, and a big plume tail. Waiters wear a felt apron with a pocket and a little paw print, a white collar and a red bow tie, and the décor (cat trees, cushion beds, lanterns, plants) keeps the room cosy rather than busy.
 
 Things should feel soft and squishy: a tap presses a button down onto its lip, panels pop gently into place, and nothing is sharp, glossy or glassy.
 

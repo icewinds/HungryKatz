@@ -283,6 +283,7 @@ export const OUTFITS = {
     { id: 'sunny', name: 'Sunny', icon: '🟡', cost: 40, color: '#ffc94d' },
     { id: 'grape', name: 'Grape', icon: '🟣', cost: 60, color: '#a07be0' },
     { id: 'cherry', name: 'Cherry', icon: '🔴', cost: 60, color: '#ff5d73' },
+    { id: 'cocoa', name: 'Cocoa', icon: '🟤', cost: 60, color: '#3b2f36' },
   ],
 };
 

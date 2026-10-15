@@ -150,8 +150,28 @@ function plush(ctx, cx, cy, rx, ry) {
 /** A soft, fuzzy fur outline: a faint edge line with fur strands brushed across it (fur colour, plus a few darker ones). */
 function softFurEdge(ctx, look, ol, cx, cy, rx, ry, tufts, amp, seed) {
   furPath(ctx, cx, cy, rx, ry, tufts, amp, seed);
-  ctx.save(); ctx.globalAlpha = 0.5; ctx.strokeStyle = ol; ctx.lineWidth = 1.8; ctx.stroke(); ctx.restore();
-  fuzz(ctx, cx, cy, rx, ry, look.fur, Math.round(tufts * 2.6), 5, seed);
+  ctx.save(); ctx.globalAlpha = 0.3; ctx.strokeStyle = ol; ctx.lineWidth = 1.8; ctx.stroke(); ctx.restore(); // felt: barely-there edge
+  ctx.save(); ctx.globalAlpha = 0.75; fuzz(ctx, cx, cy, rx, ry, look.fur, Math.round(tufts * 3), 2.8, seed, 1.3); ctx.restore(); // a soft felt halo, not bristles
+}
+
+/** A rounded triangle (soft felt ears): corners at a and c, a rounder tip at b. */
+function roundTri(ctx, a, b, c, tip = 4, base = 2.5) {
+  ctx.beginPath(); ctx.moveTo((a[0] + c[0]) / 2, (a[1] + c[1]) / 2);
+  ctx.arcTo(a[0], a[1], b[0], b[1], base); ctx.arcTo(b[0], b[1], c[0], c[1], tip); ctx.arcTo(c[0], c[1], a[0], a[1], base);
+  ctx.closePath();
+}
+
+/** Needle-felt look inside the current clip: a scatter of tiny light and dark fibre flecks (deterministic, two strokes). */
+function felt(ctx, cx, cy, rx, ry, seed) {
+  for (const [color, k] of [['rgba(255,255,255,0.28)', 0], ['rgba(70,35,50,0.09)', 1]]) {
+    ctx.beginPath();
+    for (let i = 0; i < 16; i++) {
+      const a = seed * 3 + i * 2.39996 + k, r = Math.sqrt((i + 0.5) / 16) * 0.92;
+      const x = cx + Math.cos(a) * rx * r, y = cy + Math.sin(a) * ry * r, d = a * 1.7;
+      ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(d) * 2.4, y + Math.sin(d) * 2.4);
+    }
+    ctx.strokeStyle = color; ctx.lineWidth = 1.1; ctx.stroke();
+  }
 }
 
 /** A fluffy plume tail along a curve (a, control c, tip b): overlapping puffs that get fuller toward the tip. */
@@ -170,14 +190,8 @@ function fluffyTail(ctx, look, ol, a, c, b) {
   ctx.globalAlpha = 1;
 }
 
-/** A little tuft of hair standing up on top of the head (hats are drawn over it). */
-function headTuft(ctx, look, ol, hx, hy) {
-  ctx.beginPath(); ctx.moveTo(hx - 3, hy - 15);
-  ctx.quadraticCurveTo(hx - 3, hy - 22, hx + 1, hy - 25); ctx.quadraticCurveTo(hx + 1, hy - 20, hx + 4, hy - 19);
-  ctx.quadraticCurveTo(hx + 6, hy - 23, hx + 9, hy - 22); ctx.quadraticCurveTo(hx + 7, hy - 18, hx + 8, hy - 15);
-  ctx.fillStyle = look.fur; ctx.fill();
-  ctx.save(); ctx.globalAlpha = 0.55; ctx.strokeStyle = ol; ctx.lineWidth = 1.5; ctx.stroke(); ctx.restore();
-}
+/** The round chibi head (felt style): a bit wider than tall. */
+const HEAD_RX = 20.5, HEAD_RY = 18.5;
 
 /** Cats on the café floor are drawn this much bigger than in menus and portraits (set around the café render). */
 let catScale = 1;
@@ -216,12 +230,15 @@ export function drawCat(ctx, x, y, look, o = {}) {
   // far legs, body, near legs
   leg(ctx, -10 - swing, look.dark, ol, look);
   leg(ctx, 7 + swing, look.dark, ol, look);
-  furPath(ctx, 0, -20, 19, 15, 11, 0.09, 0.3); ctx.fillStyle = look.fur; ctx.fill();
-  ctx.save(); ctx.clip(); bodyPattern(ctx, look); plush(ctx, 0, -20, 19, 15); ctx.restore();
-  softFurEdge(ctx, look, ol, 0, -20, 19, 15, 11, 0.09, 0.3);
-  if (look.accessory === 'chef' || look.accessory === 'waiter') { // apron
-    rrect(ctx, -1, -31, 17, 22, 5); fillStroke(ctx, look.acc, '#e56b8c', 1.6);
-    rrect(ctx, 3, -20, 9, 6, 2); fillStroke(ctx, '#ffd0de', null);
+  furPath(ctx, 0, -19, 17, 16, 11, 0.09, 0.3); ctx.fillStyle = look.fur; ctx.fill();
+  ctx.save(); ctx.clip(); bodyPattern(ctx, look); plush(ctx, 0, -19, 17, 16); felt(ctx, 0, -19, 17, 16, look.seed); ctx.restore();
+  softFurEdge(ctx, look, ol, 0, -19, 17, 16, 11, 0.09, 0.3);
+  if (look.accessory === 'chef' || look.accessory === 'waiter') { // felt apron with a pocket and a little paw print
+    rrect(ctx, -5, -32, 21, 25, 6); fillStroke(ctx, look.acc, 'rgba(60,30,45,0.3)', 1.4);
+    rrect(ctx, 0, -21, 11, 7, 2.5); fillStroke(ctx, 'rgba(255,255,255,0.16)', 'rgba(60,30,45,0.25)', 1);
+    ctx.fillStyle = '#ffd68a';
+    circle(ctx, 9.5, -11, 1.9); ctx.fill();
+    for (const [dx, dy] of [[-2.3, -2.4], [0, -3.3], [2.3, -2.4]]) { circle(ctx, 9.5 + dx, -11 + dy, 0.85); ctx.fill(); }
   }
   if (look.accessory === 'ghost') { // tactical vest with pouches
     rrect(ctx, -3, -32, 20, 24, 5); fillStroke(ctx, look.acc, '#1f211c', 1.6);
@@ -241,45 +258,37 @@ export function drawCat(ctx, x, y, look, o = {}) {
   // head
   const hx = 5, hy = -44 - yawn * 3 + (eat ? 3 + Math.abs(Math.sin(t * 14)) * 3 : talk ? Math.abs(Math.sin(t * 7)) * 2 : 0);
   const droop = sad ? 6 : 0;
-  const ears = [
-    [[hx - 15, hy - 6], [hx - 13 - droop, hy - 26 + droop * 1.5], [hx - 2, hy - 15]],
-    [[hx + 5, hy - 15], [hx + 16 + droop, hy - 26 + droop * 1.5], [hx + 18, hy - 5]],
+  const ears = [ // soft rounded felt ears with pink insides
+    [[hx - 18, hy - 4], [hx - 15 - droop, hy - 28 + droop * 1.5], [hx - 3, hy - 17]],
+    [[hx + 7, hy - 17], [hx + 19 + droop, hy - 28 + droop * 1.5], [hx + 22, hy - 3]],
   ];
   for (const [i, [a, b, c]] of ears.entries()) {
-    tri(ctx, a, b, c); fillStroke(ctx, i === 1 && look.ear ? look.ear : look.fur, ol, 2.2);
+    roundTri(ctx, a, b, c); ctx.fillStyle = i === 1 && look.ear ? look.ear : look.fur; ctx.fill();
+    ctx.save(); ctx.globalAlpha = 0.3; ctx.strokeStyle = ol; ctx.lineWidth = 1.8; ctx.stroke(); ctx.restore();
     const cx = (a[0] + b[0] + c[0]) / 3, cy = (a[1] + b[1] + c[1]) / 3;
-    const k = p => [cx + (p[0] - cx) * 0.5, cy + (p[1] - cy) * 0.5];
-    tri(ctx, k(a), k(b), k(c)); fillStroke(ctx, '#ffb3c6', null);
-    ctx.strokeStyle = look.light; ctx.lineWidth = 1.5; // wisps of fluff inside the ear
-    const base = [(a[0] + c[0]) / 2, (a[1] + c[1]) / 2];
-    for (const f of [0.35, 0.55]) { ctx.beginPath(); ctx.moveTo(...base); ctx.quadraticCurveTo(base[0] + (b[0] - base[0]) * f * 0.5 + 2, base[1] + (b[1] - base[1]) * f * 0.5, base[0] + (b[0] - base[0]) * f, base[1] + (b[1] - base[1]) * f); ctx.stroke(); }
+    const k = p => [cx + (p[0] - cx) * 0.55, cy + (p[1] - cy) * 0.55 + 1];
+    roundTri(ctx, k(a), k(b), k(c), 3, 1.5); ctx.fillStyle = '#ffb3c6'; ctx.fill();
   }
-  for (const d of [-1, 1]) { // big fluffy cheek tufts (the head covers their inner half)
-    ctx.beginPath(); ctx.moveTo(hx + d * 12, hy - 1); ctx.lineTo(hx + d * 25, hy + 1); ctx.lineTo(hx + d * 18, hy + 5);
-    ctx.lineTo(hx + d * 25, hy + 9); ctx.lineTo(hx + d * 17, hy + 12); ctx.lineTo(hx + d * 21, hy + 16); ctx.lineTo(hx + d * 9, hy + 15); ctx.closePath();
-    ctx.fillStyle = look.fur; ctx.fill();
-    ctx.save(); ctx.globalAlpha = 0.5; ctx.strokeStyle = ol; ctx.lineWidth = 1.6; ctx.stroke(); ctx.restore();
-  }
-  furPath(ctx, hx, hy, 18, 17, 13, 0.05, 1.1); ctx.fillStyle = look.fur; ctx.fill();
-  ctx.save(); ctx.clip(); headPattern(ctx, look, hx, hy); plush(ctx, hx, hy, 18, 17); ctx.restore();
-  softFurEdge(ctx, look, ol, hx, hy, 18, 17, 13, 0.05, 1.1);
-  headTuft(ctx, look, ol, hx, hy);
-  ellipse(ctx, hx + 4, hy + 7, 8, 5.5); fillStroke(ctx, look.light, null);
+  furPath(ctx, hx, hy, HEAD_RX, HEAD_RY, 14, 0.04, 1.1); ctx.fillStyle = look.fur; ctx.fill();
+  ctx.save(); ctx.clip(); headPattern(ctx, look, hx, hy); plush(ctx, hx, hy, HEAD_RX, HEAD_RY); felt(ctx, hx, hy, HEAD_RX, HEAD_RY, look.seed + 2); ctx.restore();
+  softFurEdge(ctx, look, ol, hx, hy, HEAD_RX, HEAD_RY, 14, 0.04, 1.1);
+  ellipse(ctx, hx + 3.5, hy + 8.5, 9, 6.5); fillStroke(ctx, look.light, null); // soft muzzle
 
   // eyes
   const blink = (t + look.seed) % 3.6 < 0.13;
   ctx.strokeStyle = '#2b2230'; ctx.lineWidth = 2.2;
-  for (const ex of [hx - 3, hx + 10]) {
-    const ey = hy - 1;
+  for (const ex of [hx - 4, hx + 11]) { // big, wide-set chibi eyes
+    const ey = hy + 1;
     if (yawn > 0.3) { // squeezed shut: > <
       const d = ex < hx ? 1 : -1;
       ctx.beginPath(); ctx.moveTo(ex - d * 3, ey - 2.5); ctx.lineTo(ex + d * 2, ey); ctx.lineTo(ex - d * 3, ey + 2.5); ctx.stroke();
     } else if (happy) { ctx.beginPath(); ctx.arc(ex, ey + 2, 3.4, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
     else if (blink) { ctx.beginPath(); ctx.moveTo(ex - 3, ey); ctx.lineTo(ex + 3, ey); ctx.stroke(); }
     else {
-      ellipse(ctx, ex, ey, 3.6, 4.6); fillStroke(ctx, look.eye, null);
-      ellipse(ctx, ex + 0.4, ey + 0.6, 2.3, 3.3); fillStroke(ctx, '#2b2230', null);
-      circle(ctx, ex - 1, ey - 1.6, 1.3); fillStroke(ctx, '#fff', null);
+      ellipse(ctx, ex, ey, 4.4, 5.2); fillStroke(ctx, '#2a1c22', null);                  // glossy dark eye
+      ellipse(ctx, ex, ey + 1.7, 3.1, 2.6); ctx.save(); ctx.globalAlpha = 0.55; ctx.fillStyle = look.eye; ctx.fill(); ctx.restore(); // its colour, as a soft glint
+      circle(ctx, ex - 1.5, ey - 2, 1.8); fillStroke(ctx, '#fff', null);                   // big highlight
+      circle(ctx, ex + 1.7, ey + 1.9, 0.8); fillStroke(ctx, '#fff', null);                 // little highlight
     }
   }
   if (sad) {
@@ -291,7 +300,7 @@ export function drawCat(ctx, x, y, look, o = {}) {
   }
 
   // nose, mouth, cheeks, whiskers
-  tri(ctx, [hx + 1.5, hy + 3], [hx + 6.5, hy + 3], [hx + 4, hy + 6]); fillStroke(ctx, '#ff7a9a', null);
+  tri(ctx, [hx + 1.8, hy + 5], [hx + 5.2, hy + 5], [hx + 3.5, hy + 7]); fillStroke(ctx, '#ff8fab', null); // tiny pink nose
   ctx.strokeStyle = '#7a2e45'; ctx.lineWidth = 1.4;
   if (yawn > 0.05) { // big yawn: open mouth, tongue, two tiny fangs
     const my = hy + 10 + yawn, rx = 2.5 + yawn * 3.5, ry = 2 + yawn * 4.5;
@@ -301,19 +310,12 @@ export function drawCat(ctx, x, y, look, o = {}) {
   } else if ((eat || talk) && Math.sin(t * (talk ? 18 : 14)) > 0) { ellipse(ctx, hx + 4, hy + 9.5, 2.6, 2.2); fillStroke(ctx, '#7a2e45', null); }
   else if (sad) { ctx.beginPath(); ctx.arc(hx + 4, hy + 11, 2.6, Math.PI * 1.15, Math.PI * 1.85); ctx.stroke(); }
   else {
-    ctx.beginPath(); ctx.arc(hx + 2.5, hy + 7, 1.6, 0, Math.PI); ctx.stroke();
-    ctx.beginPath(); ctx.arc(hx + 5.5, hy + 7, 1.6, 0, Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx + 2, hy + 8.2, 1.5, 0, Math.PI); ctx.stroke();
+    ctx.beginPath(); ctx.arc(hx + 5, hy + 8.2, 1.5, 0, Math.PI); ctx.stroke();
   }
-  ctx.fillStyle = 'rgba(255,120,150,0.4)';
-  circle(ctx, hx - 9, hy + 6, 3.2); ctx.fill();
-  circle(ctx, hx + 15, hy + 6, 3); ctx.fill();
-  ctx.strokeStyle = 'rgba(90,61,74,0.45)'; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(hx + 12, hy + 5); ctx.lineTo(hx + 23, hy + 3);
-  ctx.moveTo(hx + 12, hy + 7); ctx.lineTo(hx + 23, hy + 8);
-  ctx.moveTo(hx - 4, hy + 5); ctx.lineTo(hx - 15, hy + 3);
-  ctx.moveTo(hx - 4, hy + 7); ctx.lineTo(hx - 15, hy + 8);
-  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,128,160,0.55)'; // rosy felt cheeks
+  ellipse(ctx, hx - 10, hy + 8, 4.4, 2.8); ctx.fill();
+  ellipse(ctx, hx + 17, hy + 8, 4.2, 2.7); ctx.fill();
 
   accessory(ctx, look, hx, hy, blink);
   ctx.restore();
@@ -327,7 +329,7 @@ function drawCatBack(ctx, look, { t, state, sad }) {
 
   // sitting body with the pattern across its back, hind paws peeking out
   furPath(ctx, 0, -18, 18, 17, 12, 0.08, 0.7); ctx.fillStyle = look.fur; ctx.fill();
-  ctx.save(); ctx.clip(); backPattern(ctx, look); plush(ctx, 0, -18, 18, 17); ctx.restore();
+  ctx.save(); ctx.clip(); backPattern(ctx, look); plush(ctx, 0, -18, 18, 17); felt(ctx, 0, -18, 18, 17, look.seed); ctx.restore();
   softFurEdge(ctx, look, ol, 0, -18, 18, 17, 12, 0.08, 0.7);
   for (const px of [-10, 10]) { ellipse(ctx, px, -2, 6.5, 3.5); fillStroke(ctx, white ? '#fff' : look.fur, ol, 1.6); }
 
@@ -340,19 +342,15 @@ function drawCatBack(ctx, look, { t, state, sad }) {
   const hy = -44 + (eat ? 2 + Math.abs(Math.sin(t * 10)) * 3 : 0);
   const droop = sad ? 6 : 0;
   for (const [i, [a, b, c]] of [
-    [[hx - 16, hy - 5], [hx - 12 - droop, hy - 25 + droop * 1.5], [hx - 2, hy - 14]],
-    [[hx + 2, hy - 14], [hx + 12 + droop, hy - 25 + droop * 1.5], [hx + 16, hy - 5]],
-  ].entries()) { tri(ctx, a, b, c); fillStroke(ctx, i === 1 && look.ear ? look.ear : look.fur, ol, 2.2); }
-  furPath(ctx, hx, hy, 18, 17, 13, 0.05, 1.1); ctx.fillStyle = look.fur; ctx.fill();
-  ctx.save(); ctx.clip(); backHeadPattern(ctx, look, hx, hy); plush(ctx, hx, hy, 18, 17); ctx.restore();
-  softFurEdge(ctx, look, ol, hx, hy, 18, 17, 13, 0.05, 1.1);
-  headTuft(ctx, look, ol, hx - 3, hy);
-  // whisker tips poking out either side of the head
-  ctx.strokeStyle = 'rgba(90,61,74,0.45)'; ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(hx - 17, hy + 6); ctx.lineTo(hx - 23, hy + 4);
-  ctx.moveTo(hx + 17, hy + 6); ctx.lineTo(hx + 23, hy + 4);
-  ctx.stroke();
+    [[hx - 19, hy - 4], [hx - 14 - droop, hy - 28 + droop * 1.5], [hx - 3, hy - 17]],
+    [[hx + 3, hy - 17], [hx + 14 + droop, hy - 28 + droop * 1.5], [hx + 19, hy - 4]],
+  ].entries()) {
+    roundTri(ctx, a, b, c); ctx.fillStyle = i === 1 && look.ear ? look.ear : look.fur; ctx.fill();
+    ctx.save(); ctx.globalAlpha = 0.3; ctx.strokeStyle = ol; ctx.lineWidth = 1.8; ctx.stroke(); ctx.restore();
+  }
+  furPath(ctx, hx, hy, HEAD_RX, HEAD_RY, 14, 0.04, 1.1); ctx.fillStyle = look.fur; ctx.fill();
+  ctx.save(); ctx.clip(); backHeadPattern(ctx, look, hx, hy); plush(ctx, hx, hy, HEAD_RX, HEAD_RY); felt(ctx, hx, hy, HEAD_RX, HEAD_RY, look.seed + 2); ctx.restore();
+  softFurEdge(ctx, look, ol, hx, hy, HEAD_RX, HEAD_RY, 14, 0.04, 1.1);
   accessoryBack(ctx, look, hx, hy);
 }
 
@@ -415,7 +413,7 @@ export function drawDish(ctx, x, y, type, left, alpha = 1) {
 /** Skull-print balaclava + headset (Ghost easter-egg cat). Drawn over the face. */
 function ghostMask(ctx, hx, hy, blink = false) {
   // balaclava: dark hood around the face, pale skull print on the front
-  ellipse(ctx, hx, hy, 18, 17); ctx.strokeStyle = '#262624'; ctx.lineWidth = 5; ctx.stroke();
+  ellipse(ctx, hx, hy, HEAD_RX, HEAD_RY); ctx.strokeStyle = '#262624'; ctx.lineWidth = 5; ctx.stroke();
   ellipse(ctx, hx + 4, hy + 2, 12.5, 13); fillStroke(ctx, '#d8d4ca', '#9d998f', 1.2);
   ctx.strokeStyle = 'rgba(60,58,54,0.35)'; ctx.lineWidth = 1; // worn fabric streaks
   for (const dx of [-4, 2, 9]) { ctx.beginPath(); ctx.moveTo(hx + dx, hy - 10); ctx.lineTo(hx + dx + 1, hy - 3); ctx.stroke(); }
@@ -511,9 +509,9 @@ export function accessory(ctx, look, hx, hy, blink = false) {
       break;
     case 'glasses':
       ctx.strokeStyle = '#3d3540'; ctx.lineWidth = 1.8;
-      circle(ctx, hx - 3, hy - 1, 5.6); ctx.stroke();
-      circle(ctx, hx + 10, hy - 1, 5.6); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(hx + 2.6, hy - 1); ctx.lineTo(hx + 4.4, hy - 1); ctx.stroke();
+      circle(ctx, hx - 4, hy + 1, 6.4); ctx.stroke();
+      circle(ctx, hx + 11, hy + 1, 6.4); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(hx + 2.4, hy + 1); ctx.lineTo(hx + 4.6, hy + 1); ctx.stroke();
       break;
     case 'flower':
       for (let i = 0; i < 5; i++) {
@@ -560,6 +558,7 @@ export function accessory(ctx, look, hx, hy, blink = false) {
       break;
     case 'waiter': { // bow tie, plus any wardrobe hat
       const bx = hx + 3, by = hy + 19;
+      for (const d of [-1, 1]) { tri(ctx, [bx, by - 2], [bx + d * 9, by - 3.5], [bx + d * 5, by + 4]); fillStroke(ctx, '#fff', 'rgba(60,30,45,0.25)', 1); } // white collar
       for (const d of [-1, 1]) { tri(ctx, [bx, by], [bx + d * 7.5, by - 4.5], [bx + d * 7.5, by + 4.5]); fillStroke(ctx, '#e8504f', ol, 1.2); }
       circle(ctx, bx, by, 2.2); fillStroke(ctx, '#c43d5c', ol, 1);
       if (look.hat === 'chef') accessory(ctx, { ...look, accessory: 'chef', hat: null }, hx, hy, blink);
