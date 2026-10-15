@@ -585,16 +585,37 @@ export function drawTable(ctx, t, sc, time = 0) {
   drawTableTop(ctx, t, sc, time);
   ctx.restore();
 }
+/** Iso table body, drawn under the top: shadow cast away from the windows, a raised base disc, a pedestal shaded on its
+ *  right, and the top's thickness: a wooden edge when shabby, otherwise a tablecloth hanging over it with a scalloped hem. */
+function isoTableBody(ctx, t, sc) {
+  const p = sc.pal, cloth = sc.stage > 0, top = t.y - 26, drop = cloth ? 13 : 7, side = cloth ? p.clothRim : p.woodDark;
+  ellipse(ctx, t.x + 14, t.y + 6, 48, 12); ctx.fillStyle = SHADOW; ctx.fill();
+  ellipse(ctx, t.x, t.y + 3, 20, 6.5); fillStroke(ctx, p.woodDark, null);                 // base disc: its edge
+  ellipse(ctx, t.x, t.y, 20, 6.5); fillStroke(ctx, p.wood, p.woodDark, 1.2);               // base disc: its top
+  rrect(ctx, t.x - 6, top + 4, 12, t.y - top - 4, 3); fillStroke(ctx, p.wood, null);      // pedestal
+  ctx.fillStyle = 'rgba(60,30,15,0.2)'; ctx.fillRect(t.x + 1, top + 4, 5, t.y - top - 4); // its shaded side
+  const band = () => { // the side of the top: lower half of the top ellipse, extended down by `drop`
+    ctx.beginPath(); ctx.ellipse(t.x, top, 46, 24, 0, 0, Math.PI); ctx.lineTo(t.x - 46, top + drop);
+    ctx.ellipse(t.x, top + drop, 46, 24, 0, Math.PI, 0, true); ctx.closePath();
+  };
+  band(); ctx.fillStyle = side; ctx.fill();
+  ctx.save(); band(); ctx.clip(); ctx.fillStyle = 'rgba(60,30,15,0.14)'; ctx.fillRect(t.x + 4, top - 30, 60, 80); ctx.restore(); // right side in shade
+  if (cloth) { // scalloped hem along the front of the hanging cloth
+    ctx.fillStyle = side;
+    for (let k = 0; k <= 12; k++) { const a = Math.PI * (0.06 + k * 0.88 / 12); circle(ctx, t.x + Math.cos(a) * 45, top + drop + Math.sin(a) * 23.5, 3.6); ctx.fill(); }
+  }
+}
 function drawTableTop(ctx, t, sc, time) {
   const p = sc.pal, st = sc.stage;
-  if (sc.iso) { ellipse(ctx, t.x + 12, t.y + 6, 44, 11); ctx.fillStyle = SHADOW; ctx.fill(); } // light from the windows: shadow falls forward-right
-  else { ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill(); }
-  ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, p.woodDark, null);
-  rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, p.wood, null);
-  clipped(ctx, () => rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4), () => woodGrain(ctx, t.x - 5, t.y - 24, 10, 25, t.x, true));
+  if (sc.iso) isoTableBody(ctx, t, sc); // 2.5D: base disc, shaded pedestal, thick top edge or hanging cloth
+  else {
+    ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill();
+    ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, p.woodDark, null);
+    rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, p.wood, null);
+    clipped(ctx, () => rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4), () => woodGrain(ctx, t.x - 5, t.y - 24, 10, 25, t.x, true));
+  }
   if (st === 0) { // bare, slightly tilted wooden top with a crack
     ctx.save(); ctx.translate(t.x, t.y - 26); ctx.rotate(-0.04);
-    if (sc.iso) { ellipse(ctx, 0, 6, 44, 22); fillStroke(ctx, p.woodDark, null); } // tabletop thickness
     ellipse(ctx, 0, 0, 44, 22); fillStroke(ctx, p.wood, p.woodDark, 2.5);
     clipped(ctx, () => ellipse(ctx, 0, 0, 42.5, 20.5), () => woodGrain(ctx, -44, -22, 88, 44, t.x + t.y));
     ctx.strokeStyle = p.woodDark; ctx.lineWidth = 1.5;
@@ -602,9 +623,9 @@ function drawTableTop(ctx, t, sc, time) {
     ctx.restore();
     return;
   }
-  if (sc.iso) { ellipse(ctx, t.x, t.y - 20, 46, 24); fillStroke(ctx, p.clothRim, null); } // tabletop thickness
   ellipse(ctx, t.x, t.y - 26, 46, 24); fillStroke(ctx, p.cloth, st >= 3 ? '#e3b94f' : p.clothRim, 3);
   ellipse(ctx, t.x, t.y - 27, 34, 16); ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
+  if (sc.iso) { ellipse(ctx, t.x - 14, t.y - 33, 20, 7); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill(); } // sheen where the window light lands
   if (st >= 2) { // vase + flower
     rrect(ctx, t.x - 22, t.y - 28, 8, 12, 3); fillStroke(ctx, '#a9dcf5', null);  // front-left, clear of the plates
     circle(ctx, t.x - 18, t.y - 33, 4.5); fillStroke(ctx, '#ff8fab', null);
