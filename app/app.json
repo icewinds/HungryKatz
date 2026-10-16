@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "HungryKatz",
+    "slug": "hungrykatz",
+    "version": "1.0.0",
+    "orientation": "landscape",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#fbefdf",
+    "ios": {
+      "bundleIdentifier": "tech.solutioncloud.hungrykatz",
+      "supportsTablet": true,
+      "requireFullScreen": true
+    },
+    "android": {
+      "package": "tech.solutioncloud.hungrykatz",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundColor": "#fbefdf"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7d798dbb-1b5d-4857-b5a5-ca90c96e39d6"
+      }
+    }
+  }
+}

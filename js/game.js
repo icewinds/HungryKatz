@@ -506,8 +506,11 @@ let lastScore = 0;
 
 // ---------------------------------------------------------------- sharing
 const GAME_URL = 'https://hungrykatz.solutioncloud.tech/';
+/** Running inside the HungryKatz phone app (the Expo app sets this flag before the game starts). */
+const IN_APP = !!window.hungryKatzApp;
 /** Phone share sheet when available; otherwise copy the link. */
 async function shareGame(text) {
+  if (IN_APP && window.ReactNativeWebView) { window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'share', text, url: GAME_URL })); return; } // the app's native share sheet
   try {
     if (navigator.share) { await navigator.share({ title: 'HungryKatz', text, url: GAME_URL }); return; }
     await navigator.clipboard.writeText(`${text} ${GAME_URL}`);
@@ -1116,7 +1119,7 @@ window.addEventListener('appinstalled', () => {
   installPrompt = null;
   ui.setInstall({ available: false, standalone: true });
 });
-if ('serviceWorker' in navigator) {
+if ('serviceWorker' in navigator && !IN_APP) { // the app carries everything already
   window.addEventListener('load', () => navigator.serviceWorker.register('./service-worker.js').catch(err => console.warn('SW failed', err)));
 }
 
@@ -1132,7 +1135,7 @@ resize();
 document.fonts?.ready.then(buildBackground); // redraw the sign once Fredoka loads
 syncToggles();
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-ui.installTip = isIOS || /Android/i.test(navigator.userAgent);
+ui.installTip = !IN_APP && (isIOS || /Android/i.test(navigator.userAgent)); // no "install" tips inside the app
 ui.setInstall({ available: false, standalone: isStandalone() });
 if (isIOS) {
   // iPhone/iPad: no install button; explain Safari's Add to Home Screen instead

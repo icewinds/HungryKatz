@@ -1,0 +1,23 @@
+{
+  "name": "hungrykatz-app",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "expo": "~58.0.12",
+    "expo-status-bar": "~58.0.3",
+    "react": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-webview": "14.0.1"
+  },
+  "scripts": {
+    "bundle-game": "node scripts/bundle-game.mjs",
+    "start": "node scripts/bundle-game.mjs && expo start",
+    "android": "node scripts/bundle-game.mjs && expo start --android",
+    "ios": "node scripts/bundle-game.mjs && expo start --ios",
+    "web": "expo start --web"
+  },
+  "private": true,
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}
