@@ -129,7 +129,7 @@ function isoFloor(ctx, sc) {
     ctx.beginPath(); ctx.moveTo(0, c); ctx.lineTo(W, c - s * W); ctx.stroke();
     for (let x = (r % 3) * 60 + 20; x < W; x += 180) { const y = c - s * x; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gap / (2 * s), y + gap / 2); ctx.stroke(); }
   }
-  ctx.fillStyle = 'rgba(255,240,205,0.22)'; // sunlight from each window, falling forward onto the floor
+  ctx.fillStyle = sc.theme === 'moonlight' ? 'rgba(205,215,255,0.07)' : 'rgba(255,240,205,0.22)'; // light from each window falling forward: warm sun, or faint moonlight in the bistro
   for (const w of ISO_WINDOWS) {
     const b = x => 172 + wallDrop(x), [x0, x1] = [w.x + 10, w.x + w.w - 10];
     ctx.beginPath(); ctx.moveTo(x0, b(x0)); ctx.lineTo(x1, b(x1)); ctx.lineTo(x1 + 60, b(x1) + 110); ctx.lineTo(x0 + 60, b(x0) + 110); ctx.closePath(); ctx.fill();
@@ -137,9 +137,9 @@ function isoFloor(ctx, sc) {
 }
 
 /** Iso shell over the walls: dark ceiling above them, the corner seam, the right wall a touch shadier, a skirting shadow. */
-function isoShell(ctx) {
+function isoShell(ctx, sc) {
   const { W } = WORLD, { apex } = ISO, d0 = wallDrop(0), dW = wallDrop(W);
-  ctx.fillStyle = '#5b4038';
+  ctx.fillStyle = mix(sc.pal.wainscot, '#2a1d22', 0.6); // ceiling: the scene's own colour, deep in shadow
   ctx.beginPath(); ctx.moveTo(0, -400); ctx.lineTo(W, -400); ctx.lineTo(W, dW); ctx.lineTo(apex, 0); ctx.lineTo(0, d0); ctx.closePath(); ctx.fill();
   ctx.fillStyle = 'rgba(90,50,30,0.07)';
   ctx.beginPath(); ctx.moveTo(apex, 0); ctx.lineTo(W, dW); ctx.lineTo(W, 172 + dW); ctx.lineTo(apex, 172); ctx.closePath(); ctx.fill();
@@ -183,7 +183,7 @@ export function drawBackground(ctx, sc) {
   if (st >= 2) bunting(ctx, p);
   drawDecor(ctx, sc, 'wall');
   });
-  if (sc.iso) isoShell(ctx);
+  if (sc.iso) isoShell(ctx, sc);
 
   // window bar (a corner bar folded along both walls in iso; longer with the 'longBar' decoration)
   const b = sc.decor?.has('longBar') ? LAYOUT.longBar : LAYOUT.windowBar;
