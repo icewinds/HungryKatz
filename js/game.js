@@ -4,7 +4,7 @@
 import {
   WORLD, LAYOUT, KITCHEN, MAX_MISSED, FOODS, DIFFICULTY, DECOR_STAGES, levelProgress, foodUnlockLevel,
   foodsForLevel, tablesForLevel, decorStage, GHOST_LINES, GHOST_CUPCAKE_SCENE, PETS, OUTFITS, STAFF,
-  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER, UPGRADES, RUSH, BREEDS, EVENTS, eventKey,
+  REGULARS, FRIENDSHIP, RECIPE_TIERS, CHALLENGES, DECOR, SERVER, UPGRADES, RUSH, BREEDS, EVENTS, eventKey, ISO, wallDrop,
 } from './config.js';
 import { STICKERS, awardStickers, recordServe } from './achievements.js';
 import { watchIcons, fillRichText, drawIcon } from './icons.js';
@@ -22,7 +22,7 @@ import {
   drawCat, drawFoodIcon, drawCarryBadge, drawWaiterTray, drawRequest, drawPass, drawBroom, drawPlateStack, CLEANER_LOOK, SERVER_LOOK, SERVER2_LOOK, drawNameTag, setCatScale, catSize,
   drawHeart, drawFx, drawChatBubble, drawMissBadge, drawDish, greyLook, drawTapQueue, canvasIcons, PLAYER_LOOKS, playerLook, dressUp, FONT,
 } from './art.js';
-import { ISO, wallDrop, onWalls } from './scene.js';
+import { onWalls } from './scene.js';
 import { THEMES, makeScene, drawBackground, drawTable, drawWallLive, drawDecorPreview, sceneTables, drawPets, drawDoor, drawKitchen, seasonFor, EGG_POT, GNOME_SPOT, gnome } from './scene.js';
 
 // Drawn icons everywhere: canvas text in the café, and emoji in any on-screen copy.
@@ -581,24 +581,12 @@ const seasonParam = new URLSearchParams(location.search).get('season');
 const season = seasonParam ? (seasonParam === 'none' ? null : seasonParam) : seasonFor();
 const shownDecor = () => save.decor.owned.filter(id => !save.decor.hidden.includes(id));
 gm.season = season in EVENTS ? season : null; // seasonal events run with the seasonal decorations
-// The isometric room is the café (?flat shows the old flat back wall). Cats step out of the (lower) iso front door
-// and walk to a waypoint in front of the corner bar, so they never cut through its end.
-const ISO_ON = !new URLSearchParams(location.search).has('flat');
-if (ISO_ON) { // ponytail: mutates config at start-up; move into LAYOUT once the flat room is retired
-  LAYOUT.entry.y = LAYOUT.exit.y = LAYOUT.entry.y + wallDrop(LAYOUT.entry.x);
-  LAYOUT.door.y += wallDrop(LAYOUT.door.x);
-  LAYOUT.walk.wallY = x => 172 + wallDrop(x) + 26; // feet stay in front of the slanted walls
-  for (const s of LAYOUT.spots) if (s.row === 'bar') { s.y += wallDrop(s.x); s.plate.y += wallDrop(s.plate.x); } // the corner bar follows the walls
-  for (const s of LAYOUT.spots) if (s.row === 'table') s.plate.y -= ISO.tableLift; // dishes sit on the taller iso tabletops
-}
-/** A tap on the (slanted iso) wall, in flat-wall coordinates, for things on the window sills. */
-const onWallPoint = p => (scene.iso ? { x: p.x, y: p.y - wallDrop(p.x) } : p);
+/** A tap on the slanted walls, in flat-wall coordinates, for things on the window sills. */
+const onWallPoint = p => ({ x: p.x, y: p.y - wallDrop(p.x) });
 let scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
-scene.iso = ISO_ON;
 /** Re-read theme/level and redraw the static café (after level up or a scene change). */
 function refreshScene() {
   scene = makeScene(save.settings.scene, gm.level, season, shownDecor());
-  scene.iso = ISO_ON;
   if (bg.width > 1) buildBackground();
 }
 
@@ -689,7 +677,7 @@ function gnomeScream() {
   audio.unlock();
   audio.play('gnome');
   if (!save.stats.gnome) { save.stats.gnome = true; persist(); checkStickers(); }
-  gm.fx.push({ kind: 'text', x: gnome.x - 40, y: gnome.y + 30 + (scene.iso ? wallDrop(gnome.x) : 0), text: 'HOOO!', color: '#e8504f', size: 24, t: 0, life: 1 });
+  gm.fx.push({ kind: 'text', x: gnome.x - 40, y: gnome.y + 30 + wallDrop(gnome.x), text: 'HOOO!', color: '#e8504f', size: 24, t: 0, life: 1 });
 }
 const inEggPot = p => p.x >= EGG_POT.x && p.x <= EGG_POT.x + EGG_POT.w && p.y >= EGG_POT.y && p.y <= EGG_POT.y + EGG_POT.h;
 let eggTaps = 0, eggLast = 0, preGhostCat = null;
@@ -770,7 +758,7 @@ function render(time) {
   if (door > 0.08 && lastDoor <= 0.08) audio.play('bell'); // ding-ding as the door starts to open
   lastDoor = door;
   drawDoor(ctx, scene, door);
-  onWalls(ctx, scene, () => drawPets(ctx, save.pets, time)); // pets by the bar and the wall follow the iso slant
+  onWalls(ctx, () => drawPets(ctx, save.pets, time)); // pets by the bar and the wall follow the iso slant
 
   const menu = gm.foods;
   for (const s of gm.stations) {
@@ -856,7 +844,7 @@ function drawStreet(time) {
   for (const n of gm.npcs) {
     if (!n.outside) continue;
     ctx.save(); ctx.translate(n.x, n.y);
-    if (scene.iso) ctx.transform(1, n.x < ISO.apex ? ISO.slope : -ISO.slope, 0, 1, 0, 0); // undo the wall slant: cats stand upright
+    ctx.transform(1, n.x < ISO.apex ? ISO.slope : -ISO.slope, 0, 1, 0, 0); // undo the wall slant: cats stand upright
     ctx.scale(0.8, 0.8);
     drawCat(ctx, 0, 0, n.look, { state: 'walk', t: time + n.phase, facing: n.facing });
     ctx.restore();
@@ -868,7 +856,7 @@ function drawRushClock(time) {
   const left = gm.rushLeft;
   if (!left) return;
   const pulse = reduceMotion.matches ? 1 : 1 + Math.sin(time * 8) * 0.04;
-  ctx.save(); ctx.translate(165, 72 + (scene.iso ? wallDrop(165) : 0)); ctx.scale(pulse, pulse);
+  ctx.save(); ctx.translate(165, 72 + wallDrop(165)); ctx.scale(pulse, pulse);
   ctx.beginPath(); ctx.roundRect(-96, -18, 192, 36, 18); ctx.fillStyle = '#c43d5c'; ctx.fill();
   ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
   ctx.font = `400 19px ${FONT}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillStyle = '#fff';

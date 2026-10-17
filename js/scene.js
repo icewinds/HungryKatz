@@ -2,7 +2,7 @@
 // (shabby -> tidy -> cosy -> fancy) that unlock as the restaurant levels up.
 // A scene object is { stage: 0..3, pal: palette, level } — see makeScene().
 
-import { LAYOUT, WORLD, KITCHEN, decorStage, tablesForLevel, spotsForLevel, decorSpots } from './config.js';
+import { LAYOUT, WORLD, KITCHEN, decorStage, tablesForLevel, spotsForLevel, decorSpots, ISO, wallDrop } from './config.js';
 import { ellipse, circle, rrect, tri, fillStroke, drawFoodIcon, drawHeart, hexRgb, INK, SHADOW, FONT, drawCat, drawDish, KITCHEN_CHEF } from './art.js';
 
 const TAU = Math.PI * 2;
@@ -97,16 +97,12 @@ export function seasonFor(d = new Date()) {
   return null;
 }
 
-// ---------------------------------------------------------------- isometric room (?iso, being prototyped)
-// The flat back wall folds into two walls meeting in a corner at ISO.apex. Everything on the wall is drawn slanted
-// (vertical edges stay vertical), so windows, door, clock and decorations follow; the floor gets diagonal planks.
-// Gameplay positions are unchanged: only the room shell is drawn differently.
-export const ISO = { apex: 560, slope: 0.25, tableLift: 10 }; // tableLift: iso tabletops stand this much taller
-/** How far the iso walls drop below the flat back wall at x (0 at the corner). */
-export const wallDrop = x => ISO.slope * Math.abs(x - ISO.apex);
-/** Draw wall things slanted onto the two iso walls, or straight onto the flat back wall when not in iso. */
-export function onWalls(ctx, sc, draw) {
-  if (!sc.iso) return draw();
+// ---------------------------------------------------------------- isometric room
+// The back wall folds into two walls meeting in a corner at ISO.apex (config.js). Things on the walls are drawn in
+// flat-wall coordinates and slanted here (vertical edges stay vertical), so windows, door, clock and decorations follow;
+// the floor gets diagonal planks.
+/** Draw wall things slanted onto the two walls. */
+export function onWalls(ctx, draw) {
   const { apex, slope: s } = ISO;
   for (const left of [true, false]) {
     ctx.save();
@@ -116,9 +112,8 @@ export function onWalls(ctx, sc, draw) {
     ctx.restore();
   }
 }
-// Windows on the iso walls: the middle one moves left of the corner so it never folds.
-const ISO_WINDOWS = [{ x: 60, y: 22, w: 200, h: 96 }, { x: 395, y: 22, w: 150, h: 96 }, { x: 800, y: 22, w: 220, h: 96 }];
-const windowsFor = sc => (sc.iso ? ISO_WINDOWS : WINDOWS);
+// Windows on the walls: the middle one sits left of the corner so it never folds.
+const WINDOWS = [{ x: 60, y: 22, w: 200, h: 96 }, { x: 395, y: 22, w: 150, h: 96 }, { x: 800, y: 22, w: 220, h: 96 }];
 
 /** Iso floor: boards running up toward the corner, staggered joints, and soft sun patches under the windows. */
 function isoFloor(ctx, sc) {
@@ -130,7 +125,7 @@ function isoFloor(ctx, sc) {
     for (let x = (r % 3) * 60 + 20; x < W; x += 180) { const y = c - s * x; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + gap / (2 * s), y + gap / 2); ctx.stroke(); }
   }
   ctx.fillStyle = sc.theme === 'moonlight' ? 'rgba(205,215,255,0.07)' : 'rgba(255,240,205,0.22)'; // light from each window falling forward: warm sun, or faint moonlight in the bistro
-  for (const w of ISO_WINDOWS) {
+  for (const w of WINDOWS) {
     const b = x => 172 + wallDrop(x), [x0, x1] = [w.x + 10, w.x + w.w - 10];
     ctx.beginPath(); ctx.moveTo(x0, b(x0)); ctx.lineTo(x1, b(x1)); ctx.lineTo(x1 + 60, b(x1) + 110); ctx.lineTo(x0 + 60, b(x0) + 110); ctx.closePath(); ctx.fill();
   }
@@ -155,15 +150,7 @@ export function drawBackground(ctx, sc) {
   const { W, H } = WORLD, p = sc.pal, st = sc.stage;
 
   // floor planks
-  if (sc.iso) isoFloor(ctx, sc);
-  else {
-    ctx.fillStyle = p.floor; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = p.plank; ctx.lineWidth = 2;
-    for (let y = 172, r = 0; y < H; y += 38, r++) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke();
-      for (let x = (r % 3) * 70 + 40; x < W; x += 210) { ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 38); ctx.stroke(); }
-    }
-  }
+  isoFloor(ctx, sc);
   if (st === 0) shabbyFloor(ctx);
   if (st >= 2) { // rug under the first table
     const rt = LAYOUT.tables[0];
@@ -172,7 +159,7 @@ export function drawBackground(ctx, sc) {
   }
 
   // back wall (two slanted walls in iso)
-  onWalls(ctx, sc, () => {
+  onWalls(ctx, () => {
   ctx.fillStyle = p.wall; ctx.fillRect(0, 0, W, 172);
   if (st >= 1) { ctx.fillStyle = p.stripe; for (let x = 0; x < W; x += 36) ctx.fillRect(x, 0, 14, 126); }
   ctx.fillStyle = p.wainscot; ctx.fillRect(0, 128, W, 44);
@@ -183,11 +170,11 @@ export function drawBackground(ctx, sc) {
   if (st >= 2) bunting(ctx, p);
   drawDecor(ctx, sc, 'wall');
   });
-  if (sc.iso) isoShell(ctx, sc);
+  isoShell(ctx, sc);
 
   // window bar (a corner bar folded along both walls in iso; longer with the 'longBar' decoration)
   const b = sc.decor?.has('longBar') ? LAYOUT.longBar : LAYOUT.windowBar;
-  onWalls(ctx, sc, () => {
+  onWalls(ctx, () => {
   // a proper bar table: thick top, skirt board, four legs on the floor and a footrest rail
   const wood = sc.theme !== 'seaside', floorY = b.y + 66, edge = 'rgba(70,40,25,0.35)';
   ellipse(ctx, b.x + b.w / 2, floorY, b.w / 2 + 10, 7); ctx.fillStyle = SHADOW; ctx.fill();          // floor shadow
@@ -213,7 +200,7 @@ export function drawBackground(ctx, sc) {
 
   // seats for every open spot: wooden crates when shabby, cushions after
   for (const s of [...spotsForLevel(sc.level), ...decorSpots(id => !!sc.decor?.has(id))]) {
-    if (s.row === 'bar' && st >= 1) { ellipse(ctx, s.x, b.y + 15 + (sc.iso ? wallDrop(s.x) : 0), 13, 5); fillStroke(ctx, '#fff', '#f1d4dc', 1.5); }
+    if (s.row === 'bar' && st >= 1) { ellipse(ctx, s.x, b.y + 15 + wallDrop(s.x), 13, 5); fillStroke(ctx, '#fff', '#f1d4dc', 1.5); }
     if (st === 0) {
       rrect(ctx, s.x - 17, s.y - 9, 34, 16, 3); fillStroke(ctx, p.wood, p.woodDark, 2);
       ctx.strokeStyle = p.woodDark; ctx.lineWidth = 1.2;
@@ -226,7 +213,7 @@ export function drawBackground(ctx, sc) {
   }
 
   // welcome mat in front of the front door (the door itself opens live: drawDoor)
-  const dm = FRONT_DOOR, matY = dm.sill + (sc.iso ? wallDrop(dm.x) : 0);
+  const dm = FRONT_DOOR, matY = dm.sill + wallDrop(dm.x);
   rrect(ctx, dm.x - 38, matY + 6, 76, 20, 8); fillStroke(ctx, p.mat, p.matEdge, 2);
   if (st === 0) { ctx.strokeStyle = p.matEdge; ctx.lineWidth = 1.5; for (let x = dm.x - 34; x < dm.x + 36; x += 8) { ctx.beginPath(); ctx.moveTo(x, matY + 26); ctx.lineTo(x - 2, matY + 30); ctx.stroke(); } }
 
@@ -399,10 +386,8 @@ function kitchen(ctx, sc) {
   rrect(ctx, -6, y + 16, W + 12, 8, 3); fillStroke(ctx, p.counterEdge, null);
   if (st >= 3) { ctx.fillStyle = '#e3b94f'; ctx.fillRect(0, y + 15, W, 2); }
   if (st === 0) { ctx.fillStyle = 'rgba(110,80,50,0.15)'; ellipse(ctx, 224, y + 10, 22, 5); ctx.fill(); } // stain
-  if (sc.iso) { // chunkier counter: a lit top edge and a longer shadow on the café floor
-    ctx.fillStyle = 'rgba(255,255,255,0.38)'; ctx.fillRect(0, y + 2, W, 3);
-    ctx.fillStyle = 'rgba(70,40,25,0.1)'; ctx.fillRect(0, y - 16, W, 10);
-  }
+  ctx.fillStyle = 'rgba(255,255,255,0.38)'; ctx.fillRect(0, y + 2, W, 3); // chunky counter: a lit top edge
+  ctx.fillStyle = 'rgba(70,40,25,0.1)'; ctx.fillRect(0, y - 16, W, 10);     // and a longer shadow on the café floor
 }
 
 /** Kitchen shelves at the far ends: jars, a sack of flour and a pot plant. */
@@ -553,20 +538,20 @@ function pawPaper(ctx) {
 }
 // Each decoration: which background layer it is drawn in, where it goes, and how to frame it in the shop.
 const DECOR_ART = {
-  plants: { layer: 'wall', spots: [[420, 0], [782, 0]], isoSpots: [[378, 0], [782, 0]], draw: hangingPlant, prev: [80, 4, 1.3] },
-  lanterns: { layer: 'wall', spots: [[30, 30], [385, 30], [690, 30], [1100, 30]], isoSpots: [[30, 30], [372, 30], [690, 30], [1100, 30]], draw: lantern, prev: [80, 6, 1.9] },
+  plants: { layer: 'wall', spots: [[378, 0], [782, 0]], draw: hangingPlant, prev: [80, 4, 1.3] },
+  lanterns: { layer: 'wall', spots: [[30, 30], [372, 30], [690, 30], [1100, 30]], draw: lantern, prev: [80, 6, 1.9] },
   shelf: { layer: 'wall', spots: [[1070, 112]], draw: nappingShelf, prev: [84, 72, 1.25] },
   bigPlant: { layer: 'floor', spots: [[42, 520]], draw: bigPlant, prev: [80, 104, 0.85] },
-  catBed: { layer: 'floor', spots: [[1058, 300]], isoSpots: [[1062, 334]], draw: catBed, prev: [80, 92, 1.3] },
+  catBed: { layer: 'floor', spots: [[1062, 334]], draw: catBed, prev: [80, 92, 1.3] },
   catTree: { layer: 'floor', spots: [[44, 330]], draw: catTree, prev: [86, 104, 0.5] },
   pawPaper: { layer: 'paper', spots: [[0, 0]], draw: pawPaper, prev: [0, 0, 1] },
-  pumpkins: { layer: 'floor', spots: [[246, 226]], isoSpots: [[246, 300]], draw: pumpkinPatch, prev: [80, 96, 1.15] },
-  snowman: { layer: 'floor', spots: [[990, 236]], isoSpots: [[1000, 304]], draw: snowCat, prev: [80, 102, 0.95] },
+  pumpkins: { layer: 'floor', spots: [[246, 300]], draw: pumpkinPatch, prev: [80, 96, 1.15] },
+  snowman: { layer: 'floor', spots: [[1000, 304]], draw: snowCat, prev: [80, 102, 0.95] },
   hearts: { layer: 'wall', spots: [[24, 142]], draw: heartGarland, prev: [-10, 40, 0.42] },
   longBar: { layer: 'bar', spots: [], draw: barPreview, prev: [80, 70, 1] }, // drawn as the window bar itself; this is the shop picture
 };
 function drawDecor(ctx, sc, layer) {
-  for (const [id, a] of Object.entries(DECOR_ART)) if (a.layer === layer && sc.decor?.has(id)) for (const [x, y] of (sc.iso && a.isoSpots) || a.spots) a.draw(ctx, x, y, sc);
+  for (const [id, a] of Object.entries(DECOR_ART)) if (a.layer === layer && sc.decor?.has(id)) for (const [x, y] of a.spots) a.draw(ctx, x, y, sc);
 }
 /** Shop preview of one decoration on a little bit of wall and floor (canvas drawn at 2x). */
 export function drawDecorPreview(canvas, id, sc) {
@@ -609,14 +594,8 @@ function isoTableBody(ctx, t, sc) {
 }
 function drawTableTop(ctx, t, sc, time) {
   const p = sc.pal, st = sc.stage;
-  if (sc.iso) isoTableBody(ctx, t, sc); // 2.5D: base disc, shaded pedestal, thick top edge or hanging cloth
-  else {
-    ellipse(ctx, t.x, t.y + 4, 36, 10); ctx.fillStyle = SHADOW; ctx.fill();
-    ellipse(ctx, t.x, t.y + 1, 16, 5); fillStroke(ctx, p.woodDark, null);
-    rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4); fillStroke(ctx, p.wood, null);
-    clipped(ctx, () => rrect(ctx, t.x - 5, t.y - 24, 10, 25, 4), () => woodGrain(ctx, t.x - 5, t.y - 24, 10, 25, t.x, true));
-  }
-  ctx.save(); ctx.translate(0, sc.iso ? -ISO.tableLift : 0); // the top (and what sits on it) stands taller in iso
+  isoTableBody(ctx, t, sc); // 2.5D: base disc, shaded pedestal, thick top edge or hanging cloth
+  ctx.save(); ctx.translate(0, -ISO.tableLift); // the top (and what sits on it) stands taller
   if (st === 0) { // bare, slightly tilted wooden top with a crack
     ctx.save(); ctx.translate(t.x, t.y - 26); ctx.rotate(-0.04);
     ellipse(ctx, 0, 0, 44, 22); fillStroke(ctx, p.wood, p.woodDark, 2.5);
@@ -629,7 +608,7 @@ function drawTableTop(ctx, t, sc, time) {
   }
   ellipse(ctx, t.x, t.y - 26, 46, 24); fillStroke(ctx, p.cloth, st >= 3 ? '#e3b94f' : p.clothRim, 3);
   ellipse(ctx, t.x, t.y - 27, 34, 16); ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2; ctx.stroke();
-  if (sc.iso) { ellipse(ctx, t.x - 14, t.y - 33, 20, 7); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill(); } // sheen where the window light lands
+  ellipse(ctx, t.x - 14, t.y - 33, 20, 7); ctx.fillStyle = 'rgba(255,255,255,0.35)'; ctx.fill(); // sheen where the window light lands
   if (st >= 2) { // vase + flower
     rrect(ctx, t.x - 22, t.y - 28, 8, 12, 3); fillStroke(ctx, '#a9dcf5', null);  // front-left, clear of the plates
     circle(ctx, t.x - 18, t.y - 33, 4.5); fillStroke(ctx, '#ff8fab', null);
@@ -680,7 +659,6 @@ function drawGnome(ctx, t) {
   tri(ctx, [-7.5, -22], [7.5, -22], [2, -42]); fillStroke(ctx, '#e8504f', '#c43d3d', 1.2); // hat
   ctx.restore();
 }
-const WINDOWS = [{ x: 60, y: 22, w: 210, h: 96 }, { x: 450, y: 22, w: 220, h: 96 }, { x: 800, y: 22, w: 220, h: 96 }];
 const CLOCK_X = 735; // between the last two windows (the front door is between the first two)
 // Clouds live in one strip spanning both windows, so they drift from pane to pane.
 const CLOUDS = [
@@ -707,8 +685,8 @@ function skyColor(hour) {
 export function drawWallLive(ctx, t, sc, now = new Date(), outside = null) {
   const p = sc.pal, st = sc.stage;
   const sky = skyAt(now);
-  onWalls(ctx, sc, () => {
-  for (const [i, win] of windowsFor(sc).entries()) { drawPane(ctx, win, i, t, sc, sky, outside); drawWindowFrame(ctx, win, i, sc); }
+  onWalls(ctx, () => {
+  for (const [i, win] of WINDOWS.entries()) { drawPane(ctx, win, i, t, sc, sky, outside); drawWindowFrame(ctx, win, i, sc); }
   // wall clock showing the real time
   const cx = CLOCK_X, cy = 70, m = now.getMinutes() + now.getSeconds() / 60, hr = (now.getHours() % 12) + m / 60;
   circle(ctx, cx, cy, 25); fillStroke(ctx, '#fff', st >= 3 ? '#e3b94f' : p.clockRim, 4);
@@ -810,7 +788,7 @@ function drawSeason(ctx, t, sc) {
   if (sc.season === 'winter') {
     if (sc.stage < 3) fairyLights(ctx, t);                          // (fancy cafés already have them)
     ctx.fillStyle = '#ffffff';                                        // snow on the sills
-    for (const w of windowsFor(sc)) { rrect(ctx, w.x - 4, 112, w.w + 8, 5, 3); ctx.fill(); }
+    for (const w of WINDOWS) { rrect(ctx, w.x - 4, 112, w.w + 8, 5, 3); ctx.fill(); }
   }
   if (sc.season === 'halloween') {                                    // glowing pumpkins on the counter
     for (const [px, s] of [[22, 0.9], [WORLD.W - 22, 0.75]]) { // counter ends, clear of the plates
@@ -911,7 +889,7 @@ const DAYLIGHT = '#fff3d6';
 export const FRONT_DOOR = { x: 325, w: 64, top: 70, sill: 172 };
 /** The front door, opened by `open` (0 shut .. 1 wide open): the leaf turns away from us against the left
  *  jamb, the garden shows through and daylight spills onto the floor. */
-export function drawDoor(ctx, sc, open) { onWalls(ctx, sc, () => drawDoorFlat(ctx, sc, open)); }
+export function drawDoor(ctx, sc, open) { onWalls(ctx, () => drawDoorFlat(ctx, sc, open)); }
 function drawDoorFlat(ctx, sc, open) {
   const p = sc.pal, { x, w, top, sill } = FRONT_DOOR, l = x - w / 2, h = sill - top;
   rrect(ctx, l, top, w, h, 6); ctx.fillStyle = DAYLIGHT; ctx.fill();                      // daylight outside

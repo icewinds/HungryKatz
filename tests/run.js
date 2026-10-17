@@ -900,17 +900,12 @@ test('events: serving during an event wins its prizes in order, and event items 
   assert.equal(eventKey('winter', new Date(2027, 0, 3)), 'winter-2026', 'January belongs to last December');
 });
 
-test('iso room: walkers stop in front of the slanted walls; without it the flat limit applies', () => {
-  const p = { x: 30, y: 200 };
-  constrain(p, []);
-  assert.equal(p.y, LAYOUT.walk.minY, 'flat room: the usual top limit');
-  LAYOUT.walk.wallY = x => 172 + 0.25 * Math.abs(x - 560) + 26;
-  try {
-    const q = { x: 30, y: 200 }; constrain(q, []);
-    assert.equal(q.y, 172 + 0.25 * 530 + 26, 'iso: further forward at the sides');
-    const mid = { x: 560, y: 200 }; constrain(mid, []);
-    assert.equal(mid.y, LAYOUT.walk.minY, 'by the corner the old limit still holds');
-  } finally { delete LAYOUT.walk.wallY; }
+test('room: walkers stop in front of the slanted walls, which come further forward at the sides', () => {
+  const side = { x: 30, y: 200 }; constrain(side, []);
+  assert.equal(side.y, LAYOUT.walk.wallY(30), 'at the side: in front of the wall');
+  assert.ok(side.y > LAYOUT.walk.minY);
+  const mid = { x: 560, y: 200 }; constrain(mid, []);
+  assert.equal(mid.y, LAYOUT.walk.minY, 'by the corner the usual top limit holds');
 });
 
 test('longer window bar: two more window seats while the decoration is out', () => {

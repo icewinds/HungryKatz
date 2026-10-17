@@ -22,6 +22,11 @@ export const foodsForLevel = level => FOODS.filter(f => foodUnlockLevel(f.id) <=
 // The café starts small and gains a table at the levels listed below.
 const BAR_Y = 258;                       // feet of cats sitting at the window bar
 const KITCHEN_Y = 545;                  // top of the kitchen counter
+// The café is an isometric room: the back wall folds into two walls meeting in a corner at ISO.apex (scene.js draws
+// everything on the walls slanted to match). wallDrop(x) is how far the walls, and what stands against them, sit
+// below the old flat wall line at x. tableLift: tabletops stand this much taller than their seats.
+export const ISO = { apex: 560, slope: 0.25, tableLift: 10 };
+export const wallDrop = x => ISO.slope * Math.abs(x - ISO.apex);
 export const TABLES = [
   { x: 560, y: 415, level: 1 },          // the first, slightly wobbly table
   { x: 330, y: 388, level: 3 },
@@ -34,14 +39,15 @@ const SEAT_BACK = -34, SEAT_FRONT = 30;  // seat behind the table (faces us) and
 const blockerOf = t => ({ x: t.x - 44, y: t.y - 32, w: 88, h: 40 });
 
 export const LAYOUT = {
-  walk: { minX: 26, maxX: 1094, minY: 248, maxY: KITCHEN_Y - 28 }, // where the player may stand (up to the kitchen counter)
+  // where the player may stand: up to the kitchen counter, and in front of the slanted walls (further forward at the sides)
+  walk: { minX: 26, maxX: 1094, minY: 248, maxY: KITCHEN_Y - 28, wallY: x => 172 + wallDrop(x) + 26 },
   playerStart: { x: 560, y: 500 },
-  entry: { x: 325, y: 178 },  // NPCs step out of the front door in the back wall (scene.js FRONT_DOOR)
+  entry: { x: 325, y: 178 + wallDrop(325) }, // NPCs step out of the front door in the left wall (scene.js FRONT_DOOR)
   // The street outside: arriving cats stroll to the door along it and leaving cats stroll away,
   // seen head and shoulders through the windows. `ends` = just off-screen left and right, `pace` = walking speed outside.
   street: { y: 142, ends: [-40, 1160], pace: 1.5 },
-  door: { x: 325, y: 240 },   // first waypoint, just in front of the door
-  exit: { x: 325, y: 178 },   // NPCs are removed after walking back through it
+  door: { x: 325, y: 240 + wallDrop(325) }, // first waypoint: in front of the door, and of the corner bar's end
+  exit: { x: 325, y: 178 + wallDrop(325) }, // NPCs are removed after walking back through it
   windowBar: { x: 380, y: 168, w: 360, h: 54 },
   longBar: { x: 380, y: 168, w: 520, h: 54 }, // with the 'longBar' decoration: stretches right (the front door is on the left), two more window seats
   tables: TABLES,
@@ -54,7 +60,7 @@ export const LAYOUT = {
   // Spots come in pairs (linked via `partner` below) that chat: bar neighbours, the two side seats
   // of a table, and its back + front seats. `back` = seated with their back to us.
   spots: [
-    ...[440, 520, 600, 680].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y, face: i % 2 ? -1 : 1, level: 1, back: true })),
+    ...[440, 520, 600, 680].map((x, i) => ({ id: `W${i + 1}`, row: 'bar', x, y: BAR_Y + wallDrop(x), face: i % 2 ? -1 : 1, level: 1, back: true })),
     ...TABLES.flatMap((t, i) => [
       { id: `T${i + 1}a`, row: 'table', table: t, x: t.x - SEAT_DX, y: t.y, face: 1, level: t.level },
       { id: `T${i + 1}b`, row: 'table', table: t, x: t.x + SEAT_DX, y: t.y, face: -1, level: t.level },
@@ -62,8 +68,8 @@ export const LAYOUT = {
       { id: `T${i + 1}d`, row: 'table', table: t, x: t.x, y: t.y + SEAT_FRONT, face: 1, level: t.level, back: true },
     ]),
     // the ends of the longer window bar (Decorate): only open while that decoration is out
-    { id: 'W5', row: 'bar', x: 760, y: BAR_Y, face: 1, level: 1, back: true, decor: 'longBar' },
-    { id: 'W6', row: 'bar', x: 840, y: BAR_Y, face: -1, level: 1, back: true, decor: 'longBar' },
+    { id: 'W5', row: 'bar', x: 760, y: BAR_Y + wallDrop(760), face: 1, level: 1, back: true, decor: 'longBar' },
+    { id: 'W6', row: 'bar', x: 840, y: BAR_Y + wallDrop(840), face: -1, level: 1, back: true, decor: 'longBar' },
   ],
 };
 for (let i = 0; i < LAYOUT.spots.length; i += 2) {
@@ -77,9 +83,9 @@ const TABLE_PLATES = { a: { x: -28, y: -34 }, b: { x: 28, y: -34 }, c: { x: 0, y
 // back counter, table dishes on top of their table).
 for (const s of LAYOUT.spots) {
   s.plate = s.row === 'bar'
-    ? { x: s.x + s.face * 26, y: LAYOUT.windowBar.y + 14, z: 0 }
+    ? { x: s.x + s.face * 26, y: LAYOUT.windowBar.y + 14 + wallDrop(s.x + s.face * 26), z: 0 } // on the corner bar
     : { ...TABLE_PLATES[s.id.at(-1)], z: s.table.y + 9 };
-  if (s.row === 'table') { s.plate.x += s.table.x; s.plate.y += s.table.y; }
+  if (s.row === 'table') { s.plate.x += s.table.x; s.plate.y += s.table.y - ISO.tableLift; }
 }
 
 // What's open at a restaurant level (memoised so callers get stable arrays).
