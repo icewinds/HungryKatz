@@ -581,10 +581,12 @@ const seasonParam = new URLSearchParams(location.search).get('season');
 const season = seasonParam ? (seasonParam === 'none' ? null : seasonParam) : seasonFor();
 const shownDecor = () => save.decor.owned.filter(id => !save.decor.hidden.includes(id));
 gm.season = season in EVENTS ? season : null; // seasonal events run with the seasonal decorations
-// Isometric room prototype: open the game with ?iso. Cats step out of the (lower) iso front door.
-const ISO_ON = new URLSearchParams(location.search).has('iso');
-if (ISO_ON) { // ponytail: mutates config for the prototype; move into LAYOUT once iso is the only room
+// The isometric room is the café (?flat shows the old flat back wall). Cats step out of the (lower) iso front door
+// and walk to a waypoint in front of the corner bar, so they never cut through its end.
+const ISO_ON = !new URLSearchParams(location.search).has('flat');
+if (ISO_ON) { // ponytail: mutates config at start-up; move into LAYOUT once the flat room is retired
   LAYOUT.entry.y = LAYOUT.exit.y = LAYOUT.entry.y + wallDrop(LAYOUT.entry.x);
+  LAYOUT.door.y += wallDrop(LAYOUT.door.x);
   LAYOUT.walk.wallY = x => 172 + wallDrop(x) + 26; // feet stay in front of the slanted walls
   for (const s of LAYOUT.spots) if (s.row === 'bar') { s.y += wallDrop(s.x); s.plate.y += wallDrop(s.plate.x); } // the corner bar follows the walls
   for (const s of LAYOUT.spots) if (s.row === 'table') s.plate.y -= ISO.tableLift; // dishes sit on the taller iso tabletops
