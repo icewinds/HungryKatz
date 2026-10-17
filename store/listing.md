@@ -49,7 +49,7 @@ HungryKatz was made with love for a little girl, and shared so everyone can enjo
 ## Contact and links
 - Website: https://hungrykatz.solutioncloud.tech/
 - Privacy policy: https://hungrykatz.solutioncloud.tech/privacy.html
-- Email: (Play requires a contact email; use one you're happy to show publicly)
+- Email: contact@solutioncloud.tech (shown publicly on the store page)
 
 ## Data safety form (Policy > App content > Data safety)
 - Does your app collect or share any of the required user data types? **No**
