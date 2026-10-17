@@ -17,7 +17,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#fbefdf"
-      }
+      },
+      "blockedPermissions": [
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.ACCESS_MEDIA_LOCATION"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -27,6 +32,17 @@
         "projectId": "7d798dbb-1b5d-4857-b5a5-ca90c96e39d6"
       }
     },
-    "owner": "jasonrenauds-team"
+    "owner": "jasonrenauds-team",
+    "plugins": [
+      "expo-sharing",
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "HungryKatz saves photos of your café to your gallery when you tap Save.",
+          "savePhotosPermission": "HungryKatz saves photos of your café to your gallery when you tap Save.",
+          "granularPermissions": ["photo"]
+        }
+      ]
+    ]
   }
 }

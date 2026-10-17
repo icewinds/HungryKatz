@@ -975,7 +975,15 @@ function takePhoto() {
 }
 const photoBlob = () => new Promise(done => photo.toBlob(done, 'image/jpeg', 0.92));
 const photoName = () => `hungrykatz-${dayKey()}.jpg`;
+/** In the phone app: hand the photo to the phone to save to the gallery or share; it answers via hungryKatzPhotoDone. */
+const inAppPhoto = action => IN_APP && window.ReactNativeWebView
+  && (window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'photo', action, name: photoName(), data: photo.toDataURL('image/jpeg', 0.92).split(',')[1] })), true);
+window.hungryKatzPhotoDone = ({ action, ok }) => {
+  if (action === 'save') ui.banner(ok ? '📥 Photo saved to your gallery!' : '📷 To save photos, allow HungryKatz to add photos in your phone settings');
+  else if (!ok) ui.banner('📤 That photo could not be shared');
+};
 async function savePhoto() {
+  if (inAppPhoto('save')) return;
   const url = URL.createObjectURL(await photoBlob());
   const a = Object.assign(document.createElement('a'), { href: url, download: photoName() });
   document.body.append(a); a.click(); a.remove();
@@ -984,6 +992,7 @@ async function savePhoto() {
 }
 /** Share through the phone's share sheet; where that can't send pictures, save it instead. */
 async function sharePhoto() {
+  if (inAppPhoto('share')) return;
   const file = new File([await photoBlob()], photoName(), { type: 'image/jpeg' });
   try {
     if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file], title: 'My HungryKatz café' });
