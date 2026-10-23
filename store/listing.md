@@ -17,13 +17,16 @@ You are the waiter. Cats stroll in through the front door, ring the bell and sit
 WHAT'S ON THE MENU
 • Tap to walk, or tap several spots and your cat visits each one in turn
 • Serve milk, cat food, fish, sushi and cupcakes as your café levels up
-• Watch your shabby little café grow into a fancy one, with more tables, a rug, flowers and candles
+• Watch your shabby little corner café grow into a fancy one, with more tables, a rug, flowers and candles
 • Combos for quick service, VIP cats in crowns and two-dish weekend specials
 • Upgrades: carry more, walk faster, cook faster, earn bigger tips
 • Decorate your café: cat trees, cosy cat beds, a napping shelf, plants, lanterns and paw-print wallpaper
 • Named regular customers who become your best friends (and bring gifts)
-• Café pets, and Dusty the cleaner to clear the tables for you
-• Collect 22 stickers, earn recipe stars, and buy hats and aprons for your waiter
+• Café pets, plus staff to hire and train: Dusty the cleaner, and Waffles and Pancake the servers
+• Collect all 21 kinds of cat in your Cat Album, including sparkly rare visitors
+• Seasonal events with prizes you can only win then: Spooky Café, Snowy Café and Sweetheart Café
+• Rush hour, big eaters who leave big tips, and a longer window bar for more customers
+• Collect 25 stickers, earn recipe stars, and buy hats and aprons for your waiter
 • Take photos of your café to save or share
 • Unlock new cats, plus a secret one if you can find it
 • Five café scenes, seasonal decorations, and a gnome who screams. Really.
