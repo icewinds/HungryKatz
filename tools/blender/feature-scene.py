@@ -49,7 +49,7 @@ def felt(name, color, sheen=0.9, rough=0.95, fuzz=0.6):
     set_input(bsdf, 'Roughness', rough)
     set_input(bsdf, ['Sheen Weight', 'Sheen'], sheen)
     set_input(bsdf, ['Sheen Roughness'], 0.6)
-    set_input(bsdf, ['Subsurface Weight', 'Subsurface'], 0.08)
+    set_input(bsdf, ['Subsurface Weight', 'Subsurface'], 0.18)
     noise = nt.nodes.new('ShaderNodeTexNoise')
     set_input(noise, 'Scale', 120.0)
     set_input(noise, 'Detail', 10.0)
@@ -128,9 +128,9 @@ def cone(loc, r1, depth, mat, rot=(0, 0, 0), scale=(1, 1, 1)):
 
 
 # ------------------------------------------------------------------ palette (the game's colours)
-GINGER, GINGER_D, CREAM = '#ee8a3c', '#c8692a', '#fff1dc'
+GINGER, GINGER_D, CREAM = '#f8a050', '#d9783a', '#fff4e4'
 PINK, BLUSH, INK = '#ffb3c6', '#ff8fab', '#2a1c22'
-COCOA, BOW, GOLD = '#3b2f36', '#e8504f', '#ffd68a'
+COCOA, BOW, GOLD = '#5a4650', '#e8504f', '#ffd68a'
 
 fur = felt('fur', GINGER)
 fur_d = felt('fur_dark', GINGER_D)
@@ -199,11 +199,11 @@ for side in (-1, 1):  # rounded felt ears with pink insides
     cone(at(side * 0.4, 0.02, HZ + 0.55), 0.3, 0.52, fur, rot=(0, side * 24, 0), scale=(1, 0.55, 1))
     cone(at(side * 0.39, -0.08, HZ + 0.52), 0.18, 0.34, pink, rot=(0, side * 24, 0), scale=(1, 0.35, 1))
 for side in (-1, 1):  # big glossy eyes with a big and a little highlight, and rosy cheeks
-    blob(at(side * 0.25, -0.5, HZ + 0.04), 0.13, (0.92, 0.55, 1.08), eye)
-    blob(at(side * 0.25 - 0.045, -0.58, HZ + 0.1), 0.035, (1, 0.6, 1), shine, sub=0)
-    blob(at(side * 0.25 + 0.04, -0.58, HZ - 0.01), 0.016, (1, 0.6, 1), shine, sub=0)
-    blob(at(side * 0.43, -0.42, HZ - 0.13), 0.1, (1.2, 0.4, 0.75), blush)
-blob(at(0, -0.6, HZ - 0.09), 0.045, (1.25, 0.8, 0.85), felt('nose', BLUSH, sheen=0.3))  # tiny pink nose
+    blob(at(side * 0.25, -0.54, HZ + 0.04), 0.13, (0.92, 0.55, 1.08), eye)
+    blob(at(side * 0.25 - 0.045, -0.62, HZ + 0.1), 0.035, (1, 0.6, 1), shine, sub=0)
+    blob(at(side * 0.25 + 0.04, -0.62, HZ - 0.01), 0.016, (1, 0.6, 1), shine, sub=0)
+    blob(at(side * 0.43, -0.47, HZ - 0.13), 0.1, (1.2, 0.4, 0.75), blush)
+blob(at(0, -0.645, HZ - 0.09), 0.045, (1.25, 0.8, 0.85), felt('nose', BLUSH, sheen=0.3))  # tiny pink nose
 mouth = bpy.data.curves.new('mouth', 'CURVE')
 mouth.dimensions = '3D'
 mouth.bevel_depth = 0.009
@@ -212,7 +212,7 @@ w = mouth.splines.new('BEZIER')
 wpts = [(-0.075, HZ - 0.15), (-0.037, HZ - 0.185), (0, HZ - 0.15), (0.037, HZ - 0.185), (0.075, HZ - 0.15)]
 w.bezier_points.add(len(wpts) - 1)
 for bp, (x, z) in zip(w.bezier_points, wpts):
-    bp.co = at(x, -0.615, z)
+    bp.co = at(x, -0.655, z)
     bp.handle_left_type = bp.handle_right_type = 'AUTO'
 mouth_obj = bpy.data.objects.new('mouth', mouth)
 bpy.context.collection.objects.link(mouth_obj)
@@ -250,6 +250,42 @@ win.scale = (1.6, 1.3, 1)
 win.data.materials.append(emit('window', '#fff4dc', 3.0))
 
 
+def set_any(obj, **props):
+    """Set settings that exist in this Blender version; skip the rest."""
+    for k, v in props.items():
+        try:
+            setattr(obj, k, v)
+        except (AttributeError, TypeError, ValueError):
+            pass
+
+
+def add_fuzz(obj, length=0.05, density=2600):
+    """Needle-felt fuzz: short, slightly wild fibres all over the surface (particle hair, rendered as fine curves)."""
+    try:
+        d = obj.dimensions
+        area = 2 * (d.x * d.y + d.y * d.z + d.x * d.z)
+        mod = obj.modifiers.new('fuzz', 'PARTICLE_SYSTEM')
+        ps = mod.particle_system.settings
+        ps.type = 'HAIR'
+        set_any(ps, count=max(150, int(area * density)), hair_length=length, emit_from='FACE', use_emit_random=True,
+                child_type='INTERPOLATED', child_nbr=4, rendered_child_count=12, child_radius=0.06,
+                roughness_1=0.012, roughness_1_size=0.4, roughness_2=0.02, roughness_endpoint=0.01,
+                root_radius=1.0, tip_radius=0.0, radius_scale=0.0025, hair_step=4)
+    except Exception as e:  # if this Blender has no particle hair, the felt still renders without fuzz
+        print('fuzz skipped on', obj.name, e)
+
+
+# the tail is a curve: make it a mesh so it can grow fuzz too
+bpy.ops.object.select_all(action='DESELECT')
+tail_obj.select_set(True)
+bpy.context.view_layer.objects.active = tail_obj
+bpy.ops.object.convert(target='MESH')
+FUZZY = {'fur', 'fur_dark', 'cream'}
+for ob in list(bpy.data.objects):
+    if ob.type == 'MESH' and ob.data.materials and ob.data.materials[0] and ob.data.materials[0].name in FUZZY and ob.location.x > 0.6:
+        add_fuzz(ob, length=0.032 if ob.location.z > 1.1 else 0.05)  # shorter on the head, around the face
+
+
 def light(kind, loc, energy, color, size=None, rot=(0, 0, 0)):
     bpy.ops.object.light_add(type=kind, location=loc, rotation=[math.radians(a) for a in rot])
     l = bpy.context.active_object
@@ -260,9 +296,9 @@ def light(kind, loc, energy, color, size=None, rot=(0, 0, 0)):
     return l
 
 
-light('AREA', (-3.5, -2.0, 4.0), 520, '#ffe8c8', 4.0, (55, 0, -55))   # warm window key light from the left
-light('AREA', (5.5, -4.0, 2.5), 150, '#e8eeff', 5.0, (70, 0, 50))     # soft cool fill from the right
-light('AREA', (1.5, 3.0, 4.5), 300, '#fff1dc', 3.0, (-40, 0, 180))    # rim light from behind for the felt fuzz
+light('AREA', (-3.5, -2.0, 4.0), 720, '#ffe8c8', 8.0, (55, 0, -55))   # warm window key light from the left
+light('AREA', (5.5, -4.0, 2.5), 220, '#fff4ea', 8.0, (70, 0, 50))     # soft cool fill from the right
+light('AREA', (1.5, 3.0, 4.5), 380, '#fff1dc', 4.0, (-40, 0, 180))    # rim light from behind for the felt fuzz
 
 world = bpy.data.worlds.new('world')
 scene.world = world
@@ -278,7 +314,7 @@ cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
 scene.camera = cam
 cam.data.dof.use_dof = True
 cam.data.dof.focus_distance = (Vector(at(0, 0, 1.0)) - cam.location).length
-cam.data.dof.aperture_fstop = 5.6
+cam.data.dof.aperture_fstop = 2.8
 
 scene.render.engine = 'CYCLES'
 scene.cycles.samples = SAMPLES
@@ -288,7 +324,7 @@ scene.render.resolution_percentage = 100
 scene.render.image_settings.file_format = 'PNG'
 try:
     scene.view_settings.view_transform = 'AgX'
-    scene.view_settings.look = 'AgX - Punchy'
+    scene.view_settings.look = 'AgX - Base Contrast'
 except TypeError:
     pass
 scene.render.filepath = OUT
